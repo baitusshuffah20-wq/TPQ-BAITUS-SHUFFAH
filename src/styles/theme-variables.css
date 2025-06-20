@@ -1,0 +1,105 @@
+:root {
+  /* Default theme variables */
+  --color-primary: #f1d900;
+  --color-secondary: #008080;
+  --color-accent: #00cee9;
+  --color-background: #ffffff;
+  --color-text: #1f2937;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  
+  /* Button colors */
+  --button-primary: #008080;
+  --button-secondary: #6B7280;
+  --button-accent: #22c55e;
+  --button-danger: #ef4444;
+  --button-info: #3B82F6;
+  
+  --font-heading: 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-arabic: 'Amiri', serif;
+  
+  --border-radius: 0.5rem;
+  --container-width: 1280px;
+}
+
+/* Apply theme variables to components */
+.btn-primary, .bg-primary {
+  background-color: var(--button-primary) !important;
+  color: white;
+}
+
+.btn-secondary, .bg-secondary {
+  background-color: var(--button-secondary) !important;
+  color: white;
+}
+
+.btn-accent, .bg-accent {
+  background-color: var(--button-accent) !important;
+  color: white;
+}
+
+.btn-danger, .bg-danger {
+  background-color: var(--button-danger) !important;
+  color: white;
+}
+
+.btn-info, .bg-info {
+  background-color: var(--button-info) !important;
+  color: white;
+}
+
+.alert-success {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.alert-warning {
+  background-color: var(--color-warning);
+  color: var(--color-text);
+}
+
+.alert-error {
+  background-color: var(--color-error);
+  color: white;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background-color: var(--color-background);
+}
+
+.arabic-text {
+  font-family: var(--font-arabic);
+}
+
+/* Layout */
+.container {
+  max-width: var(--container-width);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.rounded {
+  border-radius: var(--border-radius);
+}
+
+/* Sidebar styles */
+body[data-sidebar-style="default"] .sidebar {
+  width: 250px;
+}
+
+body[data-sidebar-style="compact"] .sidebar {
+  width: 80px;
+}
+
+body[data-sidebar-style="expanded"] .sidebar {
+  width: 300px;
+}

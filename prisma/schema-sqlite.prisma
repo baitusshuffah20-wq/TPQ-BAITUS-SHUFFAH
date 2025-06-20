@@ -1,0 +1,306 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  phone     String?
+  role      String   // ADMIN, MUSYRIF, WALI, SANTRI
+  password  String
+  avatar    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  santriAsWali     Santri[]      @relation("WaliSantri")
+  halaqahAsMusyrif Halaqah[]     @relation("MusyrifHalaqah")
+  hafalanAsMusyrif Hafalan[]     @relation("MusyrifHafalan")
+  attendanceAsMusyrif Attendance[] @relation("MusyrifAttendance")
+  notifications    Notification[]
+  auditLogs        AuditLog[]
+  whatsappLogs     WhatsAppLog[] @relation("WhatsAppLogs")
+  whatsappIncoming WhatsAppIncoming[] @relation("WhatsAppIncoming")
+
+  @@map("users")
+}
+
+// Santri Management
+model Santri {
+  id             String   @id @default(cuid())
+  nis            String   @unique
+  name           String
+  birthDate      DateTime
+  birthPlace     String
+  gender         String   // MALE, FEMALE
+  address        String
+  phone          String?
+  email          String?
+  photo          String?
+  status         String   @default("ACTIVE") // ACTIVE, INACTIVE, GRADUATED, DROPPED_OUT
+  enrollmentDate DateTime @default(now())
+  graduationDate DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  waliId    String
+  wali      User      @relation("WaliSantri", fields: [waliId], references: [id])
+  halaqahId String?
+  halaqah   Halaqah?  @relation("SantriHalaqah", fields: [halaqahId], references: [id])
+
+  hafalan    Hafalan[]
+  attendance Attendance[]
+  payments   Payment[]
+
+  @@map("santri")
+}
+
+// Halaqah Management
+model Halaqah {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  maxCapacity     Int
+  currentCapacity Int      @default(0)
+  level           String   // BEGINNER, INTERMEDIATE, ADVANCED
+  status          String   @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  musyrifId String
+  musyrif   User   @relation("MusyrifHalaqah", fields: [musyrifId], references: [id])
+
+  santri     Santri[]     @relation("SantriHalaqah")
+  schedules  HalaqahSchedule[]
+  attendance Attendance[]
+
+  @@map("halaqah")
+}
+
+model HalaqahSchedule {
+  id        String   @id @default(cuid())
+  dayOfWeek Int      // 0-6 (Sunday-Saturday)
+  startTime String   // HH:mm format
+  endTime   String   // HH:mm format
+  location  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  halaqahId String
+  halaqah   Halaqah @relation(fields: [halaqahId], references: [id], onDelete: Cascade)
+
+  @@map("halaqah_schedules")
+}
+
+// Hafalan Management
+model Hafalan {
+  id        String   @id @default(cuid())
+  surahId   Int
+  surahName String
+  ayahStart Int
+  ayahEnd   Int
+  type      String   // SETORAN, MURAJAAH, TASMI
+  status    String   @default("PENDING") // PENDING, APPROVED, NEEDS_IMPROVEMENT, REJECTED
+  grade     Int?     // 1-100
+  notes     String?
+  recordedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  santriId  String
+  santri    Santri @relation(fields: [santriId], references: [id], onDelete: Cascade)
+  musyrifId String
+  musyrif   User   @relation("MusyrifHafalan", fields: [musyrifId], references: [id])
+
+  @@map("hafalan")
+}
+
+// Attendance Management
+model Attendance {
+  id           String    @id @default(cuid())
+  date         DateTime
+  status       String    // PRESENT, ABSENT, LATE, EXCUSED
+  checkInTime  DateTime?
+  checkOutTime DateTime?
+  notes        String?
+  latitude     Float?
+  longitude    Float?
+  photo        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  santriId  String
+  santri    Santri  @relation(fields: [santriId], references: [id], onDelete: Cascade)
+  halaqahId String
+  halaqah   Halaqah @relation(fields: [halaqahId], references: [id])
+  musyrifId String
+  musyrif   User    @relation("MusyrifAttendance", fields: [musyrifId], references: [id])
+
+  @@unique([santriId, halaqahId, date])
+  @@map("attendance")
+}
+
+// Payment Management
+model Payment {
+  id            String    @id @default(cuid())
+  type          String    // SPP, REGISTRATION, BOOK, UNIFORM, EVENT, OTHER
+  amount        Int       // in cents/rupiah
+  dueDate       DateTime
+  paidDate      DateTime?
+  status        String    @default("PENDING") // PENDING, PAID, OVERDUE, CANCELLED
+  method        String?   // CASH, BANK_TRANSFER, QRIS, E_WALLET, CREDIT_CARD
+  reference     String?   // Midtrans transaction ID
+  notes         String?
+  midtransToken String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  santriId String
+  santri   Santri @relation(fields: [santriId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+// Donation Management
+model Donation {
+  id            String    @id @default(cuid())
+  donorName     String
+  donorEmail    String?
+  donorPhone    String?
+  amount        Int       // in cents/rupiah
+  type          String    // GENERAL, BUILDING, SCHOLARSHIP, EQUIPMENT, RAMADAN, QURBAN
+  method        String    // CASH, BANK_TRANSFER, QRIS, E_WALLET, CREDIT_CARD
+  status        String    @default("PENDING") // PENDING, PAID, OVERDUE, CANCELLED
+  reference     String?   // Midtrans transaction ID
+  message       String?
+  isAnonymous   Boolean   @default(false)
+  midtransToken String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("donations")
+}
+
+// Notification Management
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   // INFO, WARNING, SUCCESS, ERROR, PAYMENT_DUE, ATTENDANCE, HAFALAN, ANNOUNCEMENT
+  isRead    Boolean  @default(false)
+  data      String?  // Additional data as JSON string
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// Audit Log for tracking changes
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // CREATE, UPDATE, DELETE
+  entity    String   // Table name
+  entityId  String   // Record ID
+  oldData   String?  // Previous data as JSON string
+  newData   String?  // New data as JSON string
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// News & Announcements
+model News {
+  id          String    @id @default(cuid())
+  title       String
+  excerpt     String
+  content     String
+  image       String?
+  author      String
+  category    String    // PRESTASI, PENGUMUMAN, KEGIATAN, FASILITAS
+  status      String    @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  featured    Boolean   @default(false)
+  views       Int       @default(0)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("news")
+}
+
+// WhatsApp Integration
+model WhatsAppLog {
+  id          String    @id @default(cuid())
+  recipientId String
+  messageType String
+  messageData String
+  messageId   String
+  status      String    @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
+  sentAt      DateTime  @default(now())
+  deliveredAt DateTime?
+  readAt      DateTime?
+  failedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  recipient User @relation("WhatsAppLogs", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@map("whatsapp_logs")
+}
+
+model WhatsAppIncoming {
+  id             String    @id @default(cuid())
+  senderId       String
+  senderPhone    String
+  messageType    String
+  messageContent String
+  receivedAt     DateTime
+  processed      Boolean   @default(false)
+  processedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  sender User @relation("WhatsAppIncoming", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("whatsapp_incoming")
+}
+
+// Email Integration
+model EmailLog {
+  id        String   @id @default(cuid())
+  recipient String
+  subject   String
+  status    String   @default("PENDING") // PENDING, SENT, FAILED
+  messageId String
+  template  String   @default("")
+  error     String   @default("")
+  sentAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("email_logs")
+}

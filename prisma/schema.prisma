@@ -1,0 +1,885 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+model User {
+  id                    String                 @id @default(cuid())
+  email                 String                 @unique
+  name                  String
+  phone                 String?
+  role                  String
+  password              String
+  avatar                String?
+  isActive              Boolean                @default(true)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  attendanceAsMusyrif   Attendance[]           @relation("MusyrifAttendance")
+  auditLogs             AuditLog[]
+  cartItems             CartItem[]
+  donationsConfirmed    Donation[]             @relation("DonationConfirmer")
+  emailMessages         EmailMessage[]
+  emailTemplates        EmailTemplate[]
+  reportsGenerated      FinancialReport[]      @relation("ReportGenerator")
+  hafalanAsMusyrif      Hafalan[]              @relation("MusyrifHafalan")
+  musyrif               Musyrif[]
+  notificationTemplates NotificationTemplate[]
+  notificationsCreated  Notification[]         @relation("NotificationCreator")
+  notifications         Notification[]
+  orders                Order[]
+  paymentTransactions   PaymentTransaction[]
+  santriAsWali          Santri[]               @relation("WaliSantri")
+  subscriptions         Subscription[]
+  testimonials          Testimonial[]          @relation("Testimonials")
+  themes                Theme[]
+  transactionsCreated   Transaction[]          @relation("TransactionCreator")
+  whatsappIncoming      WhatsAppIncoming[]     @relation("WhatsAppIncoming")
+  whatsappLogs          WhatsAppLog[]          @relation("WhatsAppLogs")
+  whatsappMessages      WhatsAppMessage[]
+
+  @@map("users")
+}
+
+model Santri {
+  id              String            @id @default(cuid())
+  nis             String            @unique
+  name            String
+  birthDate       DateTime
+  birthPlace      String
+  gender          String
+  address         String
+  phone           String?
+  email           String?
+  photo           String?
+  status          String            @default("ACTIVE")
+  enrollmentDate  DateTime          @default(now())
+  graduationDate  DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  waliId          String
+  halaqahId       String?
+  attendance      Attendance[]
+  hafalan         Hafalan[]
+  hafalanProgress HafalanProgress[] @relation("SantriHafalanProgress")
+  payments        Payment[]
+  halaqah         Halaqah?          @relation("SantriHalaqah", fields: [halaqahId], references: [id])
+  wali            User              @relation("WaliSantri", fields: [waliId], references: [id])
+  sppRecords      SPPRecord[]       @relation("SantriSPP")
+  testimonials    Testimonial[]
+  transactions    Transaction[]     @relation("SantriTransactions")
+  achievements    SantriAchievement[]
+
+  @@index([halaqahId], map: "santri_halaqahId_fkey")
+  @@index([waliId], map: "santri_waliId_fkey")
+  @@map("santri")
+}
+
+
+
+model Musyrif {
+  id               String   @id @default(cuid())
+  name             String
+  gender           String
+  birthDate        DateTime
+  birthPlace       String
+  address          String
+  phone            String
+  email            String
+  specialization   String?
+  joinDate         DateTime @default(now())
+  status           String   @default("ACTIVE")
+  photo            String?
+  educationData    String?
+  experienceData   String?
+  certificatesData String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  userId           String?
+  halaqahId        String?  @unique
+  halaqah          Halaqah? @relation("MusyrifHalaqah")
+  user             User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "musyrif_userId_fkey")
+  @@map("musyrif")
+}
+
+model Halaqah {
+  id          String            @id @default(cuid())
+  name        String
+  description String?
+  capacity    Int               @default(20)
+  level       String
+  status      String            @default("ACTIVE")
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  musyrifId   String?           @unique
+  attendance  Attendance[]
+  musyrif     Musyrif?          @relation("MusyrifHalaqah", fields: [musyrifId], references: [id])
+  schedules   HalaqahSchedule[]
+  santri      Santri[]          @relation("SantriHalaqah")
+
+  @@map("halaqah")
+}
+
+model HalaqahSchedule {
+  id        String   @id @default(cuid())
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  room      String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  halaqahId String
+  halaqah   Halaqah  @relation(fields: [halaqahId], references: [id], onDelete: Cascade)
+
+  @@index([halaqahId], map: "halaqah_schedules_halaqahId_fkey")
+  @@map("halaqah_schedules")
+}
+
+model Hafalan {
+  id         String   @id @default(cuid())
+  surahId    Int
+  surahName  String
+  ayahStart  Int
+  ayahEnd    Int
+  type       String
+  status     String   @default("PENDING")
+  grade      Int?
+  notes      String?
+  recordedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  santriId   String
+  musyrifId  String
+  audioUrl   String?
+  musyrif    User     @relation("MusyrifHafalan", fields: [musyrifId], references: [id])
+  santri     Santri   @relation(fields: [santriId], references: [id], onDelete: Cascade)
+
+  @@index([musyrifId], map: "hafalan_musyrifId_fkey")
+  @@index([santriId], map: "hafalan_santriId_fkey")
+  @@map("hafalan")
+}
+
+model HafalanProgress {
+  id          String    @id @default(cuid())
+  santriId    String
+  surahId     Int
+  surahName   String
+  totalAyah   Int
+  memorized   Int       @default(0)
+  inProgress  Int       @default(0)
+  lastAyah    Int       @default(0)
+  startDate   DateTime  @default(now())
+  targetDate  DateTime?
+  completedAt DateTime?
+  status      String    @default("IN_PROGRESS")
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  santri      Santri    @relation("SantriHafalanProgress", fields: [santriId], references: [id], onDelete: Cascade)
+
+  @@unique([santriId, surahId])
+  @@index([santriId], map: "hafalan_progress_santriId_fkey")
+  @@map("hafalan_progress")
+}
+
+model Attendance {
+  id           String    @id @default(cuid())
+  date         DateTime
+  status       String
+  checkInTime  DateTime?
+  checkOutTime DateTime?
+  notes        String?
+  latitude     Float?
+  longitude    Float?
+  photo        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  santriId     String
+  halaqahId    String
+  musyrifId    String
+  halaqah      Halaqah   @relation(fields: [halaqahId], references: [id])
+  musyrif      User      @relation("MusyrifAttendance", fields: [musyrifId], references: [id])
+  santri       Santri    @relation(fields: [santriId], references: [id], onDelete: Cascade)
+
+  @@unique([santriId, halaqahId, date])
+  @@index([halaqahId], map: "attendance_halaqahId_fkey")
+  @@index([musyrifId], map: "attendance_musyrifId_fkey")
+  @@map("attendance")
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  type          String
+  amount        Int
+  dueDate       DateTime
+  paidDate      DateTime?
+  status        String        @default("PENDING")
+  method        String?
+  reference     String?
+  notes         String?
+  midtransToken String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  santriId      String
+  santri        Santri        @relation(fields: [santriId], references: [id], onDelete: Cascade)
+  transactions  Transaction[]
+
+  @@index([santriId], map: "payments_santriId_fkey")
+  @@map("payments")
+}
+
+model SPPSetting {
+  id          String      @id @default(cuid())
+  name        String
+  amount      Float
+  description String?
+  isActive    Boolean     @default(true)
+  level       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  sppRecords  SPPRecord[]
+
+  @@map("spp_settings")
+}
+
+model SPPRecord {
+  id            String       @id @default(cuid())
+  month         Int
+  year          Int
+  amount        Float
+  dueDate       DateTime
+  paidDate      DateTime?
+  status        String       @default("PENDING")
+  paidAmount    Float        @default(0)
+  discount      Float        @default(0)
+  fine          Float        @default(0)
+  notes         String?
+  paymentMethod String?
+  receiptNumber String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  santriId      String
+  sppSettingId  String
+  transactionId String?      @unique
+  santri        Santri       @relation("SantriSPP", fields: [santriId], references: [id], onDelete: Cascade)
+  sppSetting    SPPSetting   @relation(fields: [sppSettingId], references: [id])
+  transaction   Transaction? @relation("SPPTransaction", fields: [transactionId], references: [id])
+
+  @@unique([santriId, month, year])
+  @@index([sppSettingId], map: "spp_records_sppSettingId_fkey")
+  @@map("spp_records")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  oldData   String?
+  newData   String?
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "audit_logs_userId_fkey")
+  @@map("audit_logs")
+}
+
+model News {
+  id          String    @id @default(cuid())
+  title       String
+  excerpt     String
+  content     String
+  image       String?
+  author      String
+  category    String
+  status      String    @default("DRAFT")
+  featured    Boolean   @default(false)
+  views       Int       @default(0)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("news")
+}
+
+model WhatsAppLog {
+  id          String    @id @default(cuid())
+  recipientId String
+  messageType String
+  messageData String
+  messageId   String
+  status      String    @default("PENDING")
+  sentAt      DateTime  @default(now())
+  deliveredAt DateTime?
+  readAt      DateTime?
+  failedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  recipient   User      @relation("WhatsAppLogs", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId], map: "whatsapp_logs_recipientId_fkey")
+  @@map("whatsapp_logs")
+}
+
+model WhatsAppIncoming {
+  id             String    @id @default(cuid())
+  senderId       String
+  senderPhone    String
+  messageType    String
+  messageContent String
+  receivedAt     DateTime
+  processed      Boolean   @default(false)
+  processedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  sender         User      @relation("WhatsAppIncoming", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([senderId], map: "whatsapp_incoming_senderId_fkey")
+  @@map("whatsapp_incoming")
+}
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  recipient String
+  subject   String
+  status    String   @default("PENDING")
+  messageId String
+  template  String   @default("")
+  error     String   @default("")
+  sentAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("email_logs")
+}
+
+model Program {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  features    String
+  duration    String
+  ageGroup    String
+  schedule    String
+  price       String
+  image       String?
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("programs")
+}
+
+model Testimonial {
+  id         String   @id @default(cuid())
+  content    String
+  rating     Int      @default(5)
+  isApproved Boolean  @default(false)
+  isFeatured Boolean  @default(false)
+  santriId   String?
+  waliId     String?
+  authorName String
+  authorRole String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  santri     Santri?  @relation(fields: [santriId], references: [id])
+  wali       User?    @relation("Testimonials", fields: [waliId], references: [id])
+
+  @@index([santriId], map: "testimonials_santriId_fkey")
+  @@index([waliId], map: "testimonials_waliId_fkey")
+  @@map("testimonials")
+}
+
+model AchievementBadge {
+  id             String              @id @default(cuid())
+  name           String
+  nameArabic     String
+  description    String
+  icon           String
+  color          String
+  category       String
+  criteriaType   String
+  criteriaValue  Int
+  criteriaCondition String
+  timeframe      String?
+  rarity         String
+  points         Int
+  isActive       Boolean             @default(true)
+  unlockMessage  String
+  shareMessage   String
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  achievements   SantriAchievement[]
+
+  @@map("achievement_badges")
+}
+
+
+
+model SantriAchievement {
+  id                  String           @id @default(cuid())
+  santriId            String
+  badgeId             String
+  achievedAt          DateTime         @default(now())
+  progress            Int              @default(100)
+  isUnlocked          Boolean          @default(true)
+  notificationSent    Boolean          @default(false)
+  certificateGenerated Boolean         @default(false)
+  certificateUrl      String?
+  sharedAt            DateTime?
+  metadata            String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  santri              Santri           @relation(fields: [santriId], references: [id], onDelete: Cascade)
+  badge               AchievementBadge @relation(fields: [badgeId], references: [id])
+
+  @@unique([santriId, badgeId])
+  @@index([santriId], map: "santri_achievements_santriId_fkey")
+  @@index([badgeId], map: "santri_achievements_badgeId_fkey")
+  @@map("santri_achievements")
+}
+
+model FinancialAccount {
+  id            String        @id @default(cuid())
+  name          String
+  type          String
+  accountNumber String?
+  balance       Float         @default(0)
+  isActive      Boolean       @default(true)
+  description   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  transactions  Transaction[]
+
+  @@map("financial_accounts")
+}
+
+model Transaction {
+  id              String           @id @default(cuid())
+  type            String
+  category        String
+  amount          Float
+  description     String
+  reference       String?
+  accountId       String
+  santriId        String?
+  donationId      String?
+  paymentId       String?
+  transactionDate DateTime         @default(now())
+  createdBy       String
+  attachments     String?
+  tags            String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  sppRecord       SPPRecord?       @relation("SPPTransaction")
+  account         FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdByUser   User             @relation("TransactionCreator", fields: [createdBy], references: [id])
+  donation        Donation?        @relation(fields: [donationId], references: [id])
+  payment         Payment?         @relation(fields: [paymentId], references: [id])
+  santri          Santri?          @relation("SantriTransactions", fields: [santriId], references: [id])
+
+  @@index([accountId], map: "transactions_accountId_fkey")
+  @@index([createdBy], map: "transactions_createdBy_fkey")
+  @@index([donationId], map: "transactions_donationId_fkey")
+  @@index([paymentId], map: "transactions_paymentId_fkey")
+  @@index([santriId], map: "transactions_santriId_fkey")
+  @@map("transactions")
+}
+
+model Donation {
+  id              String           @id @default(cuid())
+  donorName       String
+  donorEmail      String?
+  donorPhone      String?
+  amount          Float
+  type            String
+  message         String?
+  isAnonymous     Boolean          @default(false)
+  status          String           @default("PENDING")
+  paymentMethod   String?
+  paymentProof    String?
+  confirmedBy     String?
+  confirmedAt     DateTime?
+  categoryId      String?
+  reference       String?          // Add reference field
+  midtransToken   String?          // Add midtransToken field
+  method          String?          // Add method field
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  confirmedByUser User?            @relation("DonationConfirmer", fields: [confirmedBy], references: [id])
+  category        DonationCategory? @relation("CategoryDonations", fields: [categoryId], references: [id])
+  transactions    Transaction[]
+
+  @@index([confirmedBy], map: "donations_confirmedBy_fkey")
+  @@index([categoryId], map: "donations_categoryId_fkey")
+  @@map("donations")
+}
+
+model FinancialReport {
+  id              String   @id @default(cuid())
+  title           String
+  type            String
+  periodStart     DateTime
+  periodEnd       DateTime
+  totalIncome     Float
+  totalExpense    Float
+  netIncome       Float
+  reportData      String
+  generatedBy     String
+  filePath        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  generatedByUser User     @relation("ReportGenerator", fields: [generatedBy], references: [id])
+
+  @@index([generatedBy], map: "financial_reports_generatedBy_fkey")
+  @@map("financial_reports")
+}
+
+model Notification {
+  id            String            @id @default(cuid())
+  title         String
+  message       String
+  type          String
+  priority      String            @default("NORMAL")
+  status        String            @default("PENDING")
+  channels      String
+  recipientId   String?
+  recipientType String?
+  metadata      String?
+  scheduledAt   DateTime?
+  sentAt        DateTime?
+  readAt        DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  createdBy     String
+  logs          NotificationLog[]
+  creator       User              @relation("NotificationCreator", fields: [createdBy], references: [id])
+  recipient     User?             @relation(fields: [recipientId], references: [id])
+
+  @@index([createdBy], map: "notifications_createdBy_fkey")
+  @@index([recipientId], map: "notifications_recipientId_fkey")
+  @@map("notifications")
+}
+
+model NotificationTemplate {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  title     String
+  message   String
+  type      String
+  channels  String
+  variables String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  creator   User     @relation(fields: [createdBy], references: [id])
+
+  @@index([createdBy], map: "notification_templates_createdBy_fkey")
+  @@map("notification_templates")
+}
+
+model NotificationLog {
+  id             String       @id @default(cuid())
+  notificationId String
+  channel        String
+  recipient      String
+  status         String
+  response       String?
+  attemptCount   Int          @default(1)
+  lastAttemptAt  DateTime     @default(now())
+  deliveredAt    DateTime?
+  errorMessage   String?
+  createdAt      DateTime     @default(now())
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@index([notificationId], map: "notification_logs_notificationId_fkey")
+  @@map("notification_logs")
+}
+
+model WhatsAppMessage {
+  id                String    @id @default(cuid())
+  recipient         String
+  messageType       String
+  content           String
+  status            String
+  whatsappMessageId String?
+  templateName      String?
+  parameters        String?
+  errorMessage      String?
+  context           String?
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  readAt            DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  userId            String?
+  user              User?     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "whatsapp_messages_userId_fkey")
+  @@map("whatsapp_messages")
+}
+
+model EmailMessage {
+  id           String    @id @default(cuid())
+  recipient    String
+  subject      String
+  content      String
+  status       String
+  messageId    String?
+  priority     String    @default("NORMAL")
+  errorMessage String?
+  context      String?
+  sentAt       DateTime?
+  deliveredAt  DateTime?
+  bouncedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  userId       String?
+  user         User?     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "email_messages_userId_fkey")
+  @@map("email_messages")
+}
+
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  subject     String
+  html        String
+  text        String?
+  variables   String?
+  description String?
+  category    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String
+  creator     User     @relation(fields: [createdBy], references: [id])
+
+  @@index([createdBy], map: "email_templates_createdBy_fkey")
+  @@map("email_templates")
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  category    String
+  key         String
+  value       String
+  description String?
+  isEncrypted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([category, key], name: "category_key")
+  @@map("system_settings")
+}
+
+model PaymentTransaction {
+  id              String    @id @default(cuid())
+  paymentId       String    @unique
+  orderId         String    @unique
+  gateway         String
+  amount          Float
+  currency        String    @default("IDR")
+  status          String
+  customerId      String
+  items           String
+  metadata        String?
+  gatewayResponse String?
+  paidAt          DateTime?
+  expiresAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  customer        User      @relation(fields: [customerId], references: [id])
+
+  @@index([customerId], map: "payment_transactions_customerId_fkey")
+  @@map("payment_transactions")
+}
+
+model CartItem {
+  id          String   @id @default(cuid())
+  cartId      String
+  userId      String?
+  itemType    String
+  itemId      String
+  name        String
+  description String?
+  price       Float
+  quantity    Int      @default(1)
+  metadata    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "cart_items_userId_fkey")
+  @@map("cart_items")
+}
+
+model PaymentMethod {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  gateway     String
+  isActive    Boolean  @default(true)
+  icon        String?
+  description String?
+  config      String?
+  fees        Float?
+  minAmount   Float?
+  maxAmount   Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("payment_methods")
+}
+
+model Order {
+  id             String    @id
+  customerId     String?
+  customerName   String
+  customerEmail  String
+  customerPhone  String?
+  items          String
+  subtotal       Float
+  tax            Float     @default(0)
+  discount       Float     @default(0)
+  total          Float
+  status         String    @default("PENDING")
+  paymentId      String?
+  paymentGateway String?
+  paymentMethod  String?
+  paidAt         DateTime?
+  metadata       String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  customer       User?     @relation(fields: [customerId], references: [id])
+
+  @@index([customerId], map: "orders_customerId_fkey")
+  @@map("orders")
+}
+
+model Subscription {
+  id                    String                @id @default(cuid())
+  studentId             String
+  planType              String
+  amount                Float
+  currency              String                @default("IDR")
+  status                String                @default("ACTIVE")
+  startDate             DateTime
+  endDate               DateTime?
+  nextBillingDate       DateTime
+  billingCycle          String                @default("MONTHLY")
+  paymentMethod         String?
+  gateway               String?
+  gatewaySubscriptionId String?
+  autoRenewal           Boolean               @default(true)
+  trialEndDate          DateTime?
+  metadata              String?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  createdBy             String?
+  billings              SubscriptionBilling[]
+  student               User                  @relation(fields: [studentId], references: [id])
+
+  @@index([studentId], map: "subscriptions_studentId_fkey")
+  @@map("subscriptions")
+}
+
+model SubscriptionBilling {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  billingDate    DateTime
+  amount         Float
+  status         String       @default("PENDING")
+  paymentId      String?
+  orderId        String?
+  dueDate        DateTime
+  paidAt         DateTime?
+  failureReason  String?
+  retryCount     Int          @default(0)
+  nextRetryDate  DateTime?
+  metadata       String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+
+  @@index([subscriptionId], map: "subscription_billings_subscriptionId_fkey")
+  @@map("subscription_billings")
+}
+
+model SubscriptionPlan {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  amount       Float
+  currency     String   @default("IDR")
+  billingCycle String
+  trialDays    Int      @default(0)
+  features     String?
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  metadata     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("subscription_plans")
+}
+
+model SiteSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  type        String
+  category    String
+  label       String
+  description String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+model Theme {
+  id        String   @id @default(cuid())
+  name      String
+  colors    Json
+  buttons   Json
+  fonts     Json
+  layout    Json
+  logo      Json
+  isActive  Boolean  @default(false)
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("themes")
+}
+
+model DonationCategory {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  target      Float
+  collected   Float    @default(0)
+  icon        String
+  color       String
+  bgColor     String
+  urgent      Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  donations   Donation[] @relation("CategoryDonations")
+
+  @@map("donation_categories")
+}
+

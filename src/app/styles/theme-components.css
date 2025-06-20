@@ -1,0 +1,306 @@
+/* Apply theme to all components */
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text);
+}
+
+/* Links */
+a {
+  color: var(--button-primary);
+}
+
+a:hover {
+  color: var(--button-info);
+}
+
+/* Buttons */
+.bg-teal-600 {
+  background-color: var(--button-primary) !important;
+}
+
+.bg-teal-700 {
+  background-color: var(--button-primary) !important;
+  opacity: 0.9;
+}
+
+.text-teal-600 {
+  color: var(--color-primary) !important;
+}
+
+.border-teal-600 {
+  border-color: var(--color-primary) !important;
+}
+
+.border-teal-500 {
+  border-color: var(--color-primary) !important;
+}
+
+.focus\:ring-teal-500:focus {
+  --tw-ring-color: var(--color-primary) !important;
+}
+
+/* Cards */
+.card {
+  border-radius: var(--border-radius);
+}
+
+/* Inputs */
+input, select, textarea {
+  border-radius: var(--border-radius) !important;
+}
+
+/* Tables */
+table {
+  border-radius: var(--border-radius);
+}
+
+/* Alerts */
+.alert {
+  border-radius: var(--border-radius);
+}
+
+.alert-success {
+  background-color: var(--color-success);
+}
+
+.alert-warning {
+  background-color: var(--color-warning);
+}
+
+.alert-error {
+  background-color: var(--color-error);
+}
+
+/* Navigation */
+.nav-link {
+  color: var(--color-text);
+}
+
+.nav-link:hover {
+  color: var(--button-primary);
+}
+
+.nav-link.active {
+  color: var(--button-primary);
+  border-color: var(--button-primary);
+}
+
+/* Sidebar */
+.sidebar {
+  background-color: var(--color-background);
+}
+
+/* Dashboard */
+.dashboard-card {
+  border-radius: var(--border-radius);
+  background-color: var(--color-background);
+}
+
+/* Forms */
+.form-control {
+  border-radius: var(--border-radius);
+}
+
+.form-label {
+  color: var(--color-text);
+}
+
+/* Badges */
+.badge {
+  border-radius: var(--border-radius);
+}
+
+.badge-primary {
+  background-color: var(--button-primary);
+  color: white;
+}
+
+.badge-secondary {
+  background-color: var(--button-secondary);
+  color: white;
+}
+
+.badge-success {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.badge-warning {
+  background-color: var(--color-warning);
+  color: var(--color-text);
+}
+
+.badge-danger {
+  background-color: var(--color-error);
+  color: white;
+}
+
+/* Modals */
+.modal {
+  border-radius: var(--border-radius);
+}
+
+.modal-header {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* Tooltips */
+.tooltip {
+  border-radius: var(--border-radius);
+}
+
+/* Progress bars */
+.progress {
+  border-radius: var(--border-radius);
+}
+
+.progress-bar {
+  background-color: var(--button-primary);
+}
+
+/* Pagination */
+.pagination .page-item.active .page-link {
+  background-color: var(--button-primary);
+  border-color: var(--button-primary);
+}
+
+.pagination .page-link {
+  color: var(--button-primary);
+}
+
+/* Tabs */
+.nav-tabs .nav-link.active {
+  color: var(--button-primary);
+  border-color: var(--button-primary);
+}
+
+.nav-tabs .nav-link:hover {
+  border-color: var(--button-primary);
+}
+
+/* Dropdowns */
+.dropdown-item:hover {
+  background-color: var(--button-primary);
+  color: white;
+}
+
+/* Toasts */
+.toast {
+  border-radius: var(--border-radius);
+}
+
+/* Breadcrumbs */
+.breadcrumb-item.active {
+  color: var(--button-primary);
+}
+
+/* Lists */
+.list-group-item {
+  border-radius: var(--border-radius);
+}
+
+/* Spinners */
+.spinner-border {
+  color: var(--button-primary);
+}
+
+/* Switches */
+.form-switch .form-check-input:checked {
+  background-color: var(--button-primary);
+  border-color: var(--button-primary);
+}
+
+/* Checkboxes and Radios */
+.form-check-input:checked {
+  background-color: var(--button-primary);
+  border-color: var(--button-primary);
+}
+
+/* Range inputs */
+.form-range::-webkit-slider-thumb {
+  background-color: var(--button-primary);
+}
+
+.form-range::-moz-range-thumb {
+  background-color: var(--button-primary);
+}
+
+/* File inputs */
+.form-file-button {
+  background-color: var(--button-primary);
+  color: white;
+}
+
+/* Datepickers */
+.datepicker-cell.selected {
+  background-color: var(--button-primary);
+}
+
+/* Charts */
+.chart-primary {
+  background-color: var(--button-primary);
+}
+
+.chart-secondary {
+  background-color: var(--button-secondary);
+}
+
+.chart-success {
+  background-color: var(--color-success);
+}
+
+.chart-warning {
+  background-color: var(--color-warning);
+}
+
+.chart-danger {
+  background-color: var(--color-error);
+}
+
+/* Icons */
+.icon-primary {
+  color: var(--button-primary);
+}
+
+.icon-secondary {
+  color: var(--button-secondary);
+}
+
+.icon-success {
+  color: var(--color-success);
+}
+
+.icon-warning {
+  color: var(--color-warning);
+}
+
+.icon-danger {
+  color: var(--color-error);
+}
+
+/* Avatars */
+.avatar {
+  border-radius: var(--border-radius);
+}
+
+/* Containers */
+.container {
+  max-width: var(--container-width);
+}
+
+/* Arabic text */
+.arabic-text {
+  font-family: var(--font-arabic);
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+/* Body text */
+body, p, div, span {
+  font-family: var(--font-body);
+}

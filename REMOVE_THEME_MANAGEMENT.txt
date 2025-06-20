@@ -1,0 +1,22 @@
+TODO: Remove these files and folders for hardcoded theme only:
+
+- src/lib/theme-context.tsx
+- src/lib/apply-theme.ts
+- src/app/api/theme/
+- src/app/dashboard/admin/theme-customizer/
+- src/styles/theme-variables.css
+- src/styles/theme-components.css
+- src/app/styles/theme-variables.css
+- src/app/styles/theme-components.css
+- prisma/seed-theme.ts
+- prisma/seed-theme.js
+- prisma/migrations/add_theme_model.sql
+- prisma/migrations/add_buttons_to_theme.sql
+- prisma/schema.prisma (hapus model Theme jika tidak dipakai)
+
+Setelah itu, gunakan style baku di CSS dan komponen utama dengan warna:
+- Primary: #E6CF00
+- Secondary: #008080
+- Accent: #00d1c3
+
+Lanjutkan dengan update global CSS dan komponen utama (navbar, button, card, dsb) agar konsisten dan harmonis.

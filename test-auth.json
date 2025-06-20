@@ -1,0 +1,7 @@
+{
+  "email": "bapak.ahmad@gmail.com",
+  "password": "wali123",
+  "deviceId": "test-device-123",
+  "deviceType": "android",
+  "fcmToken": "test-fcm-token"
+}
