@@ -5,6 +5,7 @@ Sistem Informasi Manajemen Rumah Tahfidz yang modern dan terintegrasi untuk meng
 ## ✨ Fitur Utama
 
 ### 🏠 **Homepage & Landing Page**
+
 - Hero section dengan gradient kuning emas dan teal
 - Statistik real-time (santri aktif, hafidz, pengalaman)
 - Program unggulan dengan detail lengkap
@@ -13,11 +14,13 @@ Sistem Informasi Manajemen Rumah Tahfidz yang modern dan terintegrasi untuk meng
 - Sistem donasi terintegrasi
 
 ### 👥 **Multi-Role System**
+
 - **Admin**: Manajemen lengkap sistem
 - **Musyrif/Guru**: Kelola santri dan hafalan
 - **Wali Santri**: Pantau progress anak
 
 ### 📚 **Program Tahfidz**
+
 - Tahfidz Intensif (30 juz dalam 2-3 tahun)
 - Tahfidz Reguler (jadwal fleksibel)
 - Tahsin & Tajwid (perbaikan bacaan)
@@ -26,6 +29,7 @@ Sistem Informasi Manajemen Rumah Tahfidz yang modern dan terintegrasi untuk meng
 - Akhlak & Adab
 
 ### 💰 **Sistem Donasi**
+
 - Multiple kategori donasi
 - Progress tracking real-time
 - Multiple payment methods
@@ -44,12 +48,14 @@ Sistem Informasi Manajemen Rumah Tahfidz yang modern dan terintegrasi untuk meng
 ## 🎨 Design System
 
 ### Warna Utama
+
 - **Primary**: Teal (#008080) - Warna utama Islamic
 - **Secondary**: Gold (#fbbf24) - Aksen emas
 - **Accent**: Islamic Green (#22c55e)
 - **Background**: White dengan pattern Islamic
 
 ### Typography
+
 - **Latin**: Inter font family
 - **Arabic**: Amiri font family
 - **Quran**: Uthmanic font (planned)
@@ -57,18 +63,21 @@ Sistem Informasi Manajemen Rumah Tahfidz yang modern dan terintegrasi untuk meng
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - npm atau yarn
 
 ### Installation
 
 1. **Clone repository**
+
 ```bash
 git clone https://github.com/bestsolutioncell/sistem-informasi-TPQ-baitus-shuffah
 cd sistem-informasi-TPQ-baitus-shuffah
 ```
 
 2. **Install dependencies**
+
 ```bash
 npm install
 ```
@@ -187,13 +196,13 @@ Untuk testing, gunakan akun demo berikut:
 - **Dashboard**: `/dashboard/admin`
 
 ### Musyrif/Guru
-- **Email**: musyrif@rumahtahfidz.com
+- **Email**: ustadz.abdullah@rumahtahfidz.com
 - **Password**: musyrif123
 - **Access**: Student & hafalan management
 - **Dashboard**: `/dashboard/musyrif`
 
 ### Wali Santri
-- **Email**: wali@rumahtahfidz.com
+- **Email**: bapak.ahmad@gmail.com
 - **Password**: wali123
 - **Access**: View child progress
 - **Dashboard**: `/dashboard/wali`
