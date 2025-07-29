@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { uploadToCloudinary } from '@/lib/cloudinary';
+import { NextRequest, NextResponse } from "next/server";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const folder = formData.get('folder') as string || 'rumah-tahfidz';
+    const file = formData.get("file") as File;
+    const folder = (formData.get("folder") as string) || "rumah-tahfidz";
 
     if (!file) {
       return NextResponse.json(
-        { success: false, error: 'No file provided' },
-        { status: 400 }
+        { success: false, error: "No file provided" },
+        { status: 400 },
       );
     }
 
@@ -18,24 +18,24 @@ export async function POST(request: NextRequest) {
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
       return NextResponse.json(
-        { success: false, error: 'File size exceeds 5MB limit' },
-        { status: 400 }
+        { success: false, error: "File size exceeds 5MB limit" },
+        { status: 400 },
       );
     }
 
     // Validate file type
     const allowedTypes = [
-      'image/jpeg',
-      'image/jpg', 
-      'image/png',
-      'image/webp',
-      'application/pdf'
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "application/pdf",
     ];
 
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { success: false, error: 'File type not allowed' },
-        { status: 400 }
+        { success: false, error: "File type not allowed" },
+        { status: 400 },
       );
     }
 
@@ -58,20 +58,19 @@ export async function POST(request: NextRequest) {
         publicId: result.publicId,
         fileName: file.name,
         size: file.size,
-        type: file.type
+        type: file.type,
       });
     } else {
       return NextResponse.json(
         { success: false, error: result.error },
-        { status: 500 }
+        { status: 500 },
       );
     }
-
   } catch (error) {
-    console.error('Upload API error:', error);
+    console.error("Upload API error:", error);
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
+      { success: false, error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
@@ -80,12 +79,12 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const publicId = searchParams.get('publicId');
+    const publicId = searchParams.get("publicId");
 
     if (!publicId) {
       return NextResponse.json(
-        { success: false, error: 'No public ID provided' },
-        { status: 400 }
+        { success: false, error: "No public ID provided" },
+        { status: 400 },
       );
     }
 
@@ -95,14 +94,13 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'File deleted successfully'
+      message: "File deleted successfully",
     });
-
   } catch (error) {
-    console.error('Delete API error:', error);
+    console.error("Delete API error:", error);
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
+      { success: false, error: "Internal server error" },
+      { status: 500 },
     );
   }
 }

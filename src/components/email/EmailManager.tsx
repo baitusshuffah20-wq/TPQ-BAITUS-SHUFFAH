@@ -1,26 +1,26 @@
-'use client';
+﻿"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Mail, 
-  Send, 
-  Clock, 
-  CheckCircle, 
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Mail,
+  Send,
+  Clock,
+  CheckCircle,
   XCircle,
   Users,
   BarChart3,
   Settings,
   FileText,
   Calendar,
-  CreditCard
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  CreditCard,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface EmailLog {
   id: string;
@@ -45,9 +45,9 @@ export default function EmailManager() {
   const [stats, setStats] = useState<EmailStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
-  const [emailSubject, setEmailSubject] = useState('');
-  const [emailContent, setEmailContent] = useState('');
-  const [emailType, setEmailType] = useState('custom');
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailContent, setEmailContent] = useState("");
+  const [emailType, setEmailType] = useState("custom");
 
   useEffect(() => {
     loadEmailData();
@@ -56,55 +56,59 @@ export default function EmailManager() {
   const loadEmailData = async () => {
     try {
       setLoading(true);
-      
+
       // Load email logs
-      const logsResponse = await fetch('/api/email/logs');
+      const logsResponse = await fetch("/api/email/logs");
       if (logsResponse.ok) {
         const logsData = await logsResponse.json();
         setLogs(logsData.logs);
       }
 
       // Load email statistics
-      const statsResponse = await fetch('/api/email/stats');
+      const statsResponse = await fetch("/api/email/stats");
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         setStats(statsData.overview);
       }
     } catch (error) {
-      console.error('Error loading email data:', error);
-      toast.error('Gagal memuat data email');
+      console.error("Error loading email data:", error);
+      toast.error("Gagal memuat data email");
     } finally {
       setLoading(false);
     }
   };
 
   const sendBulkEmail = async () => {
-    if (!emailSubject.trim() || !emailContent.trim() || selectedRecipients.length === 0) {
-      toast.error('Lengkapi semua field dan pilih penerima');
+    if (
+      !emailSubject.trim() ||
+      !emailContent.trim() ||
+      selectedRecipients.length === 0
+    ) {
+      toast.error("Lengkapi semua field dan pilih penerima");
       return;
     }
 
     try {
       setLoading(true);
-      
-      const promises = selectedRecipients.map(recipientId =>
-        fetch('/api/email/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+
+      const promises = selectedRecipients.map((recipientId) =>
+        fetch("/api/email/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: emailType,
             recipientId,
-            data: { 
+            data: {
               subject: emailSubject,
-              html: emailContent.replace(/\n/g, '<br>'),
-              text: emailContent
-            }
-          })
-        })
+              html: emailContent.replace(/\n/g, "<br>"),
+              text: emailContent,
+            },
+          }),
+        }),
       );
 
       const results = await Promise.allSettled(promises);
-      const successful = results.filter(r => r.status === 'fulfilled').length;
+      const successful = results.filter((r) => r.status === "fulfilled").length;
       const failed = results.length - successful;
 
       if (successful > 0) {
@@ -112,16 +116,16 @@ export default function EmailManager() {
         if (failed > 0) {
           toast.error(`${failed} email gagal dikirim`);
         }
-        setEmailSubject('');
-        setEmailContent('');
+        setEmailSubject("");
+        setEmailContent("");
         setSelectedRecipients([]);
         loadEmailData();
       } else {
-        toast.error('Semua email gagal dikirim');
+        toast.error("Semua email gagal dikirim");
       }
     } catch (error) {
-      console.error('Error sending bulk email:', error);
-      toast.error('Gagal mengirim email');
+      console.error("Error sending bulk email:", error);
+      toast.error("Gagal mengirim email");
     } finally {
       setLoading(false);
     }
@@ -130,25 +134,26 @@ export default function EmailManager() {
   const sendTestEmail = async () => {
     try {
       setLoading(true);
-      
-      const response = await fetch('/api/email/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+
+      const response = await fetch("/api/email/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          subject: 'Test Email dari Rumah Tahfidz',
-          message: 'Test email untuk memastikan konfigurasi SMTP berfungsi dengan baik.'
-        })
+          subject: "Test Email dari Rumah Tahfidz",
+          message:
+            "Test email untuk memastikan konfigurasi SMTP berfungsi dengan baik.",
+        }),
       });
 
       if (response.ok) {
-        toast.success('Test email berhasil dikirim');
+        toast.success("Test email berhasil dikirim");
       } else {
         const error = await response.json();
         toast.error(`Gagal mengirim test email: ${error.error}`);
       }
     } catch (error) {
-      console.error('Error sending test email:', error);
-      toast.error('Gagal mengirim test email');
+      console.error("Error sending test email:", error);
+      toast.error("Gagal mengirim test email");
     } finally {
       setLoading(false);
     }
@@ -156,9 +161,13 @@ export default function EmailManager() {
 
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'sent':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Terkirim</Badge>;
-      case 'failed':
+      case "sent":
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            Terkirim
+          </Badge>
+        );
+      case "failed":
         return <Badge variant="destructive">Gagal</Badge>;
       default:
         return <Badge variant="secondary">Pending</Badge>;
@@ -167,9 +176,9 @@ export default function EmailManager() {
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'sent':
+      case "sent":
         return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'failed':
+      case "failed":
         return <XCircle className="h-4 w-4 text-red-500" />;
       default:
         return <Clock className="h-4 w-4 text-yellow-500" />;
@@ -178,16 +187,16 @@ export default function EmailManager() {
 
   const getTemplateIcon = (template: string) => {
     switch (template) {
-      case 'welcome':
+      case "welcome":
         return <Users className="h-4 w-4" />;
-      case 'hafalan_progress':
+      case "hafalan_progress":
         return <FileText className="h-4 w-4" />;
-      case 'monthly_report':
+      case "monthly_report":
         return <BarChart3 className="h-4 w-4" />;
-      case 'payment_invoice':
-      case 'payment_confirmation':
+      case "payment_invoice":
+      case "payment_confirmation":
         return <CreditCard className="h-4 w-4" />;
-      case 'attendance_notification':
+      case "attendance_notification":
         return <Calendar className="h-4 w-4" />;
       default:
         return <Mail className="h-4 w-4" />;
@@ -203,8 +212,12 @@ export default function EmailManager() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Terkirim</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalSent}</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Total Terkirim
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {stats.totalSent}
+                  </p>
                 </div>
                 <Mail className="h-8 w-8 text-blue-500" />
               </div>
@@ -216,7 +229,9 @@ export default function EmailManager() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Berhasil</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.successful}</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {stats.successful}
+                  </p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-500" />
               </div>
@@ -227,8 +242,12 @@ export default function EmailManager() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Tingkat Sukses</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.successRate}%</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Tingkat Sukses
+                  </p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {stats.successRate}%
+                  </p>
                 </div>
                 <BarChart3 className="h-8 w-8 text-green-500" />
               </div>
@@ -240,7 +259,9 @@ export default function EmailManager() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Gagal</p>
-                  <p className="text-2xl font-bold text-red-600">{stats.failed}</p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {stats.failed}
+                  </p>
                 </div>
                 <XCircle className="h-8 w-8 text-red-500" />
               </div>
@@ -267,7 +288,9 @@ export default function EmailManager() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Jenis Email</label>
+                <label className="block text-sm font-medium mb-2">
+                  Jenis Email
+                </label>
                 <select
                   value={emailType}
                   onChange={(e) => setEmailType(e.target.value)}
@@ -278,13 +301,17 @@ export default function EmailManager() {
                   <option value="hafalan_progress">Laporan Hafalan</option>
                   <option value="monthly_report">Laporan Bulanan</option>
                   <option value="payment_invoice">Invoice Pembayaran</option>
-                  <option value="attendance_notification">Notifikasi Absensi</option>
+                  <option value="attendance_notification">
+                    Notifikasi Absensi
+                  </option>
                   <option value="newsletter">Newsletter</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Subject</label>
+                <label className="block text-sm font-medium mb-2">
+                  Subject
+                </label>
                 <Input
                   value={emailSubject}
                   onChange={(e) => setEmailSubject(e.target.value)}
@@ -293,7 +320,9 @@ export default function EmailManager() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Konten Email</label>
+                <label className="block text-sm font-medium mb-2">
+                  Konten Email
+                </label>
                 <Textarea
                   value={emailContent}
                   onChange={(e) => setEmailContent(e.target.value)}
@@ -316,13 +345,18 @@ export default function EmailManager() {
               <div className="flex gap-2">
                 <Button
                   onClick={sendBulkEmail}
-                  disabled={loading || !emailSubject.trim() || !emailContent.trim() || selectedRecipients.length === 0}
+                  disabled={
+                    loading ||
+                    !emailSubject.trim() ||
+                    !emailContent.trim() ||
+                    selectedRecipients.length === 0
+                  }
                   className="flex items-center gap-2"
                 >
                   <Send className="h-4 w-4" />
                   Kirim Email
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   onClick={sendTestEmail}
@@ -367,7 +401,7 @@ export default function EmailManager() {
                               To: {log.recipient}
                             </p>
                             <p className="text-xs text-gray-400">
-                              {new Date(log.sentAt).toLocaleString('id-ID')}
+                              {new Date(log.sentAt).toLocaleString("id-ID")}
                             </p>
                           </div>
                         </div>
@@ -399,20 +433,55 @@ export default function EmailManager() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
-                  { id: 'welcome', name: 'Selamat Datang', icon: Users, description: 'Email untuk pengguna baru' },
-                  { id: 'hafalan_progress', name: 'Laporan Hafalan', icon: FileText, description: 'Progress hafalan santri' },
-                  { id: 'monthly_report', name: 'Laporan Bulanan', icon: BarChart3, description: 'Laporan bulanan lengkap' },
-                  { id: 'payment_invoice', name: 'Invoice Pembayaran', icon: CreditCard, description: 'Tagihan pembayaran' },
-                  { id: 'attendance_notification', name: 'Notifikasi Absensi', icon: Calendar, description: 'Pemberitahuan kehadiran' },
-                  { id: 'newsletter', name: 'Newsletter', icon: Mail, description: 'Berita dan pengumuman' }
+                  {
+                    id: "welcome",
+                    name: "Selamat Datang",
+                    icon: Users,
+                    description: "Email untuk pengguna baru",
+                  },
+                  {
+                    id: "hafalan_progress",
+                    name: "Laporan Hafalan",
+                    icon: FileText,
+                    description: "Progress hafalan santri",
+                  },
+                  {
+                    id: "monthly_report",
+                    name: "Laporan Bulanan",
+                    icon: BarChart3,
+                    description: "Laporan bulanan lengkap",
+                  },
+                  {
+                    id: "payment_invoice",
+                    name: "Invoice Pembayaran",
+                    icon: CreditCard,
+                    description: "Tagihan pembayaran",
+                  },
+                  {
+                    id: "attendance_notification",
+                    name: "Notifikasi Absensi",
+                    icon: Calendar,
+                    description: "Pemberitahuan kehadiran",
+                  },
+                  {
+                    id: "newsletter",
+                    name: "Newsletter",
+                    icon: Mail,
+                    description: "Berita dan pengumuman",
+                  },
                 ].map((template) => (
-                  <Card key={template.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                  <Card
+                    key={template.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3">
                         <template.icon className="h-8 w-8 text-blue-500" />
                         <div>
                           <h4 className="font-medium">{template.name}</h4>
-                          <p className="text-sm text-gray-500">{template.description}</p>
+                          <p className="text-sm text-gray-500">
+                            {template.description}
+                          </p>
                         </div>
                       </div>
                     </CardContent>
@@ -433,39 +502,56 @@ export default function EmailManager() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">SMTP Host</label>
+                <label className="block text-sm font-medium mb-2">
+                  SMTP Host
+                </label>
                 <Input
                   placeholder="smtp.gmail.com"
-                  defaultValue={process.env.SMTP_HOST || ''}
+                  defaultValue={process.env.SMTP_HOST || ""}
                   readOnly
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">SMTP Port</label>
+                <label className="block text-sm font-medium mb-2">
+                  SMTP Port
+                </label>
                 <Input
                   placeholder="587"
-                  defaultValue={process.env.SMTP_PORT || ''}
+                  defaultValue={process.env.SMTP_PORT || ""}
                   readOnly
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Email Pengirim</label>
+                <label className="block text-sm font-medium mb-2">
+                  Email Pengirim
+                </label>
                 <Input
                   placeholder="noreply@rumahtahfidz.com"
-                  defaultValue={process.env.EMAIL_FROM || ''}
+                  defaultValue={process.env.EMAIL_FROM || ""}
                   readOnly
                 />
               </div>
 
               <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-medium text-blue-900 mb-2">Catatan Konfigurasi:</h4>
+                <h4 className="font-medium text-blue-900 mb-2">
+                  Catatan Konfigurasi:
+                </h4>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Konfigurasi email diatur melalui environment variables</li>
-                  <li>• Untuk Gmail: gunakan App Password, bukan password biasa</li>
-                  <li>• Pastikan SMTP settings sesuai dengan provider email Anda</li>
-                  <li>• Test koneksi secara berkala untuk memastikan email berfungsi</li>
+                  <li>
+                    � Konfigurasi email diatur melalui environment variables
+                  </li>
+                  <li>
+                    � Untuk Gmail: gunakan App Password, bukan password biasa
+                  </li>
+                  <li>
+                    � Pastikan SMTP settings sesuai dengan provider email Anda
+                  </li>
+                  <li>
+                    � Test koneksi secara berkala untuk memastikan email
+                    berfungsi
+                  </li>
                 </ul>
               </div>
             </CardContent>

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   X,
   CreditCard,
@@ -16,9 +16,9 @@ import {
   AlertCircle,
   Loader2,
   ArrowLeft,
-  Shield
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  Shield,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface PaymentGatewayModalProps {
   isOpen: boolean;
@@ -56,13 +56,15 @@ const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
-  paymentData
+  paymentData,
 }) => {
-  const [step, setStep] = useState<'methods' | 'processing' | 'instructions'>('methods');
-  const [selectedMethod, setSelectedMethod] = useState<string>('');
+  const [step, setStep] = useState<"methods" | "processing" | "instructions">(
+    "methods",
+  );
+  const [selectedMethod, setSelectedMethod] = useState<string>("");
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(false);
-  const [paymentToken, setPaymentToken] = useState<string>('');
+  const [paymentToken, setPaymentToken] = useState<string>("");
   const [paymentInstructions, setPaymentInstructions] = useState<any>(null);
 
   useEffect(() => {
@@ -74,7 +76,9 @@ const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   const loadPaymentMethods = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/payment/create?amount=${paymentData?.amount || 0}`);
+      const response = await fetch(
+        `/api/payment/create?amount=${paymentData?.amount || 0}`,
+      );
       const result = await response.json();
 
       if (result.success) {
@@ -82,15 +86,15 @@ const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
           ...method,
           icon: getPaymentMethodIcon(method.method),
           description: getPaymentMethodDescription(method.method),
-          estimatedTime: getPaymentMethodTime(method.method)
+          estimatedTime: getPaymentMethodTime(method.method),
         }));
         setPaymentMethods(methods);
       } else {
-        toast.error('Gagal memuat metode pembayaran');
+        toast.error("Gagal memuat metode pembayaran");
       }
     } catch (error) {
-      console.error('Error loading payment methods:', error);
-      toast.error('Terjadi kesalahan saat memuat metode pembayaran');
+      console.error("Error loading payment methods:", error);
+      toast.error("Terjadi kesalahan saat memuat metode pembayaran");
     } finally {
       setLoading(false);
     }
@@ -102,90 +106,94 @@ const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
 
   const handleProceedPayment = async () => {
     if (!selectedMethod) {
-      toast.error('Pilih metode pembayaran terlebih dahulu');
+      toast.error("Pilih metode pembayaran terlebih dahulu");
       return;
     }
 
     try {
       setLoading(true);
-      setStep('processing');
+      setStep("processing");
 
       const paymentRequest = {
-        orderId: paymentData?.orderId || '',
+        orderId: paymentData?.orderId || "",
         amount: paymentData?.amount || 0,
         items: paymentData?.items || [],
         customer: {
-          firstName: paymentData?.customerName?.split(' ')[0] || '',
-          lastName: paymentData?.customerName?.split(' ').slice(1).join(' ') || '',
-          email: paymentData?.customerEmail || '',
-          phone: paymentData?.customerPhone || ''
+          firstName: paymentData?.customerName?.split(" ")[0] || "",
+          lastName:
+            paymentData?.customerName?.split(" ").slice(1).join(" ") || "",
+          email: paymentData?.customerEmail || "",
+          phone: paymentData?.customerPhone || "",
         },
         paymentMethod: selectedMethod,
         metadata: {
-          description: paymentData?.description || '',
-          source: 'admin_panel'
-        }
+          description: paymentData?.description || "",
+          source: "admin_panel",
+        },
       };
 
-      const response = await fetch('/api/payment/create', {
-        method: 'POST',
+      const response = await fetch("/api/payment/create", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(paymentRequest)
+        body: JSON.stringify(paymentRequest),
       });
 
       const result = await response.json();
 
       if (result.success) {
         setPaymentToken(result.data.token);
-        
+
         // Load Midtrans Snap
-        const script = document.createElement('script');
+        const script = document.createElement("script");
         script.src = result.data.snap_url;
-        script.setAttribute('data-client-key', process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || '');
-        
+        script.setAttribute(
+          "data-client-key",
+          process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "",
+        );
+
         script.onload = () => {
-          // @ts-ignore
+          // @ts-expect-error - Midtrans snap is loaded dynamically
           window.snap.pay(result.data.token, {
             onSuccess: (result: any) => {
-              console.log('Payment success:', result);
-              toast.success('Pembayaran berhasil!');
+              console.log("Payment success:", result);
+              toast.success("Pembayaran berhasil!");
               onSuccess({
                 ...result,
-                orderId: paymentData?.orderId || '',
+                orderId: paymentData?.orderId || "",
                 amount: paymentData?.amount || 0,
-                paymentMethod: selectedMethod
+                paymentMethod: selectedMethod,
               });
               onClose();
             },
             onPending: (result: any) => {
-              console.log('Payment pending:', result);
+              console.log("Payment pending:", result);
               setPaymentInstructions(result);
-              setStep('instructions');
-              toast.info('Pembayaran sedang diproses');
+              setStep("instructions");
+              toast.info("Pembayaran sedang diproses");
             },
             onError: (result: any) => {
-              console.log('Payment error:', result);
-              toast.error('Pembayaran gagal');
-              setStep('methods');
+              console.log("Payment error:", result);
+              toast.error("Pembayaran gagal");
+              setStep("methods");
             },
             onClose: () => {
-              console.log('Payment popup closed');
-              setStep('methods');
-            }
+              console.log("Payment popup closed");
+              setStep("methods");
+            },
           });
         };
 
         document.head.appendChild(script);
       } else {
-        toast.error(result.message || 'Gagal membuat transaksi pembayaran');
-        setStep('methods');
+        toast.error(result.message || "Gagal membuat transaksi pembayaran");
+        setStep("methods");
       }
     } catch (error) {
-      console.error('Error processing payment:', error);
-      toast.error('Terjadi kesalahan saat memproses pembayaran');
-      setStep('methods');
+      console.error("Error processing payment:", error);
+      toast.error("Terjadi kesalahan saat memproses pembayaran");
+      setStep("methods");
     } finally {
       setLoading(false);
     }
@@ -193,63 +201,88 @@ const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
 
   const getPaymentMethodIcon = (method: string) => {
     switch (method) {
-      case 'credit_card': return <CreditCard className="h-6 w-6" />;
-      case 'bank_transfer': return <Building2 className="h-6 w-6" />;
-      case 'gopay':
-      case 'shopeepay':
-      case 'dana':
-      case 'linkaja':
-      case 'ovo': return <Smartphone className="h-6 w-6" />;
-      case 'qris': return <QrCode className="h-6 w-6" />;
-      case 'cstore': return <Wallet className="h-6 w-6" />;
-      default: return <DollarSign className="h-6 w-6" />;
+      case "credit_card":
+        return <CreditCard className="h-6 w-6" />;
+      case "bank_transfer":
+        return <Building2 className="h-6 w-6" />;
+      case "gopay":
+      case "shopeepay":
+      case "dana":
+      case "linkaja":
+      case "ovo":
+        return <Smartphone className="h-6 w-6" />;
+      case "qris":
+        return <QrCode className="h-6 w-6" />;
+      case "cstore":
+        return <Wallet className="h-6 w-6" />;
+      default:
+        return <DollarSign className="h-6 w-6" />;
     }
   };
 
   const getPaymentMethodDescription = (method: string) => {
     switch (method) {
-      case 'credit_card': return 'Bayar dengan kartu kredit/debit';
-      case 'bank_transfer': return 'Transfer melalui ATM, internet banking, atau mobile banking';
-      case 'gopay': return 'Bayar dengan saldo GoPay';
-      case 'shopeepay': return 'Bayar dengan saldo ShopeePay';
-      case 'dana': return 'Bayar dengan saldo DANA';
-      case 'linkaja': return 'Bayar dengan saldo LinkAja';
-      case 'ovo': return 'Bayar dengan saldo OVO';
-      case 'qris': return 'Scan QR code dengan aplikasi e-wallet';
-      case 'cstore': return 'Bayar di Indomaret terdekat';
-      default: return 'Metode pembayaran digital';
+      case "credit_card":
+        return "Bayar dengan kartu kredit/debit";
+      case "bank_transfer":
+        return "Transfer melalui ATM, internet banking, atau mobile banking";
+      case "gopay":
+        return "Bayar dengan saldo GoPay";
+      case "shopeepay":
+        return "Bayar dengan saldo ShopeePay";
+      case "dana":
+        return "Bayar dengan saldo DANA";
+      case "linkaja":
+        return "Bayar dengan saldo LinkAja";
+      case "ovo":
+        return "Bayar dengan saldo OVO";
+      case "qris":
+        return "Scan QR code dengan aplikasi e-wallet";
+      case "cstore":
+        return "Bayar di Indomaret terdekat";
+      default:
+        return "Metode pembayaran digital";
     }
   };
 
   const getPaymentMethodTime = (method: string) => {
     switch (method) {
-      case 'credit_card': return 'Instan';
-      case 'bank_transfer': return '1-24 jam';
-      case 'gopay':
-      case 'shopeepay':
-      case 'dana':
-      case 'linkaja':
-      case 'ovo': return 'Instan';
-      case 'qris': return 'Instan';
-      case 'cstore': return '1-3 hari';
-      default: return 'Bervariasi';
+      case "credit_card":
+        return "Instan";
+      case "bank_transfer":
+        return "1-24 jam";
+      case "gopay":
+      case "shopeepay":
+      case "dana":
+      case "linkaja":
+      case "ovo":
+        return "Instan";
+      case "qris":
+        return "Instan";
+      case "cstore":
+        return "1-3 hari";
+      default:
+        return "Bervariasi";
     }
   };
 
   const renderPaymentMethods = () => (
     <div className="space-y-4">
       <div className="text-center mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Pilih Metode Pembayaran</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          Pilih Metode Pembayaran
+        </h3>
         <p className="text-gray-600">
-          Total: <span className="font-bold text-teal-600">
-            Rp {(paymentData?.amount || 0).toLocaleString('id-ID')}
+          Total:{" "}
+          <span className="font-bold text-teal-600">
+            Rp {(paymentData?.amount || 0).toLocaleString("id-ID")}
           </span>
         </p>
       </div>
 
       {loading ? (
         <div className="space-y-3">
-          {[1, 2, 3, 4].map(i => (
+          {[1, 2, 3, 4].map((i) => (
             <div key={i} className="animate-pulse">
               <div className="h-16 bg-gray-200 rounded-lg"></div>
             </div>
@@ -262,21 +295,27 @@ const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
               key={method.method}
               className={`p-4 border rounded-lg cursor-pointer transition-all ${
                 selectedMethod === method.method
-                  ? 'border-teal-500 bg-teal-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? "border-teal-500 bg-teal-50"
+                  : "border-gray-200 hover:border-gray-300"
               }`}
               onClick={() => handlePaymentMethodSelect(method.method)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className={`p-2 rounded-lg ${
-                    selectedMethod === method.method ? 'bg-teal-100 text-teal-600' : 'bg-gray-100 text-gray-600'
-                  }`}>
+                  <div
+                    className={`p-2 rounded-lg ${
+                      selectedMethod === method.method
+                        ? "bg-teal-100 text-teal-600"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
                     {method.icon}
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900">{method.name}</h4>
-                    <p className="text-sm text-gray-600">{method.description}</p>
+                    <p className="text-sm text-gray-600">
+                      {method.description}
+                    </p>
                     <div className="flex items-center space-x-4 mt-1">
                       <span className="text-xs text-gray-500 flex items-center">
                         <Clock className="h-3 w-3 mr-1" />
@@ -291,7 +330,9 @@ const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-gray-900">{method.formatted_total_amount}</p>
+                  <p className="font-bold text-gray-900">
+                    {method.formatted_total_amount}
+                  </p>
                   {selectedMethod === method.method && (
                     <CheckCircle className="h-5 w-5 text-teal-600 ml-auto mt-1" />
                   )}
@@ -306,7 +347,7 @@ const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
         <Button variant="outline" onClick={onClose}>
           Batal
         </Button>
-        <Button 
+        <Button
           onClick={handleProceedPayment}
           disabled={!selectedMethod || loading}
         >
@@ -316,7 +357,7 @@ const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
               Memproses...
             </>
           ) : (
-            'Lanjutkan Pembayaran'
+            "Lanjutkan Pembayaran"
           )}
         </Button>
       </div>
@@ -328,8 +369,12 @@ const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
       <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
         <Loader2 className="h-8 w-8 text-teal-600 animate-spin" />
       </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">Memproses Pembayaran</h3>
-      <p className="text-gray-600 mb-4">Mohon tunggu, kami sedang menyiapkan pembayaran Anda...</p>
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        Memproses Pembayaran
+      </h3>
+      <p className="text-gray-600 mb-4">
+        Mohon tunggu, kami sedang menyiapkan pembayaran Anda...
+      </p>
       <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
         <Shield className="h-4 w-4" />
         <span>Transaksi aman dengan enkripsi SSL</span>
@@ -340,16 +385,20 @@ const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   const renderInstructions = () => (
     <div className="space-y-4">
       <div className="flex items-center space-x-2 mb-4">
-        <Button variant="outline" size="sm" onClick={() => setStep('methods')}>
+        <Button variant="outline" size="sm" onClick={() => setStep("methods")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h3 className="text-lg font-semibold text-gray-900">Instruksi Pembayaran</h3>
+        <h3 className="text-lg font-semibold text-gray-900">
+          Instruksi Pembayaran
+        </h3>
       </div>
 
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <div className="flex items-center space-x-2 mb-2">
           <Clock className="h-5 w-5 text-yellow-600" />
-          <span className="font-medium text-yellow-800">Pembayaran Sedang Diproses</span>
+          <span className="font-medium text-yellow-800">
+            Pembayaran Sedang Diproses
+          </span>
         </div>
         <p className="text-yellow-700 text-sm">
           Silakan selesaikan pembayaran sesuai instruksi yang diberikan.
@@ -362,15 +411,19 @@ const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600">Order ID:</span>
-              <span className="font-mono">{paymentData?.orderId || '-'}</span>
+              <span className="font-mono">{paymentData?.orderId || "-"}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Jumlah:</span>
-              <span className="font-bold">Rp {(paymentData?.amount || 0).toLocaleString('id-ID')}</span>
+              <span className="font-bold">
+                Rp {(paymentData?.amount || 0).toLocaleString("id-ID")}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Metode:</span>
-              <span>{paymentMethods.find(m => m.method === selectedMethod)?.name}</span>
+              <span>
+                {paymentMethods.find((m) => m.method === selectedMethod)?.name}
+              </span>
             </div>
           </div>
         </div>
@@ -380,9 +433,7 @@ const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
         <Button variant="outline" onClick={onClose}>
           Tutup
         </Button>
-        <Button onClick={() => window.location.reload()}>
-          Refresh Status
-        </Button>
+        <Button onClick={() => window.location.reload()}>Refresh Status</Button>
       </div>
     </div>
   );
@@ -396,9 +447,9 @@ const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>
-                {step === 'methods' && 'Pembayaran Online'}
-                {step === 'processing' && 'Memproses Pembayaran'}
-                {step === 'instructions' && 'Instruksi Pembayaran'}
+                {step === "methods" && "Pembayaran Online"}
+                {step === "processing" && "Memproses Pembayaran"}
+                {step === "instructions" && "Instruksi Pembayaran"}
               </CardTitle>
               <button
                 onClick={onClose}
@@ -409,9 +460,9 @@ const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
             </div>
           </CardHeader>
           <CardContent>
-            {step === 'methods' && renderPaymentMethods()}
-            {step === 'processing' && renderProcessing()}
-            {step === 'instructions' && renderInstructions()}
+            {step === "methods" && renderPaymentMethods()}
+            {step === "processing" && renderProcessing()}
+            {step === "instructions" && renderInstructions()}
           </CardContent>
         </Card>
       </div>

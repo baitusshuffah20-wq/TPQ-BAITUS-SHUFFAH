@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 // GET /api/users/[id] - Get user by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const user = await prisma.user.findUnique({
@@ -16,29 +16,29 @@ export async function GET(
         name: true,
         phone: true,
         role: true,
+        avatar: true,
         isActive: true,
         createdAt: true,
-        updatedAt: true
-      }
+        updatedAt: true,
+      },
     });
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: 'User tidak ditemukan' },
-        { status: 404 }
+        { success: false, message: "User tidak ditemukan" },
+        { status: 404 },
       );
     }
 
     return NextResponse.json({
       success: true,
-      user
+      user,
     });
-
   } catch (error) {
-    console.error('Error fetching user:', error);
+    console.error("Error fetching user:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengambil data user' },
-      { status: 500 }
+      { success: false, message: "Gagal mengambil data user" },
+      { status: 500 },
     );
   }
 }
@@ -46,7 +46,7 @@ export async function GET(
 // PUT /api/users/[id] - Update user
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const body = await request.json();
@@ -54,26 +54,26 @@ export async function PUT(
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
-      where: { id: params.id }
+      where: { id: params.id },
     });
 
     if (!existingUser) {
       return NextResponse.json(
-        { success: false, message: 'User tidak ditemukan' },
-        { status: 404 }
+        { success: false, message: "User tidak ditemukan" },
+        { status: 404 },
       );
     }
 
     // Check if email is already used by another user
     if (email !== existingUser.email) {
       const emailExists = await prisma.user.findUnique({
-        where: { email }
+        where: { email },
       });
 
       if (emailExists) {
         return NextResponse.json(
-          { success: false, message: 'Email sudah digunakan' },
-          { status: 400 }
+          { success: false, message: "Email sudah digunakan" },
+          { status: 400 },
         );
       }
     }
@@ -84,11 +84,11 @@ export async function PUT(
       name,
       phone,
       role,
-      isActive
+      isActive,
     };
 
     // Hash password if provided
-    if (password && password.trim() !== '') {
+    if (password && password.trim() !== "") {
       updateData.password = await bcrypt.hash(password, 10);
     }
 
@@ -104,21 +104,20 @@ export async function PUT(
         role: true,
         isActive: true,
         createdAt: true,
-        updatedAt: true
-      }
+        updatedAt: true,
+      },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'User berhasil diupdate',
-      user
+      message: "User berhasil diupdate",
+      user,
     });
-
   } catch (error) {
-    console.error('Error updating user:', error);
+    console.error("Error updating user:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengupdate user' },
-      { status: 500 }
+      { success: false, message: "Gagal mengupdate user" },
+      { status: 500 },
     );
   }
 }
@@ -126,18 +125,18 @@ export async function PUT(
 // DELETE /api/users/[id] - Delete user
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
-      where: { id: params.id }
+      where: { id: params.id },
     });
 
     if (!existingUser) {
       return NextResponse.json(
-        { success: false, message: 'User tidak ditemukan' },
-        { status: 404 }
+        { success: false, message: "User tidak ditemukan" },
+        { status: 404 },
       );
     }
 
@@ -148,12 +147,12 @@ export async function DELETE(
         santriAsWali: true,
         halaqahAsMusyrif: true,
         hafalanAsMusyrif: true,
-        attendanceAsMusyrif: true
-      }
+        attendanceAsMusyrif: true,
+      },
     });
 
     if (relatedData) {
-      const hasRelatedData = 
+      const hasRelatedData =
         relatedData.santriAsWali.length > 0 ||
         relatedData.halaqahAsMusyrif.length > 0 ||
         relatedData.hafalanAsMusyrif.length > 0 ||
@@ -161,30 +160,80 @@ export async function DELETE(
 
       if (hasRelatedData) {
         return NextResponse.json(
-          { 
-            success: false, 
-            message: 'User tidak dapat dihapus karena masih memiliki data terkait (santri, halaqah, dll)' 
+          {
+            success: false,
+            message:
+              "User tidak dapat dihapus karena masih memiliki data terkait (santri, halaqah, dll)",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
 
     // Delete user
     await prisma.user.delete({
-      where: { id: params.id }
+      where: { id: params.id },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'User berhasil dihapus'
+      message: "User berhasil dihapus",
+    });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return NextResponse.json(
+      { success: false, message: "Gagal menghapus user" },
+      { status: 500 },
+    );
+  }
+}
+
+// PATCH /api/users/[id] - Update specific user fields (like avatar)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  try {
+    const body = await request.json();
+
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { id: params.id },
     });
 
+    if (!existingUser) {
+      return NextResponse.json(
+        { success: false, message: "User tidak ditemukan" },
+        { status: 404 },
+      );
+    }
+
+    // Update user with provided fields
+    const updatedUser = await prisma.user.update({
+      where: { id: params.id },
+      data: body,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        role: true,
+        avatar: true,
+        isActive: true,
+        updatedAt: true,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "User berhasil diupdate",
+      user: updatedUser,
+    });
   } catch (error) {
-    console.error('Error deleting user:', error);
+    console.error("Error updating user:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal menghapus user' },
-      { status: 500 }
+      { success: false, message: "Gagal mengupdate user" },
+      { status: 500 },
     );
   }
 }

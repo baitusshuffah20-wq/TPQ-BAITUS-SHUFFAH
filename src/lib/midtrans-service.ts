@@ -1,13 +1,12 @@
-import { 
-  MIDTRANS_CONFIG, 
-  PAYMENT_METHODS, 
-  TRANSACTION_CONFIG, 
+import crypto from "crypto";
+import {
+  MIDTRANS_CONFIG,
+  PAYMENT_METHODS,
+  TRANSACTION_CONFIG,
   FEE_CONFIG,
-  PAYMENT_STATUS,
   STATUS_MAPPING,
   ERROR_MESSAGES,
-  SUCCESS_MESSAGES
-} from './midtrans-config';
+} from "./midtrans-config";
 
 // Types
 export interface PaymentItem {
@@ -60,14 +59,14 @@ export interface CreateTransactionRequest {
   custom_expiry?: {
     order_time: string;
     expiry_duration: number;
-    unit: 'minute' | 'hour' | 'day';
+    unit: "minute" | "hour" | "day";
   };
   callbacks?: {
     finish?: string;
     unfinish?: string;
     error?: string;
   };
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PaymentResponse {
@@ -100,13 +99,13 @@ export interface TransactionStatus {
 export class MidtransService {
   private static instance: MidtransService;
   private serverKey: string;
-  private clientKey: string;
+  private _clientKey: string;
   private isProduction: boolean;
   private apiUrl: string;
 
   private constructor() {
     this.serverKey = MIDTRANS_CONFIG.serverKey;
-    this.clientKey = MIDTRANS_CONFIG.clientKey;
+    this._clientKey = MIDTRANS_CONFIG.clientKey;
     this.isProduction = MIDTRANS_CONFIG.isProduction;
     this.apiUrl = MIDTRANS_CONFIG.apiUrl;
   }
@@ -119,7 +118,9 @@ export class MidtransService {
   }
 
   // Create payment token
-  public async createTransaction(request: CreateTransactionRequest): Promise<PaymentResponse> {
+  public async createTransaction(
+    request: CreateTransactionRequest,
+  ): Promise<PaymentResponse> {
     try {
       // Validate request
       this.validateTransactionRequest(request);
@@ -134,56 +135,62 @@ export class MidtransService {
         request.custom_expiry = {
           order_time: new Date().toISOString(),
           expiry_duration: TRANSACTION_CONFIG.defaultExpiry,
-          unit: 'minute'
+          unit: "minute",
         };
       }
 
       const response = await fetch(`${this.apiUrl}/v2/charge`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Basic ${Buffer.from(this.serverKey + ':').toString('base64')}`,
-          'Accept': 'application/json'
+          "Content-Type": "application/json",
+          Authorization: `Basic ${Buffer.from(this.serverKey + ":").toString("base64")}`,
+          Accept: "application/json",
         },
-        body: JSON.stringify(request)
+        body: JSON.stringify(request),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error_messages?.[0] || ERROR_MESSAGES.TRANSACTION_FAILED);
+        throw new Error(
+          errorData.error_messages?.[0] || ERROR_MESSAGES.TRANSACTION_FAILED,
+        );
       }
 
       const data = await response.json();
-      
+
       return {
         token: data.token,
-        redirect_url: data.redirect_url
+        redirect_url: data.redirect_url,
       };
     } catch (error) {
-      console.error('Error creating transaction:', error);
+      console.error("Error creating transaction:", error);
       throw error;
     }
   }
 
   // Get transaction status
-  public async getTransactionStatus(orderId: string): Promise<TransactionStatus> {
+  public async getTransactionStatus(
+    orderId: string,
+  ): Promise<TransactionStatus> {
     try {
       const response = await fetch(`${this.apiUrl}/v2/${orderId}/status`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Basic ${Buffer.from(this.serverKey + ':').toString('base64')}`,
-          'Accept': 'application/json'
-        }
+          Authorization: `Basic ${Buffer.from(this.serverKey + ":").toString("base64")}`,
+          Accept: "application/json",
+        },
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error_messages?.[0] || ERROR_MESSAGES.TRANSACTION_FAILED);
+        throw new Error(
+          errorData.error_messages?.[0] || ERROR_MESSAGES.TRANSACTION_FAILED,
+        );
       }
 
       return await response.json();
     } catch (error) {
-      console.error('Error getting transaction status:', error);
+      console.error("Error getting transaction status:", error);
       throw error;
     }
   }
@@ -192,83 +199,90 @@ export class MidtransService {
   public async cancelTransaction(orderId: string): Promise<TransactionStatus> {
     try {
       const response = await fetch(`${this.apiUrl}/v2/${orderId}/cancel`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Basic ${Buffer.from(this.serverKey + ':').toString('base64')}`,
-          'Accept': 'application/json'
-        }
+          Authorization: `Basic ${Buffer.from(this.serverKey + ":").toString("base64")}`,
+          Accept: "application/json",
+        },
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error_messages?.[0] || ERROR_MESSAGES.TRANSACTION_FAILED);
+        throw new Error(
+          errorData.error_messages?.[0] || ERROR_MESSAGES.TRANSACTION_FAILED,
+        );
       }
 
       return await response.json();
     } catch (error) {
-      console.error('Error canceling transaction:', error);
+      console.error("Error canceling transaction:", error);
       throw error;
     }
   }
 
   // Refund transaction
-  public async refundTransaction(orderId: string, amount?: number, reason?: string): Promise<TransactionStatus> {
+  public async refundTransaction(
+    orderId: string,
+    amount?: number,
+    reason?: string,
+  ): Promise<TransactionStatus> {
     try {
-      const body: any = {};
+      const body: Record<string, unknown> = {};
       if (amount) body.refund_amount = amount;
       if (reason) body.reason = reason;
 
       const response = await fetch(`${this.apiUrl}/v2/${orderId}/refund`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Basic ${Buffer.from(this.serverKey + ':').toString('base64')}`,
-          'Accept': 'application/json'
+          "Content-Type": "application/json",
+          Authorization: `Basic ${Buffer.from(this.serverKey + ":").toString("base64")}`,
+          Accept: "application/json",
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error_messages?.[0] || ERROR_MESSAGES.TRANSACTION_FAILED);
+        throw new Error(
+          errorData.error_messages?.[0] || ERROR_MESSAGES.TRANSACTION_FAILED,
+        );
       }
 
       return await response.json();
     } catch (error) {
-      console.error('Error refunding transaction:', error);
+      console.error("Error refunding transaction:", error);
       throw error;
     }
   }
 
   // Validate notification
-  public validateNotification(notification: any): boolean {
+  public validateNotification(notification: Record<string, unknown>): boolean {
     try {
-      const orderId = notification.order_id;
-      const statusCode = notification.status_code;
-      const grossAmount = notification.gross_amount;
+      const orderId = notification.order_id as string;
+      const statusCode = notification.status_code as string;
+      const grossAmount = notification.gross_amount as string;
       const serverKey = this.serverKey;
 
-      const signatureKey = notification.signature_key;
+      const signatureKey = notification.signature_key as string;
       const input = orderId + statusCode + grossAmount + serverKey;
-      
-      const crypto = require('crypto');
-      const hash = crypto.createHash('sha512').update(input).digest('hex');
+
+      const hash = crypto.createHash("sha512").update(input).digest("hex");
 
       return hash === signatureKey;
     } catch (error) {
-      console.error('Error validating notification:', error);
+      console.error("Error validating notification:", error);
       return false;
     }
   }
 
   // Map Midtrans status to internal status
   public mapStatus(midtransStatus: string): string {
-    return STATUS_MAPPING[midtransStatus] || 'UNKNOWN';
+    return STATUS_MAPPING[midtransStatus] || "UNKNOWN";
   }
 
   // Calculate admin fee
   public calculateAdminFee(paymentMethod: string, amount: number): number {
-    if (paymentMethod === 'credit_card') {
+    if (paymentMethod === "credit_card") {
       return Math.round(amount * (FEE_CONFIG.creditCardFeePercentage / 100));
     }
     return FEE_CONFIG.adminFee[paymentMethod] || 0;
@@ -283,11 +297,14 @@ export class MidtransService {
   // Get payment methods for specific amount
   public getAvailablePaymentMethods(amount: number): string[] {
     const methods = PAYMENT_METHODS.ALL_METHODS.enabled_payments;
-    
+
     // Filter based on amount limits
-    return methods.filter(method => {
+    return methods.filter((method) => {
       const totalAmount = this.calculateTotalAmount(amount, method);
-      return totalAmount >= FEE_CONFIG.minimumAmount && totalAmount <= FEE_CONFIG.maximumAmount;
+      return (
+        totalAmount >= FEE_CONFIG.minimumAmount &&
+        totalAmount <= FEE_CONFIG.maximumAmount
+      );
     });
   }
 
@@ -297,10 +314,13 @@ export class MidtransService {
 
     // Validate transaction details
     if (!transaction_details.order_id) {
-      throw new Error('Order ID is required');
+      throw new Error("Order ID is required");
     }
 
-    if (!transaction_details.gross_amount || transaction_details.gross_amount < FEE_CONFIG.minimumAmount) {
+    if (
+      !transaction_details.gross_amount ||
+      transaction_details.gross_amount < FEE_CONFIG.minimumAmount
+    ) {
       throw new Error(ERROR_MESSAGES.AMOUNT_TOO_LOW);
     }
 
@@ -310,29 +330,33 @@ export class MidtransService {
 
     // Validate item details
     if (!item_details || item_details.length === 0) {
-      throw new Error('Item details are required');
+      throw new Error("Item details are required");
     }
 
     // Validate customer details
-    if (!customer_details.first_name || !customer_details.email || !customer_details.phone) {
-      throw new Error('Customer details (name, email, phone) are required');
+    if (
+      !customer_details.first_name ||
+      !customer_details.email ||
+      !customer_details.phone
+    ) {
+      throw new Error("Customer details (name, email, phone) are required");
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(customer_details.email)) {
-      throw new Error('Invalid email format');
+      throw new Error("Invalid email format");
     }
 
     // Validate phone format (Indonesian)
     const phoneRegex = /^(\+62|62|0)[0-9]{9,13}$/;
     if (!phoneRegex.test(customer_details.phone)) {
-      throw new Error('Invalid phone number format');
+      throw new Error("Invalid phone number format");
     }
   }
 
   // Generate order ID
-  public generateOrderId(prefix: string = 'TPQ'): string {
+  public generateOrderId(prefix: string = "TPQ"): string {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();
     return `${prefix}-${timestamp}-${random}`;
@@ -340,10 +364,10 @@ export class MidtransService {
 
   // Format currency
   public formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(amount);
   }
 }

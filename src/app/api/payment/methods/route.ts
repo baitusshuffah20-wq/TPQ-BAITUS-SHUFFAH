@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 // GET /api/payment/methods - Get all payment methods
 export async function GET(request: NextRequest) {
@@ -9,23 +9,23 @@ export async function GET(request: NextRequest) {
     // Get payment methods from database
     const paymentMethods = await prisma.paymentMethod.findMany({
       orderBy: {
-        name: 'asc'
-      }
+        name: "asc",
+      },
     });
 
     return NextResponse.json({
       success: true,
-      methods: paymentMethods
+      methods: paymentMethods,
     });
   } catch (error) {
-    console.error('Error fetching payment methods:', error);
+    console.error("Error fetching payment methods:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to fetch payment methods',
-        details: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        error: "Failed to fetch payment methods",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -35,20 +35,20 @@ export async function POST(request: NextRequest) {
   try {
     // Check authentication
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || session.user.role !== "ADMIN") {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
+        { success: false, error: "Unauthorized" },
+        { status: 401 },
       );
     }
 
     const body = await request.json();
-    
+
     // Validate required fields
     if (!body.name || !body.code || !body.gateway) {
       return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
-        { status: 400 }
+        { success: false, error: "Missing required fields" },
+        { status: 400 },
       );
     }
 
@@ -59,27 +59,27 @@ export async function POST(request: NextRequest) {
         code: body.code,
         gateway: body.gateway,
         isActive: body.isActive !== undefined ? body.isActive : true,
-        icon: body.icon || '',
-        description: body.description || '',
+        icon: body.icon || "",
+        description: body.description || "",
         fees: body.fees !== undefined ? body.fees : 0,
         minAmount: body.minAmount !== undefined ? body.minAmount : 0,
-        maxAmount: body.maxAmount !== undefined ? body.maxAmount : 1000000000
-      }
+        maxAmount: body.maxAmount !== undefined ? body.maxAmount : 1000000000,
+      },
     });
 
     return NextResponse.json({
       success: true,
-      method: paymentMethod
+      method: paymentMethod,
     });
   } catch (error) {
-    console.error('Error creating payment method:', error);
+    console.error("Error creating payment method:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to create payment method',
-        details: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        error: "Failed to create payment method",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

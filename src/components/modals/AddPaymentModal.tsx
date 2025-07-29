@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { X, Save, DollarSign } from 'lucide-react';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { X, Save, DollarSign } from "lucide-react";
 
 interface AddPaymentModalProps {
   isOpen: boolean;
@@ -16,44 +16,45 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
   isOpen,
   onClose,
   onSave,
-  editData
+  editData,
 }) => {
   const [formData, setFormData] = useState({
-    santriId: editData?.santriId || '',
-    santriName: editData?.santriName || '',
-    paymentType: editData?.paymentType || 'SPP',
-    amount: editData?.amount || '',
-    paymentDate: editData?.paymentDate || new Date().toISOString().split('T')[0],
-    status: editData?.status || 'PENDING'
+    santriId: editData?.santriId || "",
+    santriName: editData?.santriName || "",
+    paymentType: editData?.paymentType || "SPP",
+    amount: editData?.amount || "",
+    paymentDate:
+      editData?.paymentDate || new Date().toISOString().split("T")[0],
+    status: editData?.status || "PENDING",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const santriList = [
-    { id: '1', name: 'Ahmad Fauzi', nis: '24001' },
-    { id: '2', name: 'Siti Aisyah', nis: '24002' },
-    { id: '3', name: 'Muhammad Rizki', nis: '24003' }
+    { id: "1", name: "Ahmad Fauzi", nis: "24001" },
+    { id: "2", name: "Siti Aisyah", nis: "24002" },
+    { id: "3", name: "Muhammad Rizki", nis: "24003" },
   ];
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
 
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: ''
+        [field]: "",
       }));
     }
 
-    if (field === 'santriId') {
-      const selectedSantri = santriList.find(s => s.id === value);
+    if (field === "santriId") {
+      const selectedSantri = santriList.find((s) => s.id === value);
       if (selectedSantri) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          santriName: selectedSantri.name
+          santriName: selectedSantri.name,
         }));
       }
     }
@@ -63,11 +64,11 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!formData.santriId) {
-      newErrors.santriId = 'Santri wajib dipilih';
+      newErrors.santriId = "Santri wajib dipilih";
     }
 
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      newErrors.amount = 'Jumlah pembayaran wajib diisi';
+      newErrors.amount = "Jumlah pembayaran wajib diisi";
     }
 
     setErrors(newErrors);
@@ -83,19 +84,19 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
       ...formData,
       id: editData?.id || `payment_${Date.now()}`,
       createdAt: editData?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     onSave(paymentData);
     onClose();
 
     setFormData({
-      santriId: '',
-      santriName: '',
-      paymentType: 'SPP',
-      amount: '',
-      paymentDate: new Date().toISOString().split('T')[0],
-      status: 'PENDING'
+      santriId: "",
+      santriName: "",
+      paymentType: "SPP",
+      amount: "",
+      paymentDate: new Date().toISOString().split("T")[0],
+      status: "PENDING",
     });
     setErrors({});
   };
@@ -109,7 +110,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>
-                {editData ? 'Edit Pembayaran' : 'Tambah Pembayaran Baru'}
+                {editData ? "Edit Pembayaran" : "Tambah Pembayaran Baru"}
               </CardTitle>
               <button
                 onClick={onClose}
@@ -133,19 +134,25 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
                     </label>
                     <select
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                        errors.santriId ? 'border-red-500' : 'border-gray-300'
+                        errors.santriId ? "border-red-500" : "border-gray-300"
                       }`}
                       value={formData.santriId}
-                      onChange={(e) => handleInputChange('santriId', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("santriId", e.target.value)
+                      }
                     >
                       <option value="">Pilih Santri</option>
-                      {santriList.map(santri => (
+                      {santriList.map((santri) => (
                         <option key={santri.id} value={santri.id}>
                           {santri.name} - {santri.nis}
                         </option>
                       ))}
                     </select>
-                    {errors.santriId && <p className="text-red-500 text-sm mt-1">{errors.santriId}</p>}
+                    {errors.santriId && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.santriId}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -155,7 +162,9 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.paymentType}
-                      onChange={(e) => handleInputChange('paymentType', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("paymentType", e.target.value)
+                      }
                     >
                       <option value="SPP">SPP Bulanan</option>
                       <option value="DAFTAR_ULANG">Daftar Ulang</option>
@@ -173,13 +182,19 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
                       type="number"
                       min="0"
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                        errors.amount ? 'border-red-500' : 'border-gray-300'
+                        errors.amount ? "border-red-500" : "border-gray-300"
                       }`}
                       value={formData.amount}
-                      onChange={(e) => handleInputChange('amount', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("amount", e.target.value)
+                      }
                       placeholder="Masukkan jumlah pembayaran"
                     />
-                    {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount}</p>}
+                    {errors.amount && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.amount}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -190,7 +205,9 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
                       type="date"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.paymentDate}
-                      onChange={(e) => handleInputChange('paymentDate', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("paymentDate", e.target.value)
+                      }
                     />
                   </div>
 
@@ -201,7 +218,9 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.status}
-                      onChange={(e) => handleInputChange('status', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("status", e.target.value)
+                      }
                     >
                       <option value="PENDING">Menunggu Pembayaran</option>
                       <option value="PAID">Lunas</option>
@@ -211,8 +230,6 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
                 </div>
               </div>
 
-
-
               {/* Action Buttons */}
               <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                 <Button variant="outline" onClick={onClose}>
@@ -220,7 +237,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
                 </Button>
                 <Button onClick={handleSave}>
                   <Save className="h-4 w-4 mr-2" />
-                  {editData ? 'Update' : 'Simpan'}
+                  {editData ? "Update" : "Simpan"}
                 </Button>
               </div>
             </div>

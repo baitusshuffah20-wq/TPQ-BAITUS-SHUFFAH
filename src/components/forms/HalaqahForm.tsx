@@ -1,21 +1,23 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Users, 
-  BookOpen, 
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Users,
+  BookOpen,
   Clock,
   MapPin,
   Plus,
   Trash2,
   Save,
-  X
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  X,
+  BookText,
+  Heart,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface Schedule {
   dayOfWeek: number;
@@ -29,6 +31,7 @@ interface HalaqahFormData {
   name: string;
   description: string;
   level: string;
+  type: string;
   capacity: number;
   musyrifId: string;
   schedules: Schedule[];
@@ -48,37 +51,64 @@ interface Musyrif {
 }
 
 const DAYS_OF_WEEK = [
-  { value: 1, label: 'Senin' },
-  { value: 2, label: 'Selasa' },
-  { value: 3, label: 'Rabu' },
-  { value: 4, label: 'Kamis' },
-  { value: 5, label: 'Jumat' },
-  { value: 6, label: 'Sabtu' },
-  { value: 0, label: 'Minggu' }
+  { value: 1, label: "Senin" },
+  { value: 2, label: "Selasa" },
+  { value: 3, label: "Rabu" },
+  { value: 4, label: "Kamis" },
+  { value: 5, label: "Jumat" },
+  { value: 6, label: "Sabtu" },
+  { value: 0, label: "Minggu" },
 ];
 
 const LEVELS = [
-  'Pemula',
-  'Dasar',
-  'Menengah',
-  'Lanjutan',
-  'Tahfidz 1 Juz',
-  'Tahfidz 5 Juz',
-  'Tahfidz 10 Juz',
-  'Tahfidz 15 Juz',
-  'Tahfidz 20 Juz',
-  'Tahfidz 30 Juz'
+  "Pemula",
+  "Dasar",
+  "Menengah",
+  "Lanjutan",
+  "Tahfidz 1 Juz",
+  "Tahfidz 5 Juz",
+  "Tahfidz 10 Juz",
+  "Tahfidz 15 Juz",
+  "Tahfidz 20 Juz",
+  "Tahfidz 30 Juz",
 ];
 
-export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = false }: HalaqahFormProps) {
+const HALAQAH_TYPES = [
+  {
+    value: "QURAN",
+    label: "Al-Quran",
+    icon: <BookOpen className="h-4 w-4" />,
+    color: "bg-green-50 text-green-700 border-green-200",
+  },
+  {
+    value: "TAHSIN",
+    label: "Tahsin",
+    icon: <BookText className="h-4 w-4" />,
+    color: "bg-blue-50 text-blue-700 border-blue-200",
+  },
+  {
+    value: "AKHLAK",
+    label: "Pendidikan Akhlak",
+    icon: <Heart className="h-4 w-4" />,
+    color: "bg-purple-50 text-purple-700 border-purple-200",
+  },
+];
+
+export default function HalaqahForm({
+  halaqah,
+  onSubmit,
+  onCancel,
+  isLoading = false,
+}: HalaqahFormProps) {
   const [formData, setFormData] = useState<HalaqahFormData>({
-    name: halaqah?.name || '',
-    description: halaqah?.description || '',
-    level: halaqah?.level || 'Pemula',
+    name: halaqah?.name || "",
+    description: halaqah?.description || "",
+    level: halaqah?.level || "Pemula",
+    type: halaqah?.type || "QURAN",
     capacity: halaqah?.capacity || 20,
-    musyrifId: halaqah?.musyrifId || '',
+    musyrifId: halaqah?.musyrifId || "",
     schedules: halaqah?.schedules || [],
-    ...halaqah
+    ...halaqah,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -94,14 +124,14 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
   const loadMusyrifList = async () => {
     try {
       setLoadingData(true);
-      const response = await fetch('/api/users?role=MUSYRIF');
+      const response = await fetch("/api/users?role=MUSYRIF");
       if (response.ok) {
         const data = await response.json();
         setMusyrifList(data.users || []);
       }
     } catch (error) {
-      console.error('Error loading musyrif:', error);
-      toast.error('Gagal memuat data musyrif');
+      console.error("Error loading musyrif:", error);
+      toast.error("Gagal memuat data musyrif");
     } finally {
       setLoadingData(false);
     }
@@ -112,41 +142,46 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
 
     // Name validation
     if (!formData.name) {
-      newErrors.name = 'Nama halaqah wajib diisi';
+      newErrors.name = "Nama halaqah wajib diisi";
     } else if (formData.name.length < 3) {
-      newErrors.name = 'Nama halaqah minimal 3 karakter';
+      newErrors.name = "Nama halaqah minimal 3 karakter";
     }
 
     // Level validation
     if (!formData.level) {
-      newErrors.level = 'Level wajib dipilih';
+      newErrors.level = "Level wajib dipilih";
     }
 
     // Capacity validation
     if (!formData.capacity || formData.capacity < 1) {
-      newErrors.capacity = 'Kapasitas minimal 1 santri';
+      newErrors.capacity = "Kapasitas minimal 1 santri";
     } else if (formData.capacity > 50) {
-      newErrors.capacity = 'Kapasitas maksimal 50 santri';
+      newErrors.capacity = "Kapasitas maksimal 50 santri";
     }
 
     // Musyrif validation
     if (!formData.musyrifId) {
-      newErrors.musyrifId = 'Musyrif wajib dipilih';
+      newErrors.musyrifId = "Musyrif wajib dipilih";
     }
 
     // Schedule validation
     if (formData.schedules.length === 0) {
-      newErrors.schedules = 'Minimal harus ada 1 jadwal';
+      newErrors.schedules = "Minimal harus ada 1 jadwal";
     } else {
       formData.schedules.forEach((schedule, index) => {
         if (!schedule.startTime) {
-          newErrors[`schedule_${index}_startTime`] = 'Waktu mulai wajib diisi';
+          newErrors[`schedule_${index}_startTime`] = "Waktu mulai wajib diisi";
         }
         if (!schedule.endTime) {
-          newErrors[`schedule_${index}_endTime`] = 'Waktu selesai wajib diisi';
+          newErrors[`schedule_${index}_endTime`] = "Waktu selesai wajib diisi";
         }
-        if (schedule.startTime && schedule.endTime && schedule.startTime >= schedule.endTime) {
-          newErrors[`schedule_${index}_endTime`] = 'Waktu selesai harus lebih besar dari waktu mulai';
+        if (
+          schedule.startTime &&
+          schedule.endTime &&
+          schedule.startTime >= schedule.endTime
+        ) {
+          newErrors[`schedule_${index}_endTime`] =
+            "Waktu selesai harus lebih besar dari waktu mulai";
         }
       });
     }
@@ -157,65 +192,73 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
-      toast.error('Mohon perbaiki kesalahan pada form');
+      toast.error("Mohon perbaiki kesalahan pada form");
       return;
     }
 
     try {
       await onSubmit(formData);
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'number' ? parseInt(value) || 0 : value
+      [name]: type === "number" ? parseInt(value) || 0 : value,
     }));
 
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const addSchedule = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       schedules: [
         ...prev.schedules,
         {
           dayOfWeek: 1,
-          startTime: '14:00',
-          endTime: '16:00',
-          room: ''
-        }
-      ]
+          startTime: "14:00",
+          endTime: "16:00",
+          room: "",
+        },
+      ],
     }));
   };
 
   const removeSchedule = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      schedules: prev.schedules.filter((_, i) => i !== index)
+      schedules: prev.schedules.filter((_, i) => i !== index),
     }));
   };
 
-  const updateSchedule = (index: number, field: keyof Schedule, value: string | number) => {
-    setFormData(prev => ({
+  const updateSchedule = (
+    index: number,
+    field: keyof Schedule,
+    value: string | number,
+  ) => {
+    setFormData((prev) => ({
       ...prev,
-      schedules: prev.schedules.map((schedule, i) => 
-        i === index ? { ...schedule, [field]: value } : schedule
-      )
+      schedules: prev.schedules.map((schedule, i) =>
+        i === index ? { ...schedule, [field]: value } : schedule,
+      ),
     }));
   };
 
   const getDayLabel = (dayOfWeek: number) => {
-    return DAYS_OF_WEEK.find(day => day.value === dayOfWeek)?.label || '';
+    return DAYS_OF_WEEK.find((day) => day.value === dayOfWeek)?.label || "";
   };
 
   if (loadingData) {
@@ -236,14 +279,16 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BookOpen className="h-6 w-6 text-teal-600" />
-          {isEdit ? 'Edit Halaqah' : 'Tambah Halaqah Baru'}
+          {isEdit ? "Edit Halaqah" : "Tambah Halaqah Baru"}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Basic Information */}
           <div className="border-b pb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Informasi Dasar</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Informasi Dasar
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -255,7 +300,7 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="Contoh: Halaqah Al-Fatihah"
-                  className={errors.name ? 'border-red-500' : ''}
+                  className={errors.name ? "border-red-500" : ""}
                   disabled={isLoading}
                 />
                 {errors.name && (
@@ -271,7 +316,7 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
                   name="level"
                   value={formData.level}
                   onChange={handleChange}
-                  className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.level ? 'border-red-500' : ''}`}
+                  className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.level ? "border-red-500" : ""}`}
                   disabled={isLoading}
                 >
                   {LEVELS.map((level) => (
@@ -287,6 +332,33 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Jenis Halaqah *
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {HALAQAH_TYPES.map((type) => (
+                    <div
+                      key={type.value}
+                      className={`
+                        flex items-center justify-center p-3 rounded-md border cursor-pointer
+                        ${formData.type === type.value ? type.color : "border-gray-300 hover:bg-gray-50"}
+                      `}
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, type: type.value }))
+                      }
+                    >
+                      <div className="flex flex-col items-center gap-1">
+                        {type.icon}
+                        <span className="text-sm font-medium">
+                          {type.label}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Kapasitas Santri *
                 </label>
                 <Input
@@ -297,7 +369,7 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
                   placeholder="20"
                   min="1"
                   max="50"
-                  className={errors.capacity ? 'border-red-500' : ''}
+                  className={errors.capacity ? "border-red-500" : ""}
                   disabled={isLoading}
                 />
                 {errors.capacity && (
@@ -313,7 +385,7 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
                   name="musyrifId"
                   value={formData.musyrifId}
                   onChange={handleChange}
-                  className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.musyrifId ? 'border-red-500' : ''}`}
+                  className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.musyrifId ? "border-red-500" : ""}`}
                   disabled={isLoading}
                 >
                   <option value="">Pilih Musyrif</option>
@@ -324,7 +396,9 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
                   ))}
                 </select>
                 {errors.musyrifId && (
-                  <p className="text-red-500 text-xs mt-1">{errors.musyrifId}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.musyrifId}
+                  </p>
                 )}
               </div>
             </div>
@@ -348,7 +422,9 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
           {/* Schedules */}
           <div className="border-b pb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Jadwal Halaqah</h3>
+              <h3 className="text-lg font-medium text-gray-900">
+                Jadwal Halaqah
+              </h3>
               <Button
                 type="button"
                 variant="outline"
@@ -369,7 +445,9 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
               {formData.schedules.map((schedule, index) => (
                 <Card key={index} className="p-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium text-gray-900">Jadwal {index + 1}</h4>
+                    <h4 className="font-medium text-gray-900">
+                      Jadwal {index + 1}
+                    </h4>
                     <Button
                       type="button"
                       variant="outline"
@@ -389,7 +467,13 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
                       </label>
                       <select
                         value={schedule.dayOfWeek}
-                        onChange={(e) => updateSchedule(index, 'dayOfWeek', parseInt(e.target.value))}
+                        onChange={(e) =>
+                          updateSchedule(
+                            index,
+                            "dayOfWeek",
+                            parseInt(e.target.value),
+                          )
+                        }
                         className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                         disabled={isLoading}
                       >
@@ -408,12 +492,20 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
                       <Input
                         type="time"
                         value={schedule.startTime}
-                        onChange={(e) => updateSchedule(index, 'startTime', e.target.value)}
-                        className={errors[`schedule_${index}_startTime`] ? 'border-red-500' : ''}
+                        onChange={(e) =>
+                          updateSchedule(index, "startTime", e.target.value)
+                        }
+                        className={
+                          errors[`schedule_${index}_startTime`]
+                            ? "border-red-500"
+                            : ""
+                        }
                         disabled={isLoading}
                       />
                       {errors[`schedule_${index}_startTime`] && (
-                        <p className="text-red-500 text-xs mt-1">{errors[`schedule_${index}_startTime`]}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors[`schedule_${index}_startTime`]}
+                        </p>
                       )}
                     </div>
 
@@ -424,12 +516,20 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
                       <Input
                         type="time"
                         value={schedule.endTime}
-                        onChange={(e) => updateSchedule(index, 'endTime', e.target.value)}
-                        className={errors[`schedule_${index}_endTime`] ? 'border-red-500' : ''}
+                        onChange={(e) =>
+                          updateSchedule(index, "endTime", e.target.value)
+                        }
+                        className={
+                          errors[`schedule_${index}_endTime`]
+                            ? "border-red-500"
+                            : ""
+                        }
                         disabled={isLoading}
                       />
                       {errors[`schedule_${index}_endTime`] && (
-                        <p className="text-red-500 text-xs mt-1">{errors[`schedule_${index}_endTime`]}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors[`schedule_${index}_endTime`]}
+                        </p>
                       )}
                     </div>
 
@@ -440,7 +540,9 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
                       <Input
                         type="text"
                         value={schedule.room}
-                        onChange={(e) => updateSchedule(index, 'room', e.target.value)}
+                        onChange={(e) =>
+                          updateSchedule(index, "room", e.target.value)
+                        }
                         placeholder="Ruang A1"
                         disabled={isLoading}
                       />
@@ -450,7 +552,8 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
                   <div className="mt-3 p-3 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-600">
                       <Clock className="h-4 w-4 inline mr-1" />
-                      {getDayLabel(schedule.dayOfWeek)}, {schedule.startTime} - {schedule.endTime}
+                      {getDayLabel(schedule.dayOfWeek)}, {schedule.startTime} -{" "}
+                      {schedule.endTime}
                       {schedule.room && (
                         <>
                           <MapPin className="h-4 w-4 inline ml-3 mr-1" />
@@ -466,7 +569,9 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
                 <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
                   <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">Belum ada jadwal</p>
-                  <p className="text-sm text-gray-500">Klik "Tambah Jadwal" untuk menambah jadwal baru</p>
+                  <p className="text-sm text-gray-500">
+                    Klik "Tambah Jadwal" untuk menambah jadwal baru
+                  </p>
                 </div>
               )}
             </div>
@@ -494,7 +599,7 @@ export default function HalaqahForm({ halaqah, onSubmit, onCancel, isLoading = f
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              {isLoading ? 'Menyimpan...' : (isEdit ? 'Update' : 'Simpan')}
+              {isLoading ? "Menyimpan..." : isEdit ? "Update" : "Simpan"}
             </Button>
           </div>
         </form>

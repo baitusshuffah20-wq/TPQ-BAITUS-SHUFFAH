@@ -1,19 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { NotificationService, NotificationType, NotificationChannel, NotificationPriority } from '@/lib/notification-service';
+import { NextRequest, NextResponse } from "next/server";
+import {
+  NotificationService,
+  NotificationType,
+  NotificationChannel,
+  NotificationPriority,
+} from "@/lib/notification-service";
 
 // GET /api/notifications - Get user notifications
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = parseInt(searchParams.get('offset') || '0');
-    const statsOnly = searchParams.get('statsOnly') === 'true';
+    const userId = searchParams.get("userId");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const offset = parseInt(searchParams.get("offset") || "0");
+    const statsOnly = searchParams.get("statsOnly") === "true";
 
     if (!userId) {
       return NextResponse.json(
-        { success: false, message: 'User ID is required' },
-        { status: 400 }
+        { success: false, message: "User ID is required" },
+        { status: 400 },
       );
     }
 
@@ -21,11 +26,15 @@ export async function GET(request: NextRequest) {
       const stats = await NotificationService.getNotificationStats(userId);
       return NextResponse.json({
         success: true,
-        stats
+        stats,
       });
     }
 
-    const notifications = await NotificationService.getUserNotifications(userId, limit, offset);
+    const notifications = await NotificationService.getUserNotifications(
+      userId,
+      limit,
+      offset,
+    );
     const stats = await NotificationService.getNotificationStats(userId);
 
     return NextResponse.json({
@@ -35,14 +44,14 @@ export async function GET(request: NextRequest) {
       pagination: {
         limit,
         offset,
-        total: stats.total
-      }
+        total: stats.total,
+      },
     });
   } catch (error) {
-    console.error('Error getting notifications:', error);
+    console.error("Error getting notifications:", error);
     return NextResponse.json(
-      { success: false, message: 'Failed to get notifications' },
-      { status: 500 }
+      { success: false, message: "Failed to get notifications" },
+      { status: 500 },
     );
   }
 }
@@ -61,21 +70,24 @@ export async function POST(request: NextRequest) {
       recipientType,
       metadata,
       scheduledAt,
-      createdBy
+      createdBy,
     } = body;
 
     // Validation
     if (!title || !message || !type || !createdBy) {
       return NextResponse.json(
-        { success: false, message: 'Title, message, type, and createdBy are required' },
-        { status: 400 }
+        {
+          success: false,
+          message: "Title, message, type, and createdBy are required",
+        },
+        { status: 400 },
       );
     }
 
     if (!Object.values(NotificationType).includes(type)) {
       return NextResponse.json(
-        { success: false, message: 'Invalid notification type' },
-        { status: 400 }
+        { success: false, message: "Invalid notification type" },
+        { status: 400 },
       );
     }
 
@@ -89,19 +101,19 @@ export async function POST(request: NextRequest) {
       recipientType,
       metadata,
       scheduledAt: scheduledAt ? new Date(scheduledAt) : undefined,
-      createdBy
+      createdBy,
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Notification created successfully',
-      notification
+      message: "Notification created successfully",
+      notification,
     });
   } catch (error) {
-    console.error('Error creating notification:', error);
+    console.error("Error creating notification:", error);
     return NextResponse.json(
-      { success: false, message: 'Failed to create notification' },
-      { status: 500 }
+      { success: false, message: "Failed to create notification" },
+      { status: 500 },
     );
   }
 }
@@ -114,29 +126,29 @@ export async function PUT(request: NextRequest) {
 
     if (!notificationId) {
       return NextResponse.json(
-        { success: false, message: 'Notification ID is required' },
-        { status: 400 }
+        { success: false, message: "Notification ID is required" },
+        { status: 400 },
       );
     }
 
-    if (action === 'mark_read') {
+    if (action === "mark_read") {
       const notification = await NotificationService.markAsRead(notificationId);
       return NextResponse.json({
         success: true,
-        message: 'Notification marked as read',
-        notification
+        message: "Notification marked as read",
+        notification,
       });
     }
 
     return NextResponse.json(
-      { success: false, message: 'Invalid action' },
-      { status: 400 }
+      { success: false, message: "Invalid action" },
+      { status: 400 },
     );
   } catch (error) {
-    console.error('Error updating notification:', error);
+    console.error("Error updating notification:", error);
     return NextResponse.json(
-      { success: false, message: 'Failed to update notification' },
-      { status: 500 }
+      { success: false, message: "Failed to update notification" },
+      { status: 500 },
     );
   }
 }

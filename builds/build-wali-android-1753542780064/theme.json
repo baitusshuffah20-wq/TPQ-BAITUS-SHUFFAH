@@ -1,0 +1,11 @@
+{
+  "colors": {
+    "primary": "#ffd700",
+    "secondary": "#008080",
+    "background": "#ffffff",
+    "surface": "#f5f5f5",
+    "text": "#000000"
+  },
+  "template": "modern",
+  "appType": "wali"
+}

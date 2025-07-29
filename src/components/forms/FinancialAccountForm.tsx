@@ -1,25 +1,25 @@
-'use client';
+﻿"use client";
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Wallet, 
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Wallet,
   CreditCard,
   Building,
   Smartphone,
   Save,
   X,
-  DollarSign
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  DollarSign,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface FinancialAccountFormData {
   id?: string;
   name: string;
-  type: 'CASH' | 'BANK' | 'DIGITAL_WALLET';
+  type: "CASH" | "BANK" | "DIGITAL_WALLET";
   accountNumber?: string;
   balance: number;
   isActive: boolean;
@@ -34,25 +34,29 @@ interface FinancialAccountFormProps {
 }
 
 const ACCOUNT_TYPES = [
-  { value: 'CASH', label: 'Kas/Tunai', icon: <Wallet className="h-4 w-4" /> },
-  { value: 'BANK', label: 'Bank', icon: <Building className="h-4 w-4" /> },
-  { value: 'DIGITAL_WALLET', label: 'Dompet Digital', icon: <Smartphone className="h-4 w-4" /> }
+  { value: "CASH", label: "Kas/Tunai", icon: <Wallet className="h-4 w-4" /> },
+  { value: "BANK", label: "Bank", icon: <Building className="h-4 w-4" /> },
+  {
+    value: "DIGITAL_WALLET",
+    label: "Dompet Digital",
+    icon: <Smartphone className="h-4 w-4" />,
+  },
 ];
 
-export default function FinancialAccountForm({ 
-  account, 
-  onSubmit, 
-  onCancel, 
-  isLoading = false 
+export default function FinancialAccountForm({
+  account,
+  onSubmit,
+  onCancel,
+  isLoading = false,
 }: FinancialAccountFormProps) {
   const [formData, setFormData] = useState<FinancialAccountFormData>({
-    name: account?.name || '',
-    type: account?.type || 'CASH',
-    accountNumber: account?.accountNumber || '',
+    name: account?.name || "",
+    type: account?.type || "CASH",
+    accountNumber: account?.accountNumber || "",
     balance: account?.balance || 0,
     isActive: account?.isActive ?? true,
-    description: account?.description || '',
-    ...account
+    description: account?.description || "",
+    ...account,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -64,24 +68,24 @@ export default function FinancialAccountForm({
 
     // Name validation
     if (!formData.name) {
-      newErrors.name = 'Nama akun wajib diisi';
+      newErrors.name = "Nama akun wajib diisi";
     } else if (formData.name.length < 3) {
-      newErrors.name = 'Nama akun minimal 3 karakter';
+      newErrors.name = "Nama akun minimal 3 karakter";
     }
 
     // Type validation
     if (!formData.type) {
-      newErrors.type = 'Tipe akun wajib dipilih';
+      newErrors.type = "Tipe akun wajib dipilih";
     }
 
     // Account number validation for bank accounts
-    if (formData.type === 'BANK' && !formData.accountNumber) {
-      newErrors.accountNumber = 'Nomor rekening wajib diisi untuk akun bank';
+    if (formData.type === "BANK" && !formData.accountNumber) {
+      newErrors.accountNumber = "Nomor rekening wajib diisi untuk akun bank";
     }
 
     // Balance validation
     if (formData.balance < 0) {
-      newErrors.balance = 'Saldo tidak boleh negatif';
+      newErrors.balance = "Saldo tidak boleh negatif";
     }
 
     setErrors(newErrors);
@@ -90,48 +94,56 @@ export default function FinancialAccountForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
-      toast.error('Mohon perbaiki kesalahan pada form');
+      toast.error("Mohon perbaiki kesalahan pada form");
       return;
     }
 
     try {
       await onSubmit(formData);
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
-               type === 'number' ? parseFloat(value) || 0 : value
+      [name]:
+        type === "checkbox"
+          ? (e.target as HTMLInputElement).checked
+          : type === "number"
+            ? parseFloat(value) || 0
+            : value,
     }));
 
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const getTypeIcon = (type: string) => {
-    const accountType = ACCOUNT_TYPES.find(t => t.value === type);
+    const accountType = ACCOUNT_TYPES.find((t) => t.value === type);
     return accountType?.icon || <Wallet className="h-4 w-4" />;
   };
 
   const getTypeLabel = (type: string) => {
-    const accountType = ACCOUNT_TYPES.find(t => t.value === type);
+    const accountType = ACCOUNT_TYPES.find((t) => t.value === type);
     return accountType?.label || type;
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -140,7 +152,7 @@ export default function FinancialAccountForm({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CreditCard className="h-6 w-6 text-green-600" />
-          {isEdit ? 'Edit Akun Keuangan' : 'Tambah Akun Keuangan Baru'}
+          {isEdit ? "Edit Akun Keuangan" : "Tambah Akun Keuangan Baru"}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -157,7 +169,7 @@ export default function FinancialAccountForm({
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="Contoh: Kas Utama, Bank BCA, OVO"
-                className={errors.name ? 'border-red-500' : ''}
+                className={errors.name ? "border-red-500" : ""}
                 disabled={isLoading}
               />
               {errors.name && (
@@ -175,8 +187,8 @@ export default function FinancialAccountForm({
                     key={type.value}
                     className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
                       formData.type === type.value
-                        ? 'border-green-500 bg-green-50'
-                        : 'border-gray-300 hover:border-green-300'
+                        ? "border-green-500 bg-green-50"
+                        : "border-gray-300 hover:border-green-300"
                     }`}
                   >
                     <input
@@ -198,7 +210,7 @@ export default function FinancialAccountForm({
               )}
             </div>
 
-            {formData.type === 'BANK' && (
+            {formData.type === "BANK" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Nomor Rekening *
@@ -209,11 +221,13 @@ export default function FinancialAccountForm({
                   value={formData.accountNumber}
                   onChange={handleChange}
                   placeholder="1234567890"
-                  className={errors.accountNumber ? 'border-red-500' : ''}
+                  className={errors.accountNumber ? "border-red-500" : ""}
                   disabled={isLoading}
                 />
                 {errors.accountNumber && (
-                  <p className="text-red-500 text-xs mt-1">{errors.accountNumber}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.accountNumber}
+                  </p>
                 )}
               </div>
             )}
@@ -232,7 +246,7 @@ export default function FinancialAccountForm({
                   placeholder="0"
                   min="0"
                   step="1000"
-                  className={`pl-10 ${errors.balance ? 'border-red-500' : ''}`}
+                  className={`pl-10 ${errors.balance ? "border-red-500" : ""}`}
                   disabled={isLoading}
                 />
               </div>
@@ -274,8 +288,8 @@ export default function FinancialAccountForm({
               <label className="text-sm font-medium text-gray-700">
                 Akun Aktif
               </label>
-              <Badge variant={formData.isActive ? 'success' : 'secondary'}>
-                {formData.isActive ? 'Aktif' : 'Tidak Aktif'}
+              <Badge variant={formData.isActive ? "success" : "secondary"}>
+                {formData.isActive ? "Aktif" : "Tidak Aktif"}
               </Badge>
             </div>
             <p className="text-xs text-gray-500 mt-1">
@@ -285,23 +299,34 @@ export default function FinancialAccountForm({
 
           {/* Preview */}
           <div className="border-t pt-6">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Preview Akun:</h4>
+            <h4 className="text-sm font-medium text-gray-700 mb-3">
+              Preview Akun:
+            </h4>
             <div className="p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
                 {getTypeIcon(formData.type)}
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">{formData.name || 'Nama Akun'}</p>
-                  <p className="text-sm text-gray-600">{getTypeLabel(formData.type)}</p>
+                  <p className="font-medium text-gray-900">
+                    {formData.name || "Nama Akun"}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {getTypeLabel(formData.type)}
+                  </p>
                   {formData.accountNumber && (
-                    <p className="text-sm text-gray-500">No: {formData.accountNumber}</p>
+                    <p className="text-sm text-gray-500">
+                      No: {formData.accountNumber}
+                    </p>
                   )}
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-bold text-green-600">
                     {formatCurrency(formData.balance)}
                   </p>
-                  <Badge variant={formData.isActive ? 'success' : 'secondary'} className="text-xs">
-                    {formData.isActive ? 'Aktif' : 'Tidak Aktif'}
+                  <Badge
+                    variant={formData.isActive ? "success" : "secondary"}
+                    className="text-xs"
+                  >
+                    {formData.isActive ? "Aktif" : "Tidak Aktif"}
                   </Badge>
                 </div>
               </div>
@@ -330,7 +355,7 @@ export default function FinancialAccountForm({
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              {isLoading ? 'Menyimpan...' : (isEdit ? 'Update' : 'Simpan')}
+              {isLoading ? "Menyimpan..." : isEdit ? "Update" : "Simpan"}
             </Button>
           </div>
         </form>

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { WhatsAppService } from '@/lib/whatsapp-service';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { WhatsAppService } from "@/lib/whatsapp-service";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,14 +8,14 @@ export async function POST(request: NextRequest) {
     const {
       to,
       message,
-      type = 'text',
+      type = "text",
       templateName,
-      languageCode = 'id',
+      languageCode = "id",
       parameters = [],
       context,
       // Legacy support
       recipientId,
-      data
+      data,
     } = body;
 
     const whatsappService = new WhatsAppService();
@@ -28,33 +28,39 @@ export async function POST(request: NextRequest) {
     // Validation for new format
     if (!to) {
       return NextResponse.json(
-        { success: false, message: 'Recipient phone number is required' },
-        { status: 400 }
+        { success: false, message: "Recipient phone number is required" },
+        { status: 400 },
       );
     }
 
-    if (type === 'text' && !message) {
+    if (type === "text" && !message) {
       return NextResponse.json(
-        { success: false, message: 'Message content is required for text messages' },
-        { status: 400 }
+        {
+          success: false,
+          message: "Message content is required for text messages",
+        },
+        { status: 400 },
       );
     }
 
-    if (type === 'template' && !templateName) {
+    if (type === "template" && !templateName) {
       return NextResponse.json(
-        { success: false, message: 'Template name is required for template messages' },
-        { status: 400 }
+        {
+          success: false,
+          message: "Template name is required for template messages",
+        },
+        { status: 400 },
       );
     }
 
     let result;
 
-    if (type === 'template') {
+    if (type === "template") {
       result = await whatsappService.sendTemplateMessage(
         to,
         templateName,
         languageCode,
-        parameters
+        parameters,
       );
     } else {
       result = await whatsappService.sendTextMessage(to, message, context);
@@ -62,18 +68,18 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'WhatsApp message sent successfully',
-      data: result
+      message: "WhatsApp message sent successfully",
+      data: result,
     });
   } catch (error) {
-    console.error('Error sending WhatsApp message:', error);
+    console.error("Error sending WhatsApp message:", error);
     return NextResponse.json(
       {
         success: false,
-        message: 'Failed to send WhatsApp message',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        message: "Failed to send WhatsApp message",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -85,51 +91,64 @@ export async function PUT(request: NextRequest) {
     const {
       recipients,
       message,
-      type = 'text',
+      type = "text",
       templateName,
-      languageCode = 'id',
+      languageCode = "id",
       parametersMap = {},
-      context
+      context,
     } = body;
 
     // Validation
     if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Recipients array is required and cannot be empty' },
-        { status: 400 }
+        {
+          success: false,
+          message: "Recipients array is required and cannot be empty",
+        },
+        { status: 400 },
       );
     }
 
-    if (type === 'text' && !message) {
+    if (type === "text" && !message) {
       return NextResponse.json(
-        { success: false, message: 'Message content is required for text messages' },
-        { status: 400 }
+        {
+          success: false,
+          message: "Message content is required for text messages",
+        },
+        { status: 400 },
       );
     }
 
-    if (type === 'template' && !templateName) {
+    if (type === "template" && !templateName) {
       return NextResponse.json(
-        { success: false, message: 'Template name is required for template messages' },
-        { status: 400 }
+        {
+          success: false,
+          message: "Template name is required for template messages",
+        },
+        { status: 400 },
       );
     }
 
     const whatsappService = new WhatsAppService();
     let results;
 
-    if (type === 'template') {
+    if (type === "template") {
       results = await whatsappService.sendBulkTemplateMessages(
         recipients,
         templateName,
         languageCode,
-        parametersMap
+        parametersMap,
       );
     } else {
-      results = await whatsappService.sendBulkMessages(recipients, message, context);
+      results = await whatsappService.sendBulkMessages(
+        recipients,
+        message,
+        context,
+      );
     }
 
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
+    const successful = results.filter((r) => r.success).length;
+    const failed = results.filter((r) => !r.success).length;
 
     return NextResponse.json({
       success: true,
@@ -138,80 +157,92 @@ export async function PUT(request: NextRequest) {
         total: recipients.length,
         successful,
         failed,
-        results
-      }
+        results,
+      },
     });
   } catch (error) {
-    console.error('Error sending bulk WhatsApp messages:', error);
+    console.error("Error sending bulk WhatsApp messages:", error);
     return NextResponse.json(
       {
         success: false,
-        message: 'Failed to send bulk WhatsApp messages',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        message: "Failed to send bulk WhatsApp messages",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 // Handle legacy request format
-async function handleLegacyRequest(recipientId: string, data: any, whatsappService: WhatsAppService) {
+async function handleLegacyRequest(
+  recipientId: string,
+  data: any,
+  whatsappService: WhatsAppService,
+) {
   try {
     let result;
 
     switch (data.type) {
-      case 'hafalan_progress':
+      case "hafalan_progress":
         result = await sendHafalanProgress(recipientId, data, whatsappService);
         break;
 
-      case 'attendance_notification':
-        result = await sendAttendanceNotification(recipientId, data, whatsappService);
+      case "attendance_notification":
+        result = await sendAttendanceNotification(
+          recipientId,
+          data,
+          whatsappService,
+        );
         break;
 
-      case 'payment_reminder':
+      case "payment_reminder":
         result = await sendPaymentReminder(recipientId, data, whatsappService);
         break;
 
-      case 'monthly_report':
+      case "monthly_report":
         result = await sendMonthlyReport(recipientId, data, whatsappService);
         break;
 
-      case 'custom_message':
+      case "custom_message":
         result = await sendCustomMessage(recipientId, data, whatsappService);
         break;
 
       default:
         return NextResponse.json(
-          { error: 'Invalid message type' },
-          { status: 400 }
+          { error: "Invalid message type" },
+          { status: 400 },
         );
     }
 
     return NextResponse.json({
       success: true,
       messageId: result.messages?.[0]?.id,
-      message: 'WhatsApp message sent successfully'
+      message: "WhatsApp message sent successfully",
     });
   } catch (error) {
-    console.error('Legacy WhatsApp API error:', error);
+    console.error("Legacy WhatsApp API error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
 
-async function sendHafalanProgress(recipientId: string, data: any, whatsappService: WhatsAppService) {
+async function sendHafalanProgress(
+  recipientId: string,
+  data: any,
+  whatsappService: WhatsAppService,
+) {
   // Get student and parent information
   const student = await prisma.user.findUnique({
     where: { id: recipientId },
     include: {
-      parent: true
-    }
+      parent: true,
+    },
   });
 
   if (!student || !student.parent?.phone) {
-    throw new Error('Student or parent phone not found');
+    throw new Error("Student or parent phone not found");
   }
 
   const message = `Assalamu'alaikum ${student.parent.name},
@@ -223,44 +254,58 @@ Alhamdulillah, semoga Allah mudahkan perjalanan hafalan putra/putri Anda.
 Barakallahu fiikum.
 TPQ Baitus Shuffah`;
 
-  return whatsappService.sendTextMessage(student.parent.phone, message, { type: 'hafalan_progress', studentId: recipientId });
+  return whatsappService.sendTextMessage(student.parent.phone, message, {
+    type: "hafalan_progress",
+    studentId: recipientId,
+  });
 }
 
-async function sendAttendanceNotification(recipientId: string, data: any, whatsappService: WhatsAppService) {
+async function sendAttendanceNotification(
+  recipientId: string,
+  data: any,
+  whatsappService: WhatsAppService,
+) {
   const student = await prisma.user.findUnique({
     where: { id: recipientId },
     include: {
-      parent: true
-    }
+      parent: true,
+    },
   });
 
   if (!student || !student.parent?.phone) {
-    throw new Error('Student or parent phone not found');
+    throw new Error("Student or parent phone not found");
   }
 
-  const statusText = data.status === 'HADIR' ? 'hadir' : 'tidak hadir';
+  const statusText = data.status === "HADIR" ? "hadir" : "tidak hadir";
   const message = `Assalamu'alaikum ${student.parent.name},
 
 Kami informasikan bahwa ${student.name} ${statusText} pada kegiatan TPQ hari ${data.date} pukul ${data.time}.
 
-${data.notes ? `Catatan: ${data.notes}` : ''}
+${data.notes ? `Catatan: ${data.notes}` : ""}
 
 Barakallahu fiikum.
 TPQ Baitus Shuffah`;
 
-  return whatsappService.sendTextMessage(student.parent.phone, message, { type: 'attendance_notification', studentId: recipientId });
+  return whatsappService.sendTextMessage(student.parent.phone, message, {
+    type: "attendance_notification",
+    studentId: recipientId,
+  });
 }
 
-async function sendPaymentReminder(recipientId: string, data: any, whatsappService: WhatsAppService) {
+async function sendPaymentReminder(
+  recipientId: string,
+  data: any,
+  whatsappService: WhatsAppService,
+) {
   const student = await prisma.user.findUnique({
     where: { id: recipientId },
     include: {
-      parent: true
-    }
+      parent: true,
+    },
   });
 
   if (!student || !student.parent?.phone) {
-    throw new Error('Student or parent phone not found');
+    throw new Error("Student or parent phone not found");
   }
 
   const message = `Assalamu'alaikum ${student.parent.name},
@@ -272,47 +317,64 @@ Mohon untuk segera melakukan pembayaran. Terima kasih.
 Barakallahu fiikum.
 TPQ Baitus Shuffah`;
 
-  return whatsappService.sendTextMessage(student.parent.phone, message, { type: 'payment_reminder', studentId: recipientId });
+  return whatsappService.sendTextMessage(student.parent.phone, message, {
+    type: "payment_reminder",
+    studentId: recipientId,
+  });
 }
 
-async function sendMonthlyReport(recipientId: string, data: any, whatsappService: WhatsAppService) {
+async function sendMonthlyReport(
+  recipientId: string,
+  data: any,
+  whatsappService: WhatsAppService,
+) {
   const student = await prisma.user.findUnique({
     where: { id: recipientId },
     include: {
-      parent: true
-    }
+      parent: true,
+    },
   });
 
   if (!student || !student.parent?.phone) {
-    throw new Error('Student or parent phone not found');
+    throw new Error("Student or parent phone not found");
   }
 
   const message = `Assalamu'alaikum ${student.parent.name},
 
 Laporan bulanan untuk ${student.name}:
 
-📖 Progress Hafalan: ${data.hafalanProgress || 'Belum ada data'}
-📅 Kehadiran: ${data.attendance || 'Belum ada data'}
-📝 Catatan Musyrif: ${data.notes || 'Tidak ada catatan khusus'}
+📖 Progress Hafalan: ${data.hafalanProgress || "Belum ada data"}
+📅 Kehadiran: ${data.attendance || "Belum ada data"}
+📝 Catatan Musyrif: ${data.notes || "Tidak ada catatan khusus"}
 
 Semoga Allah mudahkan perjalanan hafalan putra/putri Anda.
 
 Barakallahu fiikum.
 TPQ Baitus Shuffah`;
 
-  return whatsappService.sendTextMessage(student.parent.phone, message, { type: 'monthly_report', studentId: recipientId });
+  return whatsappService.sendTextMessage(student.parent.phone, message, {
+    type: "monthly_report",
+    studentId: recipientId,
+  });
 }
 
-async function sendCustomMessage(recipientId: string, data: any, whatsappService: WhatsAppService) {
+async function sendCustomMessage(
+  recipientId: string,
+  data: any,
+  whatsappService: WhatsAppService,
+) {
   const recipient = await prisma.user.findUnique({
-    where: { id: recipientId }
+    where: { id: recipientId },
   });
 
   if (!recipient?.phone) {
-    throw new Error('Recipient phone not found');
+    throw new Error("Recipient phone not found");
   }
 
-  return whatsappService.sendTextMessage(recipient.phone, data.message, { type: 'custom_message', recipientId });
+  return whatsappService.sendTextMessage(recipient.phone, data.message, {
+    type: "custom_message",
+    recipientId,
+  });
 }
 
 // Legacy logging function - now handled by WhatsAppService

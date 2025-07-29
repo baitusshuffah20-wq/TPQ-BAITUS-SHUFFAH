@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   X,
   Save,
@@ -14,8 +14,8 @@ import {
   Users,
   BookOpen,
   Upload,
-  Camera
-} from 'lucide-react';
+  Camera,
+} from "lucide-react";
 
 interface AddStudentModalProps {
   isOpen: boolean;
@@ -28,30 +28,30 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
   isOpen,
   onClose,
   onSave,
-  editData
+  editData,
 }) => {
   const [formData, setFormData] = useState({
     // Personal Info
-    name: '',
-    nis: '',
-    gender: 'MALE',
-    birthPlace: '',
-    birthDate: '',
-    address: '',
-    phone: '',
-    email: '',
-    
+    name: "",
+    nis: "",
+    gender: "MALE",
+    birthPlace: "",
+    birthDate: "",
+    address: "",
+    phone: "",
+    email: "",
+
     // Parent/Wali Info
-    waliId: '',
-    
+    waliId: "",
+
     // Academic Info
-    halaqahId: '',
-    enrollmentDate: new Date().toISOString().split('T')[0],
-    graduationDate: '',
-    status: 'ACTIVE',
-    
+    halaqahId: "",
+    enrollmentDate: new Date().toISOString().split("T")[0],
+    graduationDate: "",
+    status: "ACTIVE",
+
     // Additional Info
-    photo: ''
+    photo: "",
   });
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -73,40 +73,46 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
   useEffect(() => {
     if (editData) {
       setFormData({
-        name: editData.name || '',
-        nis: editData.nis || '',
-        gender: editData.gender || 'MALE',
-        birthPlace: editData.birthPlace || '',
-        birthDate: editData.birthDate ? new Date(editData.birthDate).toISOString().split('T')[0] : '',
-        address: editData.address || '',
-        phone: editData.phone || '',
-        email: editData.email || '',
-        waliId: editData.waliId || '',
-        halaqahId: editData.halaqahId || '',
-        enrollmentDate: editData.enrollmentDate ? new Date(editData.enrollmentDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        graduationDate: editData.graduationDate ? new Date(editData.graduationDate).toISOString().split('T')[0] : '',
-        status: editData.status || 'ACTIVE',
-        photo: editData.photo || ''
+        name: editData.name || "",
+        nis: editData.nis || "",
+        gender: editData.gender || "MALE",
+        birthPlace: editData.birthPlace || "",
+        birthDate: editData.birthDate
+          ? new Date(editData.birthDate).toISOString().split("T")[0]
+          : "",
+        address: editData.address || "",
+        phone: editData.phone || "",
+        email: editData.email || "",
+        waliId: editData.waliId || "",
+        halaqahId: editData.halaqahId || "",
+        enrollmentDate: editData.enrollmentDate
+          ? new Date(editData.enrollmentDate).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
+        graduationDate: editData.graduationDate
+          ? new Date(editData.graduationDate).toISOString().split("T")[0]
+          : "",
+        status: editData.status || "ACTIVE",
+        photo: editData.photo || "",
       });
-      
+
       setAvatarPreview(editData.photo || null);
     } else {
       // Reset form for new student
       setFormData({
-        name: '',
-        nis: '',
-        gender: 'MALE',
-        birthPlace: '',
-        birthDate: '',
-        address: '',
-        phone: '',
-        email: '',
-        waliId: '',
-        halaqahId: '',
-        enrollmentDate: new Date().toISOString().split('T')[0],
-        graduationDate: '',
-        status: 'ACTIVE',
-        photo: ''
+        name: "",
+        nis: "",
+        gender: "MALE",
+        birthPlace: "",
+        birthDate: "",
+        address: "",
+        phone: "",
+        email: "",
+        waliId: "",
+        halaqahId: "",
+        enrollmentDate: new Date().toISOString().split("T")[0],
+        graduationDate: "",
+        status: "ACTIVE",
+        photo: "",
       });
       setAvatarPreview(null);
     }
@@ -115,25 +121,45 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
   const loadWaliList = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/users?role=WALI');
+      const response = await fetch("/api/users?role=WALI");
       const data = await response.json();
-      
+
       if (data.success) {
         setWaliList(data.users);
       } else {
-        console.error('Failed to load wali list:', data.message);
+        console.error("Failed to load wali list:", data.message);
         // Fallback data
         setWaliList([
-          { id: 'wali1', name: 'Ahmad (Wali)', email: 'ahmad@example.com', phone: '08123456789' },
-          { id: 'wali2', name: 'Budi (Wali)', email: 'budi@example.com', phone: '08123456790' }
+          {
+            id: "wali1",
+            name: "Ahmad (Wali)",
+            email: "ahmad@example.com",
+            phone: "08123456789",
+          },
+          {
+            id: "wali2",
+            name: "Budi (Wali)",
+            email: "budi@example.com",
+            phone: "08123456790",
+          },
         ]);
       }
     } catch (error) {
-      console.error('Error loading wali list:', error);
+      console.error("Error loading wali list:", error);
       // Fallback data
       setWaliList([
-        { id: 'wali1', name: 'Ahmad (Wali)', email: 'ahmad@example.com', phone: '08123456789' },
-        { id: 'wali2', name: 'Budi (Wali)', email: 'budi@example.com', phone: '08123456790' }
+        {
+          id: "wali1",
+          name: "Ahmad (Wali)",
+          email: "ahmad@example.com",
+          phone: "08123456789",
+        },
+        {
+          id: "wali2",
+          name: "Budi (Wali)",
+          email: "budi@example.com",
+          phone: "08123456790",
+        },
       ]);
     } finally {
       setLoading(false);
@@ -143,25 +169,25 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
   const loadHalaqahList = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/halaqah');
+      const response = await fetch("/api/halaqah");
       const data = await response.json();
-      
+
       if (data.success) {
         setHalaqahList(data.halaqah);
       } else {
-        console.error('Failed to load halaqah list:', data.message);
+        console.error("Failed to load halaqah list:", data.message);
         // Fallback data
         setHalaqahList([
-          { id: 'halaqah1', name: 'Halaqah Al-Fatihah', level: 'Pemula' },
-          { id: 'halaqah2', name: 'Halaqah Al-Baqarah', level: 'Menengah' }
+          { id: "halaqah1", name: "Halaqah Al-Fatihah", level: "Pemula" },
+          { id: "halaqah2", name: "Halaqah Al-Baqarah", level: "Menengah" },
         ]);
       }
     } catch (error) {
-      console.error('Error loading halaqah list:', error);
+      console.error("Error loading halaqah list:", error);
       // Fallback data
       setHalaqahList([
-        { id: 'halaqah1', name: 'Halaqah Al-Fatihah', level: 'Pemula' },
-        { id: 'halaqah2', name: 'Halaqah Al-Baqarah', level: 'Menengah' }
+        { id: "halaqah1", name: "Halaqah Al-Fatihah", level: "Pemula" },
+        { id: "halaqah2", name: "Halaqah Al-Baqarah", level: "Menengah" },
       ]);
     } finally {
       setLoading(false);
@@ -169,16 +195,16 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: ''
+        [field]: "",
       }));
     }
   };
@@ -199,31 +225,31 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Nama wajib diisi';
+      newErrors.name = "Nama wajib diisi";
     }
 
     if (!formData.nis.trim()) {
-      newErrors.nis = 'NIS wajib diisi';
+      newErrors.nis = "NIS wajib diisi";
     }
 
     if (!formData.birthDate) {
-      newErrors.birthDate = 'Tanggal lahir wajib diisi';
+      newErrors.birthDate = "Tanggal lahir wajib diisi";
     }
 
     if (!formData.birthPlace.trim()) {
-      newErrors.birthPlace = 'Tempat lahir wajib diisi';
+      newErrors.birthPlace = "Tempat lahir wajib diisi";
     }
 
     if (!formData.address.trim()) {
-      newErrors.address = 'Alamat wajib diisi';
+      newErrors.address = "Alamat wajib diisi";
     }
 
     if (!formData.waliId) {
-      newErrors.waliId = 'Wali santri wajib dipilih';
+      newErrors.waliId = "Wali santri wajib dipilih";
     }
 
     if (!formData.enrollmentDate) {
-      newErrors.enrollmentDate = 'Tanggal masuk wajib diisi';
+      newErrors.enrollmentDate = "Tanggal masuk wajib diisi";
     }
 
     setErrors(newErrors);
@@ -238,11 +264,11 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
     const studentData = {
       ...formData,
       photo: avatarPreview,
-      id: editData?.id
+      id: editData?.id,
     };
 
     onSave(studentData);
-    
+
     // Form will be reset by useEffect when modal closes
   };
 
@@ -255,7 +281,7 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>
-                {editData ? 'Edit Data Santri' : 'Tambah Santri Baru'}
+                {editData ? "Edit Data Santri" : "Tambah Santri Baru"}
               </CardTitle>
               <button
                 onClick={onClose}
@@ -270,14 +296,20 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
               {/* Avatar Section */}
               <div className="text-center">
                 <div className="relative inline-block">
-                  <div className="w-24 h-24 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                  <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden relative">
                     {avatarPreview ? (
-                      <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
+                      <img
+                        src={avatarPreview}
+                        alt="Avatar Preview"
+                        className="w-full h-full object-cover absolute inset-0"
+                      />
                     ) : (
-                      <User className="h-12 w-12 text-teal-600" />
+                      <div className="w-full h-full bg-gray-100 rounded-full flex items-center justify-center">
+                        <User className="h-12 w-12 text-gray-600" />
+                      </div>
                     )}
                   </div>
-                  <label className="absolute bottom-0 right-0 bg-teal-600 text-white p-2 rounded-full cursor-pointer hover:bg-teal-700 transition-colors">
+                  <label className="absolute bottom-0 right-0 bg-gray-600 text-white p-2 rounded-full cursor-pointer hover:bg-gray-700 transition-colors">
                     <Camera className="h-4 w-4" />
                     <input
                       type="file"
@@ -303,13 +335,17 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
                     <input
                       type="text"
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                        errors.name ? 'border-red-500' : 'border-gray-300'
+                        errors.name ? "border-red-500" : "border-gray-300"
                       }`}
                       value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
                       placeholder="Masukkan nama lengkap"
                     />
-                    {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                    {errors.name && (
+                      <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                    )}
                   </div>
 
                   <div>
@@ -319,13 +355,15 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
                     <input
                       type="text"
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                        errors.nis ? 'border-red-500' : 'border-gray-300'
+                        errors.nis ? "border-red-500" : "border-gray-300"
                       }`}
                       value={formData.nis}
-                      onChange={(e) => handleInputChange('nis', e.target.value)}
+                      onChange={(e) => handleInputChange("nis", e.target.value)}
                       placeholder="Masukkan NIS"
                     />
-                    {errors.nis && <p className="text-red-500 text-sm mt-1">{errors.nis}</p>}
+                    {errors.nis && (
+                      <p className="text-red-500 text-sm mt-1">{errors.nis}</p>
+                    )}
                   </div>
 
                   <div>
@@ -335,7 +373,9 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.gender}
-                      onChange={(e) => handleInputChange('gender', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("gender", e.target.value)
+                      }
                     >
                       <option value="MALE">Laki-laki</option>
                       <option value="FEMALE">Perempuan</option>
@@ -350,7 +390,9 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
                       type="text"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.birthPlace}
-                      onChange={(e) => handleInputChange('birthPlace', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("birthPlace", e.target.value)
+                      }
                       placeholder="Masukkan tempat lahir"
                     />
                   </div>
@@ -362,12 +404,18 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
                     <input
                       type="date"
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                        errors.birthDate ? 'border-red-500' : 'border-gray-300'
+                        errors.birthDate ? "border-red-500" : "border-gray-300"
                       }`}
                       value={formData.birthDate}
-                      onChange={(e) => handleInputChange('birthDate', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("birthDate", e.target.value)
+                      }
                     />
-                    {errors.birthDate && <p className="text-red-500 text-sm mt-1">{errors.birthDate}</p>}
+                    {errors.birthDate && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.birthDate}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -378,7 +426,9 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
                       type="tel"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("phone", e.target.value)
+                      }
                       placeholder="Masukkan nomor telepon"
                     />
                   </div>
@@ -391,7 +441,9 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.address}
-                      onChange={(e) => handleInputChange('address', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("address", e.target.value)
+                      }
                       placeholder="Masukkan alamat lengkap"
                     />
                   </div>
@@ -411,10 +463,12 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
                     </label>
                     <select
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                        errors.waliId ? 'border-red-500' : 'border-gray-300'
+                        errors.waliId ? "border-red-500" : "border-gray-300"
                       }`}
                       value={formData.waliId}
-                      onChange={(e) => handleInputChange('waliId', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("waliId", e.target.value)
+                      }
                       disabled={loading}
                     >
                       <option value="">-- Pilih Wali Santri --</option>
@@ -424,16 +478,38 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
                         </option>
                       ))}
                     </select>
-                    {errors.waliId && <p className="text-red-500 text-sm mt-1">{errors.waliId}</p>}
-                    
+                    {errors.waliId && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.waliId}
+                      </p>
+                    )}
+
                     {formData.waliId && waliList.length > 0 && (
                       <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                        <h4 className="font-medium text-gray-900 mb-2">Detail Wali Santri</h4>
-                        {waliList.find(w => w.id === formData.waliId) && (
+                        <h4 className="font-medium text-gray-900 mb-2">
+                          Detail Wali Santri
+                        </h4>
+                        {waliList.find((w) => w.id === formData.waliId) && (
                           <div className="space-y-1 text-sm">
-                            <p><span className="font-medium">Nama:</span> {waliList.find(w => w.id === formData.waliId)?.name}</p>
-                            <p><span className="font-medium">Email:</span> {waliList.find(w => w.id === formData.waliId)?.email}</p>
-                            <p><span className="font-medium">Telepon:</span> {waliList.find(w => w.id === formData.waliId)?.phone || '-'}</p>
+                            <p>
+                              <span className="font-medium">Nama:</span>{" "}
+                              {
+                                waliList.find((w) => w.id === formData.waliId)
+                                  ?.name
+                              }
+                            </p>
+                            <p>
+                              <span className="font-medium">Email:</span>{" "}
+                              {
+                                waliList.find((w) => w.id === formData.waliId)
+                                  ?.email
+                              }
+                            </p>
+                            <p>
+                              <span className="font-medium">Telepon:</span>{" "}
+                              {waliList.find((w) => w.id === formData.waliId)
+                                ?.phone || "-"}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -456,7 +532,9 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.halaqahId}
-                      onChange={(e) => handleInputChange('halaqahId', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("halaqahId", e.target.value)
+                      }
                       disabled={loading}
                     >
                       <option value="">-- Belum Ada Halaqah --</option>
@@ -476,7 +554,9 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
                       type="email"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("email", e.target.value)
+                      }
                       placeholder="Masukkan email santri (opsional)"
                     />
                   </div>
@@ -488,12 +568,20 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
                     <input
                       type="date"
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                        errors.enrollmentDate ? 'border-red-500' : 'border-gray-300'
+                        errors.enrollmentDate
+                          ? "border-red-500"
+                          : "border-gray-300"
                       }`}
                       value={formData.enrollmentDate}
-                      onChange={(e) => handleInputChange('enrollmentDate', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("enrollmentDate", e.target.value)
+                      }
                     />
-                    {errors.enrollmentDate && <p className="text-red-500 text-sm mt-1">{errors.enrollmentDate}</p>}
+                    {errors.enrollmentDate && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.enrollmentDate}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -504,7 +592,9 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
                       type="date"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.graduationDate}
-                      onChange={(e) => handleInputChange('graduationDate', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("graduationDate", e.target.value)
+                      }
                     />
                   </div>
 
@@ -515,7 +605,9 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.status}
-                      onChange={(e) => handleInputChange('status', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("status", e.target.value)
+                      }
                     >
                       <option value="ACTIVE">Aktif</option>
                       <option value="INACTIVE">Tidak Aktif</option>
@@ -541,7 +633,7 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
                 </Button>
                 <Button onClick={handleSave}>
                   <Save className="h-4 w-4 mr-2" />
-                  {editData ? 'Update' : 'Simpan'}
+                  {editData ? "Update" : "Simpan"}
                 </Button>
               </div>
             </div>

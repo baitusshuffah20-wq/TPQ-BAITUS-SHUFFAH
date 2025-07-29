@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TPQ Wali Santri - Admin APK Generator</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      .build-log {
+        background: #1a1a1a;
+        color: #00ff00;
+        font-family: "Courier New", monospace;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .status-building {
+        color: #fbbf24;
+      }
+      .status-completed {
+        color: #10b981;
+      }
+      .status-failed {
+        color: #ef4444;
+      }
+      .status-cancelled {
+        color: #6b7280;
+      }
+
+      .platform-card {
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+      }
+      .platform-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      }
+      .platform-card.selected {
+        border-color: #3b82f6;
+        background: #eff6ff;
+      }
+
+      .profile-card {
+        transition: all 0.2s ease;
+      }
+      .profile-card:hover {
+        background: #f3f4f6;
+      }
+      .profile-card.selected {
+        background: #dbeafe;
+        border-color: #3b82f6;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-4">
+          <div class="flex items-center">
+            <i class="fas fa-mobile-alt text-blue-600 text-2xl mr-3"></i>
+            <h1 class="text-2xl font-bold text-gray-900">TPQ Wali Santri</h1>
+            <span
+              class="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded"
+              >Admin Panel</span
+            >
+          </div>
+          <div class="flex items-center space-x-4">
+            <div id="connectionStatus" class="flex items-center">
+              <div class="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+              <span class="text-sm text-gray-600">Disconnected</span>
+            </div>
+            <button
+              id="refreshBtn"
+              class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+            >
+              <i class="fas fa-sync-alt mr-2"></i>Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Project Info -->
+      <div class="bg-white rounded-lg shadow mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">
+            <i class="fas fa-info-circle mr-2 text-blue-600"></i>Project
+            Information
+          </h2>
+        </div>
+        <div class="p-6">
+          <div id="projectInfo" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Project info will be loaded here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Build Configuration -->
+      <div class="bg-white rounded-lg shadow mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">
+            <i class="fas fa-cogs mr-2 text-blue-600"></i>Build Configuration
+          </h2>
+        </div>
+        <div class="p-6">
+          <!-- Platform Selection -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-3"
+              >Select Platform</label
+            >
+            <div
+              id="platformSelection"
+              class="grid grid-cols-1 md:grid-cols-2 gap-4"
+            >
+              <!-- Platform cards will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Profile Selection -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-3"
+              >Select Build Profile</label
+            >
+            <div
+              id="profileSelection"
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+            >
+              <!-- Profile cards will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Build Options -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-3"
+              >Build Options</label
+            >
+            <div class="space-y-3">
+              <label class="flex items-center">
+                <input
+                  type="checkbox"
+                  id="autoIncrement"
+                  checked
+                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span class="ml-2 text-sm text-gray-700"
+                  >Auto increment version number</span
+                >
+              </label>
+              <label class="flex items-center">
+                <input
+                  type="checkbox"
+                  id="sendNotifications"
+                  checked
+                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span class="ml-2 text-sm text-gray-700"
+                  >Send notifications when build completes</span
+                >
+              </label>
+            </div>
+          </div>
+
+          <!-- Build Actions -->
+          <div class="flex space-x-4">
+            <button
+              id="startBuildBtn"
+              class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <i class="fas fa-play mr-2"></i>Start Build
+            </button>
+            <button
+              id="stopBuildBtn"
+              class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled
+            >
+              <i class="fas fa-stop mr-2"></i>Stop Build
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Build Status -->
+      <div
+        id="currentBuildSection"
+        class="bg-white rounded-lg shadow mb-8"
+        style="display: none"
+      >
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">
+            <i class="fas fa-hammer mr-2 text-blue-600"></i>Current Build
+          </h2>
+        </div>
+        <div class="p-6">
+          <div id="currentBuildInfo" class="mb-4">
+            <!-- Current build info will be displayed here -->
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Build Logs</label
+            >
+            <div id="buildLogs" class="build-log p-4 rounded border text-sm">
+              <!-- Build logs will appear here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Build History -->
+      <div class="bg-white rounded-lg shadow mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">
+            <i class="fas fa-history mr-2 text-blue-600"></i>Build History
+          </h2>
+        </div>
+        <div class="p-6">
+          <div id="buildHistory" class="space-y-4">
+            <!-- Build history will be loaded here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Asset Management -->
+      <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">
+            <i class="fas fa-images mr-2 text-blue-600"></i>Asset Management
+          </h2>
+        </div>
+        <div class="p-6">
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Upload App Assets</label
+            >
+            <div
+              class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center"
+            >
+              <input
+                type="file"
+                id="assetUpload"
+                multiple
+                accept="image/*"
+                class="hidden"
+              />
+              <i
+                class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"
+              ></i>
+              <p class="text-gray-600 mb-2">
+                Drag and drop assets here, or click to select
+              </p>
+              <button
+                onclick="document.getElementById('assetUpload').click()"
+                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Select Files
+              </button>
+            </div>
+          </div>
+          <div
+            id="uploadedAssets"
+            class="grid grid-cols-2 md:grid-cols-4 gap-4"
+          >
+            <!-- Uploaded assets will be displayed here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div
+      id="loadingModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      style="display: none"
+    >
+      <div class="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+        <div class="text-center">
+          <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+          <h3 class="text-lg font-semibold mb-2">Processing...</h3>
+          <p class="text-gray-600">
+            Please wait while we process your request.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Admin Panel JavaScript
+      class AdminAPKPanel {
+        constructor() {
+          this.ws = null;
+          this.selectedPlatform = null;
+          this.selectedProfile = null;
+          this.buildConfigs = {};
+          this.isBuilding = false;
+
+          this.init();
+        }
+
+        async init() {
+          await this.loadProjectInfo();
+          await this.loadBuildConfigs();
+          await this.loadBuildHistory();
+          this.setupWebSocket();
+          this.setupEventListeners();
+        }
+
+        setupWebSocket() {
+          this.ws = new WebSocket("ws://localhost:3002");
+
+          this.ws.onopen = () => {
+            this.updateConnectionStatus(true);
+          };
+
+          this.ws.onclose = () => {
+            this.updateConnectionStatus(false);
+            // Reconnect after 5 seconds
+            setTimeout(() => this.setupWebSocket(), 5000);
+          };
+
+          this.ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            this.handleWebSocketMessage(data);
+          };
+        }
+
+        updateConnectionStatus(connected) {
+          const statusEl = document.getElementById("connectionStatus");
+          const dot = statusEl.querySelector("div");
+          const text = statusEl.querySelector("span");
+
+          if (connected) {
+            dot.className = "w-2 h-2 bg-green-500 rounded-full mr-2";
+            text.textContent = "Connected";
+          } else {
+            dot.className = "w-2 h-2 bg-red-500 rounded-full mr-2";
+            text.textContent = "Disconnected";
+          }
+        }
+
+        handleWebSocketMessage(data) {
+          switch (data.type) {
+            case "log":
+              this.appendBuildLog(data.message, data.color);
+              break;
+            case "build_started":
+              this.onBuildStarted(data.build);
+              break;
+            case "build_completed":
+              this.onBuildCompleted(data.build);
+              break;
+            case "build_failed":
+              this.onBuildFailed(data.build);
+              break;
+            case "build_cancelled":
+              this.onBuildCancelled(data.build);
+              break;
+          }
+        }
+
+        async loadProjectInfo() {
+          try {
+            const response = await fetch("/api/project/info");
+            const result = await response.json();
+
+            if (result.success) {
+              this.displayProjectInfo(result.data);
+            }
+          } catch (error) {
+            console.error("Failed to load project info:", error);
+          }
+        }
+
+        displayProjectInfo(info) {
+          const container = document.getElementById("projectInfo");
+          container.innerHTML = `
+                    <div class="bg-gray-50 p-4 rounded">
+                        <h3 class="font-semibold text-gray-900">${info.name}</h3>
+                        <p class="text-sm text-gray-600">App Name</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded">
+                        <h3 class="font-semibold text-gray-900">${info.version}</h3>
+                        <p class="text-sm text-gray-600">Version</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded">
+                        <h3 class="font-semibold text-gray-900">${info.buildNumber}</h3>
+                        <p class="text-sm text-gray-600">Build Number</p>
+                    </div>
+                `;
+        }
+
+        async loadBuildConfigs() {
+          try {
+            const response = await fetch("/api/build-configs");
+            const result = await response.json();
+
+            if (result.success) {
+              this.buildConfigs = result.data;
+              this.displayPlatforms();
+            }
+          } catch (error) {
+            console.error("Failed to load build configs:", error);
+          }
+        }
+
+        displayPlatforms() {
+          const container = document.getElementById("platformSelection");
+          container.innerHTML = "";
+
+          Object.keys(this.buildConfigs).forEach((platform) => {
+            const card = document.createElement("div");
+            card.className =
+              "platform-card bg-white border-2 rounded-lg p-4 cursor-pointer";
+            card.onclick = () => this.selectPlatform(platform);
+
+            const icon =
+              platform === "android" ? "fab fa-android" : "fab fa-apple";
+            const color =
+              platform === "android" ? "text-green-600" : "text-gray-800";
+
+            card.innerHTML = `
+                        <div class="text-center">
+                            <i class="${icon} text-4xl ${color} mb-2"></i>
+                            <h3 class="font-semibold capitalize">${platform}</h3>
+                        </div>
+                    `;
+
+            container.appendChild(card);
+          });
+        }
+
+        selectPlatform(platform) {
+          this.selectedPlatform = platform;
+          this.selectedProfile = null;
+
+          // Update UI
+          document.querySelectorAll(".platform-card").forEach((card) => {
+            card.classList.remove("selected");
+          });
+          event.currentTarget.classList.add("selected");
+
+          this.displayProfiles();
+        }
+
+        displayProfiles() {
+          const container = document.getElementById("profileSelection");
+          container.innerHTML = "";
+
+          if (!this.selectedPlatform) return;
+
+          const profiles = this.buildConfigs[this.selectedPlatform];
+          Object.entries(profiles).forEach(([key, profile]) => {
+            const card = document.createElement("div");
+            card.className =
+              "profile-card bg-white border rounded-lg p-4 cursor-pointer";
+            card.onclick = () => this.selectProfile(key);
+
+            card.innerHTML = `
+                        <h4 class="font-semibold text-sm mb-1">${profile.name}</h4>
+                        <p class="text-xs text-gray-600">${profile.description}</p>
+                        <span class="inline-block mt-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                            ${profile.buildType}
+                        </span>
+                    `;
+
+            container.appendChild(card);
+          });
+        }
+
+        selectProfile(profile) {
+          this.selectedProfile = profile;
+
+          // Update UI
+          document.querySelectorAll(".profile-card").forEach((card) => {
+            card.classList.remove("selected");
+          });
+          event.currentTarget.classList.add("selected");
+        }
+
+        setupEventListeners() {
+          document.getElementById("startBuildBtn").onclick = () =>
+            this.startBuild();
+          document.getElementById("stopBuildBtn").onclick = () =>
+            this.stopBuild();
+          document.getElementById("refreshBtn").onclick = () => this.refresh();
+          document.getElementById("assetUpload").onchange = (e) =>
+            this.uploadAssets(e.target.files);
+        }
+
+        async startBuild() {
+          if (!this.selectedPlatform || !this.selectedProfile) {
+            alert("Please select platform and profile");
+            return;
+          }
+
+          const autoIncrement =
+            document.getElementById("autoIncrement").checked;
+
+          try {
+            this.showLoading(true);
+
+            const response = await fetch("/api/build/start", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                platform: this.selectedPlatform,
+                profile: this.selectedProfile,
+                autoIncrement,
+              }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              this.showNotification("Build started successfully!", "success");
+            } else {
+              this.showNotification(result.error, "error");
+            }
+          } catch (error) {
+            this.showNotification(
+              "Failed to start build: " + error.message,
+              "error",
+            );
+          } finally {
+            this.showLoading(false);
+          }
+        }
+
+        onBuildStarted(build) {
+          this.isBuilding = true;
+          document.getElementById("startBuildBtn").disabled = true;
+          document.getElementById("stopBuildBtn").disabled = false;
+          document.getElementById("currentBuildSection").style.display =
+            "block";
+
+          const info = document.getElementById("currentBuildInfo");
+          info.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold">${build.buildConfig.name}</h3>
+                            <p class="text-sm text-gray-600">Started: ${new Date(build.startTime).toLocaleString()}</p>
+                        </div>
+                        <div class="status-building">
+                            <i class="fas fa-spinner fa-spin mr-2"></i>Building...
+                        </div>
+                    </div>
+                `;
+
+          // Clear logs
+          document.getElementById("buildLogs").innerHTML = "";
+        }
+
+        onBuildCompleted(build) {
+          this.isBuilding = false;
+          document.getElementById("startBuildBtn").disabled = false;
+          document.getElementById("stopBuildBtn").disabled = true;
+
+          const info = document.getElementById("currentBuildInfo");
+          info.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold">${build.buildConfig.name}</h3>
+                            <p class="text-sm text-gray-600">Completed in ${build.duration}s</p>
+                            ${build.downloadUrl ? `<a href="${build.downloadUrl}" class="text-blue-600 hover:underline text-sm">Download APK</a>` : ""}
+                        </div>
+                        <div class="status-completed">
+                            <i class="fas fa-check-circle mr-2"></i>Completed
+                        </div>
+                    </div>
+                `;
+
+          this.showNotification("Build completed successfully!", "success");
+          this.loadBuildHistory();
+        }
+
+        onBuildFailed(build) {
+          this.isBuilding = false;
+          document.getElementById("startBuildBtn").disabled = false;
+          document.getElementById("stopBuildBtn").disabled = true;
+
+          const info = document.getElementById("currentBuildInfo");
+          info.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold">${build.buildConfig.name}</h3>
+                            <p class="text-sm text-gray-600">Failed after ${build.duration}s</p>
+                            <p class="text-sm text-red-600">${build.error}</p>
+                        </div>
+                        <div class="status-failed">
+                            <i class="fas fa-times-circle mr-2"></i>Failed
+                        </div>
+                    </div>
+                `;
+
+          this.showNotification("Build failed: " + build.error, "error");
+          this.loadBuildHistory();
+        }
+
+        appendBuildLog(message, color) {
+          const logs = document.getElementById("buildLogs");
+          const logLine = document.createElement("div");
+          logLine.textContent = message;
+          if (color && color !== "reset") {
+            logLine.style.color = this.getLogColor(color);
+          }
+          logs.appendChild(logLine);
+          logs.scrollTop = logs.scrollHeight;
+        }
+
+        getLogColor(color) {
+          const colors = {
+            red: "#ef4444",
+            green: "#10b981",
+            yellow: "#fbbf24",
+            blue: "#3b82f6",
+            cyan: "#06b6d4",
+          };
+          return colors[color] || "#00ff00";
+        }
+
+        async loadBuildHistory() {
+          try {
+            const response = await fetch("/api/build-history");
+            const result = await response.json();
+
+            if (result.success) {
+              this.displayBuildHistory(result.data);
+            }
+          } catch (error) {
+            console.error("Failed to load build history:", error);
+          }
+        }
+
+        displayBuildHistory(history) {
+          const container = document.getElementById("buildHistory");
+
+          if (history.length === 0) {
+            container.innerHTML =
+              '<p class="text-gray-500 text-center py-8">No builds yet</p>';
+            return;
+          }
+
+          container.innerHTML = history
+            .reverse()
+            .map(
+              (build) => `
+                    <div class="border rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-semibold">${build.buildConfig?.name || build.profile}</h4>
+                                <p class="text-sm text-gray-600">${new Date(build.startTime).toLocaleString()}</p>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <span class="status-${build.success ? "completed" : "failed"}">
+                                    <i class="fas fa-${build.success ? "check-circle" : "times-circle"} mr-1"></i>
+                                    ${build.success ? "Success" : "Failed"}
+                                </span>
+                                ${build.downloadUrl ? `<a href="${build.downloadUrl}" class="text-blue-600 hover:underline">Download</a>` : ""}
+                            </div>
+                        </div>
+                    </div>
+                `,
+            )
+            .join("");
+        }
+
+        showNotification(message, type) {
+          // Simple notification - you can enhance this
+          const color = type === "success" ? "green" : "red";
+          console.log(`%c${message}`, `color: ${color}`);
+
+          // You can implement a proper toast notification here
+          alert(message);
+        }
+
+        showLoading(show) {
+          document.getElementById("loadingModal").style.display = show
+            ? "flex"
+            : "none";
+        }
+
+        async refresh() {
+          await this.loadProjectInfo();
+          await this.loadBuildHistory();
+        }
+      }
+
+      // Initialize admin panel when page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        new AdminAPKPanel();
+      });
+    </script>
+  </body>
+</html>

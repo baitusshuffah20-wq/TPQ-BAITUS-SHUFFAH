@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { Badge } from '@/components/ui/badge';
-import { 
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
   CreditCard,
   Plus,
   Edit,
@@ -15,9 +15,9 @@ import {
   DollarSign,
   Users,
   Star,
-  RefreshCw
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  RefreshCw,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface SubscriptionPlan {
   id: string;
@@ -47,49 +47,52 @@ export default function SubscriptionPlansPage() {
   const loadPlans = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/subscriptions/plans');
+      const response = await fetch("/api/subscriptions/plans");
       if (response.ok) {
         const data = await response.json();
         setPlans(data.data);
       } else {
-        toast.error('Gagal memuat subscription plans');
+        toast.error("Gagal memuat subscription plans");
       }
     } catch (error) {
-      console.error('Error loading plans:', error);
-      toast.error('Gagal memuat subscription plans');
+      console.error("Error loading plans:", error);
+      toast.error("Gagal memuat subscription plans");
     } finally {
       setLoading(false);
     }
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(amount);
   };
 
   const getBillingCycleLabel = (cycle: string) => {
     const labels = {
-      MONTHLY: 'Bulanan',
-      QUARTERLY: 'Triwulan',
-      YEARLY: 'Tahunan'
+      MONTHLY: "Bulanan",
+      QUARTERLY: "Triwulan",
+      YEARLY: "Tahunan",
     };
     return labels[cycle as keyof typeof labels] || cycle;
   };
 
   const getBillingCycleBadge = (cycle: string) => {
     const cycleConfig = {
-      MONTHLY: { label: 'Bulanan', color: 'bg-blue-100 text-blue-800' },
-      QUARTERLY: { label: 'Triwulan', color: 'bg-green-100 text-green-800' },
-      YEARLY: { label: 'Tahunan', color: 'bg-purple-100 text-purple-800' }
+      MONTHLY: { label: "Bulanan", color: "bg-blue-100 text-blue-800" },
+      QUARTERLY: { label: "Triwulan", color: "bg-green-100 text-green-800" },
+      YEARLY: { label: "Tahunan", color: "bg-purple-100 text-purple-800" },
     };
 
-    const config = cycleConfig[cycle as keyof typeof cycleConfig] || cycleConfig.MONTHLY;
+    const config =
+      cycleConfig[cycle as keyof typeof cycleConfig] || cycleConfig.MONTHLY;
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}
+      >
         {config.label}
       </span>
     );
@@ -97,45 +100,45 @@ export default function SubscriptionPlansPage() {
 
   const togglePlanStatus = async (planId: string, isActive: boolean) => {
     try {
-      const response = await fetch('/api/subscriptions/plans', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: planId, isActive: !isActive })
+      const response = await fetch("/api/subscriptions/plans", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: planId, isActive: !isActive }),
       });
 
       if (response.ok) {
-        toast.success(`Plan ${!isActive ? 'diaktifkan' : 'dinonaktifkan'}`);
+        toast.success(`Plan ${!isActive ? "diaktifkan" : "dinonaktifkan"}`);
         loadPlans();
       } else {
         const error = await response.json();
-        toast.error(error.message || 'Gagal mengubah status plan');
+        toast.error(error.message || "Gagal mengubah status plan");
       }
     } catch (error) {
-      console.error('Error toggling plan status:', error);
-      toast.error('Gagal mengubah status plan');
+      console.error("Error toggling plan status:", error);
+      toast.error("Gagal mengubah status plan");
     }
   };
 
   const deletePlan = async (planId: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus plan ini?')) {
+    if (!confirm("Apakah Anda yakin ingin menghapus plan ini?")) {
       return;
     }
 
     try {
       const response = await fetch(`/api/subscriptions/plans?id=${planId}`, {
-        method: 'DELETE'
+        method: "DELETE",
       });
 
       if (response.ok) {
-        toast.success('Plan berhasil dihapus');
+        toast.success("Plan berhasil dihapus");
         loadPlans();
       } else {
         const error = await response.json();
-        toast.error(error.message || 'Gagal menghapus plan');
+        toast.error(error.message || "Gagal menghapus plan");
       }
     } catch (error) {
-      console.error('Error deleting plan:', error);
-      toast.error('Gagal menghapus plan');
+      console.error("Error deleting plan:", error);
+      toast.error("Gagal menghapus plan");
     }
   };
 
@@ -144,7 +147,9 @@ export default function SubscriptionPlansPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Subscription Plans</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Subscription Plans
+          </h1>
           <p className="text-gray-600">Kelola paket subscription SPP</p>
         </div>
         <div className="flex items-center gap-3">
@@ -155,10 +160,10 @@ export default function SubscriptionPlansPage() {
             disabled={loading}
             className="flex items-center gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button 
+          <Button
             onClick={() => setShowCreateModal(true)}
             className="flex items-center gap-2"
           >
@@ -193,7 +198,9 @@ export default function SubscriptionPlansPage() {
           <CardContent className="p-12 text-center">
             <CreditCard className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-600 mb-2">Belum ada subscription plan</p>
-            <p className="text-sm text-gray-500 mb-4">Buat plan pertama untuk memulai subscription system</p>
+            <p className="text-sm text-gray-500 mb-4">
+              Buat plan pertama untuk memulai subscription system
+            </p>
             <Button onClick={() => setShowCreateModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Buat Plan Pertama
@@ -203,7 +210,10 @@ export default function SubscriptionPlansPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {plans.map((plan) => (
-            <Card key={plan.id} className={`relative ${plan.isActive ? 'border-blue-200' : 'border-gray-200 opacity-75'}`}>
+            <Card
+              key={plan.id}
+              className={`relative ${plan.isActive ? "border-blue-200" : "border-gray-200 opacity-75"}`}
+            >
               {plan.isActive && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                   <Badge variant="success" className="flex items-center gap-1">
@@ -212,12 +222,14 @@ export default function SubscriptionPlansPage() {
                   </Badge>
                 </div>
               )}
-              
+
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="text-lg">{plan.name}</CardTitle>
-                    <p className="text-sm text-gray-600 mt-1">{plan.description}</p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {plan.description}
+                    </p>
                   </div>
                   <div className="flex items-center gap-1">
                     <Button
@@ -239,7 +251,7 @@ export default function SubscriptionPlansPage() {
                   </div>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="space-y-4">
                 {/* Price */}
                 <div className="text-center">
@@ -259,10 +271,15 @@ export default function SubscriptionPlansPage() {
                 {/* Features */}
                 {plan.features && plan.features.length > 0 && (
                   <div className="space-y-2">
-                    <h4 className="font-medium text-gray-900 text-sm">Fitur:</h4>
+                    <h4 className="font-medium text-gray-900 text-sm">
+                      Fitur:
+                    </h4>
                     <ul className="space-y-1">
                       {plan.features.map((feature, index) => (
-                        <li key={index} className="flex items-center gap-2 text-sm text-gray-600">
+                        <li
+                          key={index}
+                          className="flex items-center gap-2 text-sm text-gray-600"
+                        >
                           <Check className="h-3 w-3 text-green-600 flex-shrink-0" />
                           {feature}
                         </li>
@@ -313,7 +330,9 @@ export default function SubscriptionPlansPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Total Plans</p>
-                <p className="text-xl font-bold text-gray-900">{plans.length}</p>
+                <p className="text-xl font-bold text-gray-900">
+                  {plans.length}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -328,7 +347,7 @@ export default function SubscriptionPlansPage() {
               <div>
                 <p className="text-sm text-gray-600">Active Plans</p>
                 <p className="text-xl font-bold text-gray-900">
-                  {plans.filter(p => p.isActive).length}
+                  {plans.filter((p) => p.isActive).length}
                 </p>
               </div>
             </div>
@@ -344,7 +363,7 @@ export default function SubscriptionPlansPage() {
               <div>
                 <p className="text-sm text-gray-600">Monthly Plans</p>
                 <p className="text-xl font-bold text-gray-900">
-                  {plans.filter(p => p.billingCycle === 'MONTHLY').length}
+                  {plans.filter((p) => p.billingCycle === "MONTHLY").length}
                 </p>
               </div>
             </div>
@@ -360,9 +379,12 @@ export default function SubscriptionPlansPage() {
               <div>
                 <p className="text-sm text-gray-600">Avg Price</p>
                 <p className="text-lg font-bold text-gray-900">
-                  {plans.length > 0 ? formatCurrency(
-                    plans.reduce((sum, p) => sum + p.amount, 0) / plans.length
-                  ) : formatCurrency(0)}
+                  {plans.length > 0
+                    ? formatCurrency(
+                        plans.reduce((sum, p) => sum + p.amount, 0) /
+                          plans.length,
+                      )
+                    : formatCurrency(0)}
                 </p>
               </div>
             </div>

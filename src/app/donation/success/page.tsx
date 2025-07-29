@@ -1,77 +1,89 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState, Suspense } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { Card, CardContent } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { 
-  CheckCircle, 
-  Download, 
-  Home, 
+import React, { useEffect, useState, Suspense } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  CheckCircle,
+  Download,
+  Home,
   Heart,
   Calendar,
   User,
   Hash,
   ArrowRight,
   Share2,
-  MessageCircle
-} from 'lucide-react';
+  MessageCircle,
+} from "lucide-react";
 
 const DonationSuccessPage = () => {
   const searchParams = useSearchParams();
-  const [donationData, setDonationData] = useState<any>(null);
+  const [donationData, setDonationData] = useState<{
+    orderId: string;
+    amount: number;
+    donorName: string;
+    donorEmail: string;
+    category: string;
+    message?: string;
+    status: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Get donation details from URL params or API
-    const orderId = searchParams.get('order_id');
-    const statusCode = searchParams.get('status_code');
-    const transactionStatus = searchParams.get('transaction_status');
-    const devMode = searchParams.get('dev_mode') === 'true';
-    
+    const orderId = searchParams.get("order_id");
+    const devMode = searchParams.get("dev_mode") === "true";
+
     const fetchDonationData = async () => {
       try {
         setLoading(true);
-        
+
         if (devMode) {
           // In development mode, use data from URL params if available
           const mockDonationData = {
-            orderId: orderId || 'donation_dev_mode',
-            amount: parseInt(searchParams.get('amount') || '1000000'),
-            donationType: searchParams.get('type') || 'GENERAL',
-            donorName: searchParams.get('donor_name') || 'Donatur Anonim',
-            donorEmail: searchParams.get('donor_email') || 'anonymous@example.com',
-            paymentMethod: 'Development Mode',
+            orderId: orderId || "donation_dev_mode",
+            amount: parseInt(searchParams.get("amount") || "1000000"),
+            donationType: searchParams.get("type") || "GENERAL",
+            donorName: searchParams.get("donor_name") || "Donatur Anonim",
+            donorEmail:
+              searchParams.get("donor_email") || "anonymous@example.com",
+            paymentMethod: "Development Mode",
             paidAt: new Date().toISOString(),
-            reference: orderId || 'DEV_MODE_REFERENCE',
-            message: searchParams.get('message') || 'Donasi dalam mode pengembangan',
-            isAnonymous: searchParams.get('is_anonymous') === 'true',
-            status: 'DEVELOPMENT_MODE',
-            categoryName: searchParams.get('category_name') || 'Donasi Umum'
+            reference: orderId || "DEV_MODE_REFERENCE",
+            message:
+              searchParams.get("message") || "Donasi dalam mode pengembangan",
+            isAnonymous: searchParams.get("is_anonymous") === "true",
+            status: "DEVELOPMENT_MODE",
+            categoryName: searchParams.get("category_name") || "Donasi Umum",
           };
-          
+
           setDonationData(mockDonationData);
           setLoading(false);
           return;
         }
-        
+
         // In production, fetch real data from API
         if (orderId) {
           try {
             const response = await fetch(`/api/donations/${orderId}`);
-            
+
             if (response.ok) {
               const data = await response.json();
               if (data.success && data.donation) {
                 setDonationData({
                   ...data.donation,
                   // Parse type field if it contains category info (format: categoryId:categoryName)
-                  donationType: data.donation.type?.split(':')[0] || data.donation.type,
-                  categoryName: data.donation.type?.includes(':') 
-                    ? data.donation.type.split(':')[1] 
+                  donationType:
+                    data.donation.type?.split(":")[0] || data.donation.type,
+                  categoryName: data.donation.type?.includes(":")
+                    ? data.donation.type.split(":")[1]
                     : getDonationTypeLabel(data.donation.type),
-                  paidAt: data.donation.paidAt || data.donation.createdAt || new Date().toISOString()
+                  paidAt:
+                    data.donation.paidAt ||
+                    data.donation.createdAt ||
+                    new Date().toISOString(),
                 });
               } else {
                 // Fallback to mock data if API returns error
@@ -82,79 +94,86 @@ const DonationSuccessPage = () => {
               fallbackToMockData(orderId);
             }
           } catch (error) {
-            console.error('Error fetching donation data:', error);
+            console.error("Error fetching donation data:", error);
             fallbackToMockData(orderId);
           }
         } else {
           fallbackToMockData();
         }
-        
+
         setLoading(false);
       } catch (error) {
-        console.error('Error in donation success page:', error);
+        console.error("Error in donation success page:", error);
         fallbackToMockData();
         setLoading(false);
       }
     };
-    
+
     const fallbackToMockData = (id?: string) => {
       // Mock donation data as fallback
       const mockDonationData = {
-        orderId: id || 'donation_1707123456_xyz789',
+        orderId: id || "donation_1707123456_xyz789",
         amount: 1000000,
-        donationType: 'GENERAL',
-        categoryName: 'Donasi Umum',
-        donorName: 'Donatur',
-        donorEmail: 'donor@example.com',
-        paymentMethod: 'Bank Transfer',
+        donationType: "GENERAL",
+        categoryName: "Donasi Umum",
+        donorName: "Donatur",
+        donorEmail: "donor@example.com",
+        paymentMethod: "Bank Transfer",
         paidAt: new Date().toISOString(),
-        reference: id || 'DON001234567890',
-        message: 'Semoga bermanfaat untuk kemajuan rumah tahfidz',
+        reference: id || "DON001234567890",
+        message: "Semoga bermanfaat untuk kemajuan rumah tahfidz",
         isAnonymous: false,
-        status: 'PAID'
+        status: "PAID",
       };
-      
+
       setDonationData(mockDonationData);
     };
-    
+
     fetchDonationData();
   }, [searchParams]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(amount);
   };
 
   const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getDonationTypeLabel = (type: string) => {
     switch (type) {
-      case 'GENERAL': return 'Donasi Umum';
-      case 'BUILDING': return 'Pembangunan Gedung';
-      case 'SCHOLARSHIP': return 'Beasiswa Santri';
-      case 'EQUIPMENT': return 'Peralatan';
-      case 'RAMADAN': return 'Program Ramadan';
-      case 'QURBAN': return 'Program Qurban';
-      default: return type;
+      case "GENERAL":
+        return "Donasi Umum";
+      case "BUILDING":
+        return "Pembangunan Gedung";
+      case "SCHOLARSHIP":
+        return "Beasiswa Santri";
+      case "EQUIPMENT":
+        return "Peralatan";
+      case "RAMADAN":
+        return "Program Ramadan";
+      case "QURBAN":
+        return "Program Qurban";
+      default:
+        return type;
     }
   };
 
   const shareToWhatsApp = () => {
-    const message = `Alhamdulillah, saya telah berdonasi sebesar ${formatCurrency(donationData.amount)} untuk ${getDonationTypeLabel(donationData.donationType)} di Rumah Tahfidz Baitus Shuffah. Mari bersama-sama membangun generasi penghafal Al-Quran! 🤲\n\nInfo lebih lanjut: ${window.location.origin}`;
+    const message = `Alhamdulillah, saya telah berdonasi sebesar ${formatCurrency(donationData.amount)} untuk ${getDonationTypeLabel(donationData.donationType)} di Rumah Tahfidz Baitus Shuffah. Mari bersama-sama membangun generasi penghafal Al-Quran! ??\n\nInfo lebih lanjut: ${window.location.origin}`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    window.open(whatsappUrl, "_blank");
   };
 
   if (loading) {
@@ -198,7 +217,9 @@ const DonationSuccessPage = () => {
                     <Hash className="h-5 w-5 text-gray-400 mr-3" />
                     <span className="text-gray-600">ID Donasi</span>
                   </div>
-                  <span className="font-medium text-gray-900">{donationData.reference}</span>
+                  <span className="font-medium text-gray-900">
+                    {donationData.reference}
+                  </span>
                 </div>
 
                 <div className="flex justify-between items-center py-3 border-b border-gray-100">
@@ -208,10 +229,14 @@ const DonationSuccessPage = () => {
                   </div>
                   <div className="text-right">
                     <div className="font-medium text-gray-900">
-                      {donationData.isAnonymous ? 'Donatur Anonim' : donationData.donorName}
+                      {donationData.isAnonymous
+                        ? "Donatur Anonim"
+                        : donationData.donorName}
                     </div>
                     {!donationData.isAnonymous && donationData.donorEmail && (
-                      <div className="text-sm text-gray-500">{donationData.donorEmail}</div>
+                      <div className="text-sm text-gray-500">
+                        {donationData.donorEmail}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -222,7 +247,8 @@ const DonationSuccessPage = () => {
                     <span className="text-gray-600">Kategori Donasi</span>
                   </div>
                   <span className="font-medium text-gray-900">
-                    {donationData.categoryName || getDonationTypeLabel(donationData.donationType)}
+                    {donationData.categoryName ||
+                      getDonationTypeLabel(donationData.donationType)}
                   </span>
                 </div>
 
@@ -241,15 +267,21 @@ const DonationSuccessPage = () => {
                     <div className="flex items-start">
                       <MessageCircle className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                       <div>
-                        <span className="text-gray-600 block mb-1">Pesan/Doa:</span>
-                        <p className="text-gray-900 italic">"{donationData.message}"</p>
+                        <span className="text-gray-600 block mb-1">
+                          Pesan/Doa:
+                        </span>
+                        <p className="text-gray-900 italic">
+                          "{donationData.message}"
+                        </p>
                       </div>
                     </div>
                   </div>
                 )}
 
                 <div className="flex justify-between items-center py-3 bg-green-50 px-4 rounded-lg">
-                  <span className="text-lg font-semibold text-gray-900">Jumlah Donasi</span>
+                  <span className="text-lg font-semibold text-gray-900">
+                    Jumlah Donasi
+                  </span>
                   <span className="text-2xl font-bold text-green-600">
                     {formatCurrency(donationData.amount)}
                   </span>
@@ -269,10 +301,11 @@ const DonationSuccessPage = () => {
           {/* Islamic Quote */}
           <div className="mb-8 p-6 bg-teal-50 rounded-lg text-center">
             <p className="text-teal-800 font-medium mb-2 text-lg">
-              "مَن تَصَدَّقَ بِعَدْلِ تَمْرَةٍ مِنْ كَسْبٍ طَيِّبٍ"
+              "??? ????????? ???????? ???????? ???? ?????? ???????"
             </p>
             <p className="text-teal-700 text-sm">
-              "Barangsiapa bersedekah senilai sebiji kurma dari penghasilan yang halal..."
+              "Barangsiapa bersedekah senilai sebiji kurma dari penghasilan yang
+              halal..."
             </p>
             <p className="text-teal-600 text-xs mt-2">- HR. Bukhari</p>
           </div>
@@ -284,8 +317,12 @@ const DonationSuccessPage = () => {
                 <Download className="h-4 w-4 mr-2" />
                 Download Bukti Donasi
               </Button>
-              
-              <Button variant="outline" className="w-full" onClick={shareToWhatsApp}>
+
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={shareToWhatsApp}
+              >
                 <Share2 className="h-4 w-4 mr-2" />
                 Bagikan ke WhatsApp
               </Button>
@@ -313,15 +350,22 @@ const DonationSuccessPage = () => {
               Terima Kasih atas Kepercayaan Anda
             </h3>
             <div className="text-sm text-gray-700 space-y-2">
-              <p>• Donasi Anda akan digunakan sesuai dengan kategori yang dipilih</p>
-              <p>• Laporan penggunaan dana akan dipublikasikan secara berkala</p>
-              <p>• Bukti donasi telah dikirim ke email yang terdaftar</p>
-              <p>• Semoga Allah SWT membalas kebaikan Anda dengan berlipat ganda</p>
+              <p>
+                � Donasi Anda akan digunakan sesuai dengan kategori yang dipilih
+              </p>
+              <p>
+                � Laporan penggunaan dana akan dipublikasikan secara berkala
+              </p>
+              <p>� Bukti donasi telah dikirim ke email yang terdaftar</p>
+              <p>
+                � Semoga Allah SWT membalas kebaikan Anda dengan berlipat ganda
+              </p>
             </div>
-            
+
             <div className="mt-4 text-center">
               <p className="text-sm text-gray-600">
-                Hubungi kami: <strong>+62 21 1234 5678</strong> | <strong>info@rumahtahfidz.com</strong>
+                Hubungi kami: <strong>+62 21 1234 5678</strong> |{" "}
+                <strong>info@rumahtahfidz.com</strong>
               </p>
             </div>
           </div>
@@ -333,14 +377,16 @@ const DonationSuccessPage = () => {
 
 const DonationSuccessPageWithSuspense = () => {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Memuat halaman...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Memuat halaman...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <DonationSuccessPage />
     </Suspense>
   );

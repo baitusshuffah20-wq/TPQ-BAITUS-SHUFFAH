@@ -1,28 +1,19 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  Lock,
-  Eye,
-  EyeOff,
-  Save,
-  X
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { User, Mail, Phone, Lock, Eye, EyeOff, Save, X } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface UserFormData {
   id?: string;
   email: string;
   name: string;
   phone: string;
-  role: 'ADMIN' | 'MUSYRIF' | 'WALI' | 'SANTRI';
+  role: "ADMIN" | "MUSYRIF" | "WALI" | "SANTRI";
   password?: string;
   confirmPassword?: string;
   isActive: boolean;
@@ -35,16 +26,21 @@ interface UserFormProps {
   isLoading?: boolean;
 }
 
-export default function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFormProps) {
+export default function UserForm({
+  user,
+  onSubmit,
+  onCancel,
+  isLoading = false,
+}: UserFormProps) {
   const [formData, setFormData] = useState<UserFormData>({
-    email: user?.email || '',
-    name: user?.name || '',
-    phone: user?.phone || '',
-    role: user?.role || 'WALI',
-    password: '',
-    confirmPassword: '',
+    email: user?.email || "",
+    name: user?.name || "",
+    phone: user?.phone || "",
+    role: user?.role || "WALI",
+    password: "",
+    confirmPassword: "",
     isActive: user?.isActive ?? true,
-    ...user
+    ...user,
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -58,35 +54,35 @@ export default function UserForm({ user, onSubmit, onCancel, isLoading = false }
 
     // Email validation
     if (!formData.email) {
-      newErrors.email = 'Email wajib diisi';
+      newErrors.email = "Email wajib diisi";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Format email tidak valid';
+      newErrors.email = "Format email tidak valid";
     }
 
     // Name validation
     if (!formData.name) {
-      newErrors.name = 'Nama wajib diisi';
+      newErrors.name = "Nama wajib diisi";
     } else if (formData.name.length < 2) {
-      newErrors.name = 'Nama minimal 2 karakter';
+      newErrors.name = "Nama minimal 2 karakter";
     }
 
     // Phone validation
     if (!formData.phone) {
-      newErrors.phone = 'Nomor telepon wajib diisi';
+      newErrors.phone = "Nomor telepon wajib diisi";
     } else if (!/^[0-9+\-\s()]+$/.test(formData.phone)) {
-      newErrors.phone = 'Format nomor telepon tidak valid';
+      newErrors.phone = "Format nomor telepon tidak valid";
     }
 
     // Password validation (only for new users or when password is provided)
     if (!isEdit || formData.password) {
       if (!formData.password) {
-        newErrors.password = 'Password wajib diisi';
+        newErrors.password = "Password wajib diisi";
       } else if (formData.password.length < 6) {
-        newErrors.password = 'Password minimal 6 karakter';
+        newErrors.password = "Password minimal 6 karakter";
       }
 
       if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = 'Konfirmasi password tidak cocok';
+        newErrors.confirmPassword = "Konfirmasi password tidak cocok";
       }
     }
 
@@ -96,39 +92,47 @@ export default function UserForm({ user, onSubmit, onCancel, isLoading = false }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
-      toast.error('Mohon perbaiki kesalahan pada form');
+      toast.error("Mohon perbaiki kesalahan pada form");
       return;
     }
 
     try {
       await onSubmit(formData);
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]:
+        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
     }));
 
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'ADMIN': return 'destructive';
-      case 'MUSYRIF': return 'warning';
-      case 'WALI': return 'success';
-      case 'SANTRI': return 'secondary';
-      default: return 'secondary';
+      case "ADMIN":
+        return "destructive";
+      case "MUSYRIF":
+        return "warning";
+      case "WALI":
+        return "success";
+      case "SANTRI":
+        return "secondary";
+      default:
+        return "secondary";
     }
   };
 
@@ -137,7 +141,7 @@ export default function UserForm({ user, onSubmit, onCancel, isLoading = false }
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <User className="h-6 w-6 text-teal-600" />
-          {isEdit ? 'Edit User' : 'Tambah User Baru'}
+          {isEdit ? "Edit User" : "Tambah User Baru"}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -156,7 +160,7 @@ export default function UserForm({ user, onSubmit, onCancel, isLoading = false }
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="user@example.com"
-                  className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
+                  className={`pl-10 ${errors.email ? "border-red-500" : ""}`}
                   disabled={isLoading}
                 />
               </div>
@@ -177,7 +181,7 @@ export default function UserForm({ user, onSubmit, onCancel, isLoading = false }
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="Nama lengkap"
-                  className={`pl-10 ${errors.name ? 'border-red-500' : ''}`}
+                  className={`pl-10 ${errors.name ? "border-red-500" : ""}`}
                   disabled={isLoading}
                 />
               </div>
@@ -200,7 +204,7 @@ export default function UserForm({ user, onSubmit, onCancel, isLoading = false }
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="08xxxxxxxxxx"
-                  className={`pl-10 ${errors.phone ? 'border-red-500' : ''}`}
+                  className={`pl-10 ${errors.phone ? "border-red-500" : ""}`}
                   disabled={isLoading}
                 />
               </div>
@@ -238,22 +242,26 @@ export default function UserForm({ user, onSubmit, onCancel, isLoading = false }
           {/* Password Section */}
           <div className="border-t pt-6">
             <h4 className="text-lg font-medium text-gray-900 mb-4">
-              {isEdit ? 'Ubah Password (Opsional)' : 'Password'}
+              {isEdit ? "Ubah Password (Opsional)" : "Password"}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password {!isEdit && '*'}
+                  Password {!isEdit && "*"}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    placeholder={isEdit ? 'Kosongkan jika tidak ingin mengubah' : 'Masukkan password'}
-                    className={`pl-10 pr-10 ${errors.password ? 'border-red-500' : ''}`}
+                    placeholder={
+                      isEdit
+                        ? "Kosongkan jika tidak ingin mengubah"
+                        : "Masukkan password"
+                    }
+                    className={`pl-10 pr-10 ${errors.password ? "border-red-500" : ""}`}
                     disabled={isLoading}
                   />
                   <button
@@ -261,7 +269,11 @@ export default function UserForm({ user, onSubmit, onCancel, isLoading = false }
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
                 {errors.password && (
@@ -271,17 +283,17 @@ export default function UserForm({ user, onSubmit, onCancel, isLoading = false }
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Konfirmasi Password {!isEdit && '*'}
+                  Konfirmasi Password {!isEdit && "*"}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    type={showConfirmPassword ? 'text' : 'password'}
+                    type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     placeholder="Konfirmasi password"
-                    className={`pl-10 pr-10 ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                    className={`pl-10 pr-10 ${errors.confirmPassword ? "border-red-500" : ""}`}
                     disabled={isLoading}
                   />
                   <button
@@ -289,11 +301,17 @@ export default function UserForm({ user, onSubmit, onCancel, isLoading = false }
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
                 {errors.confirmPassword && (
-                  <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.confirmPassword}
+                  </p>
                 )}
               </div>
             </div>
@@ -341,7 +359,7 @@ export default function UserForm({ user, onSubmit, onCancel, isLoading = false }
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              {isLoading ? 'Menyimpan...' : (isEdit ? 'Update' : 'Simpan')}
+              {isLoading ? "Menyimpan..." : isEdit ? "Update" : "Simpan"}
             </Button>
           </div>
         </form>

@@ -1,33 +1,28 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import React, { useState, useEffect } from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Bell,
   Send,
-  Users,
   MessageSquare,
   Mail,
   Smartphone,
-  Plus,
   Filter,
   Search,
   Eye,
-  Edit,
-  Trash2,
   CheckCircle,
   Clock,
   AlertTriangle,
   RefreshCw,
-  FileText
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import {
-  Notification,
-  getNotificationStatusColor,
-  getNotificationStatusText
-} from '@/lib/quran-data';
+  FileText,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
+import { Notification } from "@/lib/quran-data";
 
 // Using Notification interface from quran-data.ts
 
@@ -43,13 +38,12 @@ export default function NotificationsPage() {
   const [stats, setStats] = useState<NotificationStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    search: '',
-    type: '',
-    status: '',
-    priority: '',
-    channel: ''
+    search: "",
+    type: "",
+    status: "",
+    priority: "",
+    channel: "",
   });
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     loadNotifications();
@@ -60,9 +54,9 @@ export default function NotificationsPage() {
     try {
       setLoading(true);
       const params = new URLSearchParams({
-        userId: 'admin-user',
-        limit: '50',
-        offset: '0'
+        userId: "admin-user",
+        limit: "50",
+        offset: "0",
       });
 
       const response = await fetch(`/api/notifications?${params}`);
@@ -70,11 +64,11 @@ export default function NotificationsPage() {
         const data = await response.json();
         setNotifications(data.notifications || []);
       } else {
-        toast.error('Gagal memuat notifikasi');
+        toast.error("Gagal memuat notifikasi");
       }
     } catch (error) {
-      console.error('Error loading notifications:', error);
-      toast.error('Gagal memuat notifikasi');
+      console.error("Error loading notifications:", error);
+      toast.error("Gagal memuat notifikasi");
     } finally {
       setLoading(false);
     }
@@ -83,8 +77,8 @@ export default function NotificationsPage() {
   const loadStats = async () => {
     try {
       const params = new URLSearchParams({
-        userId: 'admin-user',
-        statsOnly: 'true'
+        userId: "admin-user",
+        statsOnly: "true",
       });
 
       const response = await fetch(`/api/notifications?${params}`);
@@ -93,48 +87,50 @@ export default function NotificationsPage() {
         setStats(data.stats);
       }
     } catch (error) {
-      console.error('Error loading stats:', error);
+      console.error("Error loading stats:", error);
     }
   };
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleFilterChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const response = await fetch('/api/notifications', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/notifications", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           notificationId,
-          action: 'mark_read'
-        })
+          action: "mark_read",
+        }),
       });
 
       if (response.ok) {
-        toast.success('Notifikasi ditandai sudah dibaca');
+        toast.success("Notifikasi ditandai sudah dibaca");
         loadNotifications();
         loadStats();
       } else {
-        toast.error('Gagal menandai notifikasi');
+        toast.error("Gagal menandai notifikasi");
       }
     } catch (error) {
-      console.error('Error marking notification as read:', error);
-      toast.error('Gagal menandai notifikasi');
+      console.error("Error marking notification as read:", error);
+      toast.error("Gagal menandai notifikasi");
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'SENT':
+      case "SENT":
         return <Badge variant="success">Terkirim</Badge>;
-      case 'PENDING':
+      case "PENDING":
         return <Badge variant="warning">Menunggu</Badge>;
-      case 'FAILED':
+      case "FAILED":
         return <Badge variant="destructive">Gagal</Badge>;
-      case 'SCHEDULED':
+      case "SCHEDULED":
         return <Badge variant="secondary">Terjadwal</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
@@ -143,33 +139,51 @@ export default function NotificationsPage() {
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
-      case 'URGENT':
+      case "URGENT":
         return <Badge variant="destructive">Urgent</Badge>;
-      case 'HIGH':
+      case "HIGH":
         return <Badge variant="warning">Tinggi</Badge>;
-      case 'NORMAL':
+      case "NORMAL":
         return <Badge variant="secondary">Normal</Badge>;
-      case 'LOW':
+      case "LOW":
         return <Badge variant="outline">Rendah</Badge>;
       default:
         return <Badge variant="outline">{priority}</Badge>;
     }
   };
 
-  const getChannelIcons = (channels: string) => {
-    const channelList = channels.split(',');
+  const getChannelIcons = (channels: string | string[]) => {
+    const channelList = Array.isArray(channels)
+      ? channels
+      : channels.split(",");
     return (
       <div className="flex gap-1">
         {channelList.map((channel, index) => {
           switch (channel.trim()) {
-            case 'IN_APP':
-              return <Bell key={index} className="h-4 w-4 text-blue-600" title="In-App" />;
-            case 'EMAIL':
-              return <Mail key={index} className="h-4 w-4 text-green-600" title="Email" />;
-            case 'WHATSAPP':
-              return <MessageSquare key={index} className="h-4 w-4 text-green-500" title="WhatsApp" />;
-            case 'SMS':
-              return <Smartphone key={index} className="h-4 w-4 text-purple-600" title="SMS" />;
+            case "IN_APP":
+              return (
+                <span key={index} title="In-App">
+                  <Bell className="h-4 w-4 text-blue-600" />
+                </span>
+              );
+            case "EMAIL":
+              return (
+                <span key={index} title="Email">
+                  <Mail className="h-4 w-4 text-green-600" />
+                </span>
+              );
+            case "WHATSAPP":
+              return (
+                <span key={index} title="WhatsApp">
+                  <MessageSquare className="h-4 w-4 text-green-500" />
+                </span>
+              );
+            case "SMS":
+              return (
+                <span key={index} title="SMS">
+                  <Smartphone className="h-4 w-4 text-purple-600" />
+                </span>
+              );
             default:
               return null;
           }
@@ -179,12 +193,12 @@ export default function NotificationsPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -193,7 +207,9 @@ export default function NotificationsPage() {
       <DashboardLayout>
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">Manajemen Notifikasi</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Manajemen Notifikasi
+            </h1>
           </div>
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -209,17 +225,24 @@ export default function NotificationsPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Manajemen Notifikasi</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Manajemen Notifikasi
+          </h1>
           <div className="flex gap-3">
             <Button
-              onClick={() => window.location.href = '/dashboard/admin/notifications/send'}
+              onClick={() =>
+                (window.location.href = "/dashboard/admin/notifications/send")
+              }
               className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
             >
               <Send className="h-4 w-4" />
               Kirim Notifikasi
             </Button>
             <Button
-              onClick={() => window.location.href = '/dashboard/admin/notifications/templates'}
+              onClick={() =>
+                (window.location.href =
+                  "/dashboard/admin/notifications/templates")
+              }
               variant="outline"
               className="flex items-center gap-2"
             >
@@ -268,8 +291,12 @@ export default function NotificationsPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Notifikasi</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Total Notifikasi
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {stats.total}
+                    </p>
                   </div>
                   <div className="p-3 bg-blue-100 rounded-full">
                     <Bell className="h-6 w-6 text-blue-600" />
@@ -282,8 +309,12 @@ export default function NotificationsPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Belum Dibaca</p>
-                    <p className="text-2xl font-bold text-orange-600">{stats.unread}</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Belum Dibaca
+                    </p>
+                    <p className="text-2xl font-bold text-orange-600">
+                      {stats.unread}
+                    </p>
                   </div>
                   <div className="p-3 bg-orange-100 rounded-full">
                     <AlertTriangle className="h-6 w-6 text-orange-600" />
@@ -296,8 +327,12 @@ export default function NotificationsPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Terkirim</p>
-                    <p className="text-2xl font-bold text-green-600">{stats.byStatus.SENT || 0}</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Terkirim
+                    </p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {stats.byStatus.SENT || 0}
+                    </p>
                   </div>
                   <div className="p-3 bg-green-100 rounded-full">
                     <CheckCircle className="h-6 w-6 text-green-600" />
@@ -310,8 +345,12 @@ export default function NotificationsPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Menunggu</p>
-                    <p className="text-2xl font-bold text-yellow-600">{stats.byStatus.PENDING || 0}</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Menunggu
+                    </p>
+                    <p className="text-2xl font-bold text-yellow-600">
+                      {stats.byStatus.PENDING || 0}
+                    </p>
                   </div>
                   <div className="p-3 bg-yellow-100 rounded-full">
                     <Clock className="h-6 w-6 text-yellow-600" />
@@ -348,7 +387,7 @@ export default function NotificationsPage() {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Tipe
@@ -361,7 +400,9 @@ export default function NotificationsPage() {
                 >
                   <option value="">Semua Tipe</option>
                   <option value="PAYMENT_REMINDER">Pengingat Pembayaran</option>
-                  <option value="PAYMENT_CONFIRMATION">Konfirmasi Pembayaran</option>
+                  <option value="PAYMENT_CONFIRMATION">
+                    Konfirmasi Pembayaran
+                  </option>
                   <option value="SPP_OVERDUE">SPP Terlambat</option>
                   <option value="ATTENDANCE_ALERT">Alert Absensi</option>
                   <option value="HAFALAN_PROGRESS">Progress Hafalan</option>
@@ -443,25 +484,35 @@ export default function NotificationsPage() {
                   <div
                     key={notification.id}
                     className={`p-4 border rounded-lg ${
-                      notification.readAt ? 'bg-white' : 'bg-blue-50 border-blue-200'
+                      notification.readAt
+                        ? "bg-white"
+                        : "bg-blue-50 border-blue-200"
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-gray-900">{notification.title}</h3>
+                          <h3 className="font-semibold text-gray-900">
+                            {notification.title}
+                          </h3>
                           {getStatusBadge(notification.status)}
                           {getPriorityBadge(notification.priority)}
                           {getChannelIcons(notification.channels)}
                         </div>
-                        <p className="text-gray-600 text-sm mb-2">{notification.message}</p>
+                        <p className="text-gray-600 text-sm mb-2">
+                          {notification.message}
+                        </p>
                         <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span>Dibuat: {formatDate(notification.createdAt)}</span>
+                          <span>
+                            Dibuat: {formatDate(notification.createdAt)}
+                          </span>
                           {notification.sentAt && (
-                            <span>Dikirim: {formatDate(notification.sentAt)}</span>
+                            <span>
+                              Dikirim: {formatDate(notification.sentAt)}
+                            </span>
                           )}
-                          {notification.recipient && (
-                            <span>Penerima: {notification.recipient.name}</span>
+                          {notification.recipientId && (
+                            <span>Penerima: {notification.recipientId}</span>
                           )}
                         </div>
                       </div>

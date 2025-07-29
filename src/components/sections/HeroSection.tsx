@@ -1,23 +1,17 @@
-'use client';
+﻿"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import Button from '@/components/ui/Button';
-import {
-  BookOpen,
-  Users,
-  Award,
-  Heart,
-  ArrowRight,
-  Star
-} from 'lucide-react';
+import React from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { BookOpen, Users, Award, Heart, ArrowRight, Star } from "lucide-react";
 
 const HeroSection = () => {
   return (
     <section
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
       style={{
-        background: "linear-gradient(135deg,rgb(238, 255, 0) 0%, #008080 90%, #00e0e0 100%)"
+        background:
+          "linear-gradient(135deg,rgb(238, 255, 0) 0%, #008080 90%, #00e0e0 100%)",
       }}
     >
       {/* Background with Islamic Pattern */}
@@ -46,8 +40,9 @@ const HeroSection = () => {
 
             {/* Description */}
             <p className="text-xl text-[#1E293B] mb-8 leading-relaxed max-w-2xl">
-              Bergabunglah dengan Rumah Tahfidz Baitus Shuffah, tempat terbaik untuk
-              menghafal Al-Quran dengan metode modern dan bimbingan ustadz berpengalaman.
+              Bergabunglah dengan Rumah Tahfidz Baitus Shuffah, tempat terbaik
+              untuk menghafal Al-Quran dengan metode modern dan bimbingan ustadz
+              berpengalaman.
             </p>
 
             {/* CTA Buttons */}
@@ -76,16 +71,24 @@ const HeroSection = () => {
             {/* Quick Stats */}
             <div className="grid grid-cols-3 gap-6 pt-8 border-t border-[#00e0e0]/40">
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-[#E6CF00] mb-1">250+</div>
+                <div className="text-2xl md:text-3xl font-bold text-[#E6CF00] mb-1">
+                  250+
+                </div>
                 <div className="text-sm text-[#008080]">Santri Aktif</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-[#E6CF00] mb-1">50+</div>
+                <div className="text-2xl md:text-3xl font-bold text-[#E6CF00] mb-1">
+                  50+
+                </div>
                 <div className="text-sm text-[#008080]">Hafidz/Hafidzah</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-[#E6CF00] mb-1">15</div>
-                <div className="text-sm text-[#008080]">Tahun Berpengalaman</div>
+                <div className="text-2xl md:text-3xl font-bold text-[#E6CF00] mb-1">
+                  15
+                </div>
+                <div className="text-sm text-[#008080]">
+                  Tahun Berpengalaman
+                </div>
               </div>
             </div>
           </div>
@@ -102,7 +105,8 @@ const HeroSection = () => {
                   Metode Tahfidz Modern
                 </h3>
                 <p className="text-[#1E293B] text-sm">
-                  Sistem pembelajaran yang terbukti efektif dengan teknologi terkini
+                  Sistem pembelajaran yang terbukti efektif dengan teknologi
+                  terkini
                 </p>
               </div>
 
@@ -115,7 +119,8 @@ const HeroSection = () => {
                   Ustadz Berpengalaman
                 </h3>
                 <p className="text-[#1E293B] text-sm">
-                  Dibimbing langsung oleh ustadz hafidz dengan pengalaman puluhan tahun
+                  Dibimbing langsung oleh ustadz hafidz dengan pengalaman
+                  puluhan tahun
                 </p>
               </div>
 

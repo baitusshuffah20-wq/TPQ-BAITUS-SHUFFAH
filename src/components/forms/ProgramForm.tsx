@@ -1,21 +1,21 @@
-'use client';
+﻿"use client";
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  BookOpen, 
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  BookOpen,
   Plus,
   Trash2,
   Save,
   X,
   Clock,
   Users,
-  DollarSign
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  DollarSign,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface ProgramFormData {
   id?: string;
@@ -38,19 +38,24 @@ interface ProgramFormProps {
   isLoading?: boolean;
 }
 
-export default function ProgramForm({ program, onSubmit, onCancel, isLoading = false }: ProgramFormProps) {
+export default function ProgramForm({
+  program,
+  onSubmit,
+  onCancel,
+  isLoading = false,
+}: ProgramFormProps) {
   const [formData, setFormData] = useState<ProgramFormData>({
-    title: program?.title || '',
-    description: program?.description || '',
-    features: program?.features || [''],
-    duration: program?.duration || '',
-    ageGroup: program?.ageGroup || '',
-    schedule: program?.schedule || '',
-    price: program?.price || '',
-    image: program?.image || '',
+    title: program?.title || "",
+    description: program?.description || "",
+    features: program?.features || [""],
+    duration: program?.duration || "",
+    ageGroup: program?.ageGroup || "",
+    schedule: program?.schedule || "",
+    price: program?.price || "",
+    image: program?.image || "",
     isActive: program?.isActive ?? true,
     order: program?.order || 0,
-    ...program
+    ...program,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -62,42 +67,42 @@ export default function ProgramForm({ program, onSubmit, onCancel, isLoading = f
 
     // Title validation
     if (!formData.title) {
-      newErrors.title = 'Judul program wajib diisi';
+      newErrors.title = "Judul program wajib diisi";
     } else if (formData.title.length < 3) {
-      newErrors.title = 'Judul program minimal 3 karakter';
+      newErrors.title = "Judul program minimal 3 karakter";
     }
 
     // Description validation
     if (!formData.description) {
-      newErrors.description = 'Deskripsi program wajib diisi';
+      newErrors.description = "Deskripsi program wajib diisi";
     } else if (formData.description.length < 10) {
-      newErrors.description = 'Deskripsi program minimal 10 karakter';
+      newErrors.description = "Deskripsi program minimal 10 karakter";
     }
 
     // Features validation
-    const validFeatures = formData.features.filter(f => f.trim() !== '');
+    const validFeatures = formData.features.filter((f) => f.trim() !== "");
     if (validFeatures.length === 0) {
-      newErrors.features = 'Minimal harus ada 1 fitur program';
+      newErrors.features = "Minimal harus ada 1 fitur program";
     }
 
     // Duration validation
     if (!formData.duration) {
-      newErrors.duration = 'Durasi program wajib diisi';
+      newErrors.duration = "Durasi program wajib diisi";
     }
 
     // Age group validation
     if (!formData.ageGroup) {
-      newErrors.ageGroup = 'Kelompok usia wajib diisi';
+      newErrors.ageGroup = "Kelompok usia wajib diisi";
     }
 
     // Schedule validation
     if (!formData.schedule) {
-      newErrors.schedule = 'Jadwal program wajib diisi';
+      newErrors.schedule = "Jadwal program wajib diisi";
     }
 
     // Price validation
     if (!formData.price) {
-      newErrors.price = 'Harga program wajib diisi';
+      newErrors.price = "Harga program wajib diisi";
     }
 
     setErrors(newErrors);
@@ -106,9 +111,9 @@ export default function ProgramForm({ program, onSubmit, onCancel, isLoading = f
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
-      toast.error('Mohon perbaiki kesalahan pada form');
+      toast.error("Mohon perbaiki kesalahan pada form");
       return;
     }
 
@@ -116,49 +121,57 @@ export default function ProgramForm({ program, onSubmit, onCancel, isLoading = f
       // Filter out empty features
       const cleanedData = {
         ...formData,
-        features: formData.features.filter(f => f.trim() !== '')
+        features: formData.features.filter((f) => f.trim() !== ""),
       };
-      
+
       await onSubmit(cleanedData);
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
-               type === 'number' ? parseInt(value) || 0 : value
+      [name]:
+        type === "checkbox"
+          ? (e.target as HTMLInputElement).checked
+          : type === "number"
+            ? parseInt(value) || 0
+            : value,
     }));
 
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const addFeature = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      features: [...prev.features, '']
+      features: [...prev.features, ""],
     }));
   };
 
   const removeFeature = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      features: prev.features.filter((_, i) => i !== index)
+      features: prev.features.filter((_, i) => i !== index),
     }));
   };
 
   const updateFeature = (index: number, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      features: prev.features.map((feature, i) => 
-        i === index ? value : feature
-      )
+      features: prev.features.map((feature, i) =>
+        i === index ? value : feature,
+      ),
     }));
   };
 
@@ -167,14 +180,16 @@ export default function ProgramForm({ program, onSubmit, onCancel, isLoading = f
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BookOpen className="h-6 w-6 text-teal-600" />
-          {isEdit ? 'Edit Program' : 'Tambah Program Baru'}
+          {isEdit ? "Edit Program" : "Tambah Program Baru"}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Basic Information */}
           <div className="border-b pb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Informasi Dasar</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Informasi Dasar
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -186,7 +201,7 @@ export default function ProgramForm({ program, onSubmit, onCancel, isLoading = f
                   value={formData.title}
                   onChange={handleChange}
                   placeholder="Contoh: Tahfidz Al-Quran"
-                  className={errors.title ? 'border-red-500' : ''}
+                  className={errors.title ? "border-red-500" : ""}
                   disabled={isLoading}
                 />
                 {errors.title && (
@@ -203,12 +218,14 @@ export default function ProgramForm({ program, onSubmit, onCancel, isLoading = f
                   value={formData.description}
                   onChange={handleChange}
                   rows={4}
-                  className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.description ? 'border-red-500' : ''}`}
+                  className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.description ? "border-red-500" : ""}`}
                   placeholder="Deskripsi lengkap tentang program ini..."
                   disabled={isLoading}
                 />
                 {errors.description && (
-                  <p className="text-red-500 text-xs mt-1">{errors.description}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.description}
+                  </p>
                 )}
               </div>
 
@@ -222,7 +239,7 @@ export default function ProgramForm({ program, onSubmit, onCancel, isLoading = f
                   value={formData.duration}
                   onChange={handleChange}
                   placeholder="Contoh: 2-4 Tahun"
-                  className={errors.duration ? 'border-red-500' : ''}
+                  className={errors.duration ? "border-red-500" : ""}
                   disabled={isLoading}
                 />
                 {errors.duration && (
@@ -240,7 +257,7 @@ export default function ProgramForm({ program, onSubmit, onCancel, isLoading = f
                   value={formData.ageGroup}
                   onChange={handleChange}
                   placeholder="Contoh: 7-17 Tahun"
-                  className={errors.ageGroup ? 'border-red-500' : ''}
+                  className={errors.ageGroup ? "border-red-500" : ""}
                   disabled={isLoading}
                 />
                 {errors.ageGroup && (
@@ -258,7 +275,7 @@ export default function ProgramForm({ program, onSubmit, onCancel, isLoading = f
                   value={formData.schedule}
                   onChange={handleChange}
                   placeholder="Contoh: Senin-Jumat 14:00-17:00"
-                  className={errors.schedule ? 'border-red-500' : ''}
+                  className={errors.schedule ? "border-red-500" : ""}
                   disabled={isLoading}
                 />
                 {errors.schedule && (
@@ -276,7 +293,7 @@ export default function ProgramForm({ program, onSubmit, onCancel, isLoading = f
                   value={formData.price}
                   onChange={handleChange}
                   placeholder="Contoh: Rp 200.000/bulan"
-                  className={errors.price ? 'border-red-500' : ''}
+                  className={errors.price ? "border-red-500" : ""}
                   disabled={isLoading}
                 />
                 {errors.price && (
@@ -321,7 +338,9 @@ export default function ProgramForm({ program, onSubmit, onCancel, isLoading = f
           {/* Features */}
           <div className="border-b pb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Fitur Program</h3>
+              <h3 className="text-lg font-medium text-gray-900">
+                Fitur Program
+              </h3>
               <Button
                 type="button"
                 variant="outline"
@@ -367,7 +386,9 @@ export default function ProgramForm({ program, onSubmit, onCancel, isLoading = f
                 <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
                   <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">Belum ada fitur</p>
-                  <p className="text-sm text-gray-500">Klik "Tambah Fitur" untuk menambah fitur baru</p>
+                  <p className="text-sm text-gray-500">
+                    Klik "Tambah Fitur" untuk menambah fitur baru
+                  </p>
                 </div>
               )}
             </div>
@@ -375,7 +396,9 @@ export default function ProgramForm({ program, onSubmit, onCancel, isLoading = f
 
           {/* Status */}
           <div className="border-b pb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Status Program</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Status Program
+            </h3>
             <div className="flex items-center gap-3">
               <input
                 type="checkbox"
@@ -388,8 +411,8 @@ export default function ProgramForm({ program, onSubmit, onCancel, isLoading = f
               <label className="text-sm font-medium text-gray-700">
                 Program Aktif
               </label>
-              <Badge variant={formData.isActive ? 'success' : 'secondary'}>
-                {formData.isActive ? 'Aktif' : 'Tidak Aktif'}
+              <Badge variant={formData.isActive ? "success" : "secondary"}>
+                {formData.isActive ? "Aktif" : "Tidak Aktif"}
               </Badge>
             </div>
             <p className="text-xs text-gray-500 mt-1">
@@ -419,7 +442,7 @@ export default function ProgramForm({ program, onSubmit, onCancel, isLoading = f
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              {isLoading ? 'Menyimpan...' : (isEdit ? 'Update' : 'Simpan')}
+              {isLoading ? "Menyimpan..." : isEdit ? "Update" : "Simpan"}
             </Button>
           </div>
         </form>

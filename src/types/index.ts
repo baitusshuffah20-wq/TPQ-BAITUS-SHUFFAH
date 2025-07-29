@@ -12,9 +12,9 @@ export interface User {
 }
 
 export enum UserRole {
-  ADMIN = 'ADMIN',
-  MUSYRIF = 'MUSYRIF',
-  WALI = 'WALI'
+  ADMIN = "ADMIN",
+  MUSYRIF = "MUSYRIF",
+  WALI = "WALI",
 }
 
 // Santri Types
@@ -39,15 +39,15 @@ export interface Santri {
 }
 
 export enum Gender {
-  MALE = 'MALE',
-  FEMALE = 'FEMALE'
+  MALE = "MALE",
+  FEMALE = "FEMALE",
 }
 
 export enum SantriStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  GRADUATED = 'GRADUATED',
-  DROPPED_OUT = 'DROPPED_OUT'
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  GRADUATED = "GRADUATED",
+  DROPPED_OUT = "DROPPED_OUT",
 }
 
 // Halaqah Types
@@ -74,14 +74,14 @@ export interface HalaqahSchedule {
 }
 
 export enum HalaqahLevel {
-  BEGINNER = 'BEGINNER',
-  INTERMEDIATE = 'INTERMEDIATE',
-  ADVANCED = 'ADVANCED'
+  BEGINNER = "BEGINNER",
+  INTERMEDIATE = "INTERMEDIATE",
+  ADVANCED = "ADVANCED",
 }
 
 export enum HalaqahStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE'
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
 }
 
 // Hafalan Types
@@ -103,16 +103,16 @@ export interface Hafalan {
 }
 
 export enum HafalanType {
-  SETORAN = 'SETORAN', // New memorization
-  MURAJAAH = 'MURAJAAH', // Review
-  TASMI = 'TASMI' // Listening/Testing
+  SETORAN = "SETORAN", // New memorization
+  MURAJAAH = "MURAJAAH", // Review
+  TASMI = "TASMI", // Listening/Testing
 }
 
 export enum HafalanStatus {
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  NEEDS_IMPROVEMENT = 'NEEDS_IMPROVEMENT',
-  REJECTED = 'REJECTED'
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  NEEDS_IMPROVEMENT = "NEEDS_IMPROVEMENT",
+  REJECTED = "REJECTED",
 }
 
 // Attendance Types
@@ -135,10 +135,10 @@ export interface Attendance {
 }
 
 export enum AttendanceStatus {
-  PRESENT = 'PRESENT',
-  ABSENT = 'ABSENT',
-  LATE = 'LATE',
-  EXCUSED = 'EXCUSED'
+  PRESENT = "PRESENT",
+  ABSENT = "ABSENT",
+  LATE = "LATE",
+  EXCUSED = "EXCUSED",
 }
 
 // Financial Types
@@ -158,26 +158,26 @@ export interface Payment {
 }
 
 export enum PaymentType {
-  SPP = 'SPP',
-  REGISTRATION = 'REGISTRATION',
-  BOOK = 'BOOK',
-  UNIFORM = 'UNIFORM',
-  EVENT = 'EVENT',
-  OTHER = 'OTHER'
+  SPP = "SPP",
+  REGISTRATION = "REGISTRATION",
+  BOOK = "BOOK",
+  UNIFORM = "UNIFORM",
+  EVENT = "EVENT",
+  OTHER = "OTHER",
 }
 
 export enum PaymentStatus {
-  PENDING = 'PENDING',
-  PAID = 'PAID',
-  OVERDUE = 'OVERDUE',
-  CANCELLED = 'CANCELLED'
+  PENDING = "PENDING",
+  PAID = "PAID",
+  OVERDUE = "OVERDUE",
+  CANCELLED = "CANCELLED",
 }
 
 export enum PaymentMethod {
-  CASH = 'CASH',
-  BANK_TRANSFER = 'BANK_TRANSFER',
-  QRIS = 'QRIS',
-  E_WALLET = 'E_WALLET'
+  CASH = "CASH",
+  BANK_TRANSFER = "BANK_TRANSFER",
+  QRIS = "QRIS",
+  E_WALLET = "E_WALLET",
 }
 
 // Donation Types
@@ -198,12 +198,12 @@ export interface Donation {
 }
 
 export enum DonationType {
-  GENERAL = 'GENERAL',
-  BUILDING = 'BUILDING',
-  SCHOLARSHIP = 'SCHOLARSHIP',
-  EQUIPMENT = 'EQUIPMENT',
-  RAMADAN = 'RAMADAN',
-  QURBAN = 'QURBAN'
+  GENERAL = "GENERAL",
+  BUILDING = "BUILDING",
+  SCHOLARSHIP = "SCHOLARSHIP",
+  EQUIPMENT = "EQUIPMENT",
+  RAMADAN = "RAMADAN",
+  QURBAN = "QURBAN",
 }
 
 // Notification Types
@@ -214,24 +214,24 @@ export interface Notification {
   message: string;
   type: NotificationType;
   isRead: boolean;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export enum NotificationType {
-  INFO = 'INFO',
-  WARNING = 'WARNING',
-  SUCCESS = 'SUCCESS',
-  ERROR = 'ERROR',
-  PAYMENT_DUE = 'PAYMENT_DUE',
-  ATTENDANCE = 'ATTENDANCE',
-  HAFALAN = 'HAFALAN',
-  ANNOUNCEMENT = 'ANNOUNCEMENT'
+  INFO = "INFO",
+  WARNING = "WARNING",
+  SUCCESS = "SUCCESS",
+  ERROR = "ERROR",
+  PAYMENT_DUE = "PAYMENT_DUE",
+  ATTENDANCE = "ATTENDANCE",
+  HAFALAN = "HAFALAN",
+  ANNOUNCEMENT = "ANNOUNCEMENT",
 }
 
 // API Response Types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data?: T;

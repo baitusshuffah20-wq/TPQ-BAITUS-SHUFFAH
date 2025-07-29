@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { useSession } from 'next-auth/react';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSession } from "next-auth/react";
 import {
   Users,
   GraduationCap,
@@ -15,8 +15,8 @@ import {
   AlertCircle,
   TrendingUp,
   Award,
-  Target
-} from 'lucide-react';
+  Target,
+} from "lucide-react";
 
 const MusyrifDashboard = () => {
   const { data: session, status } = useSession();
@@ -24,18 +24,18 @@ const MusyrifDashboard = () => {
 
   // Check authentication and role
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
+    if (status === "unauthenticated") {
+      router.push("/login");
       return;
     }
 
-    if (status === 'authenticated' && session?.user.role !== 'MUSYRIF') {
-      router.push('/dashboard');
+    if (status === "authenticated" && session?.user.role !== "MUSYRIF") {
+      router.push("/dashboard");
       return;
     }
   }, [session, status, router]);
 
-  if (status === 'loading') {
+  if (status === "loading") {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-96">
@@ -49,111 +49,111 @@ const MusyrifDashboard = () => {
   }
 
   // If user is not musyrif, don't render anything (redirect will happen)
-  if (status === 'authenticated' && session?.user.role !== 'MUSYRIF') {
+  if (status === "authenticated" && session?.user.role !== "MUSYRIF") {
     return null;
   }
 
   // Mock data for Musyrif
   const stats = [
     {
-      title: 'Santri Binaan',
-      value: '25',
-      change: '+2',
-      changeType: 'increase',
+      title: "Santri Binaan",
+      value: "25",
+      change: "+2",
+      changeType: "increase",
       icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50'
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
     },
     {
-      title: 'Halaqah Aktif',
-      value: '3',
-      change: '0',
-      changeType: 'stable',
+      title: "Halaqah Aktif",
+      value: "3",
+      change: "0",
+      changeType: "stable",
       icon: BookOpen,
-      color: 'text-teal-600',
-      bgColor: 'bg-teal-50'
+      color: "text-teal-600",
+      bgColor: "bg-teal-50",
     },
     {
-      title: 'Hafalan Selesai Bulan Ini',
-      value: '12',
-      change: '+4',
-      changeType: 'increase',
+      title: "Hafalan Selesai Bulan Ini",
+      value: "12",
+      change: "+4",
+      changeType: "increase",
       icon: GraduationCap,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50'
+      color: "text-green-600",
+      bgColor: "bg-green-50",
     },
     {
-      title: 'Tingkat Kehadiran',
-      value: '92%',
-      change: '+3%',
-      changeType: 'increase',
+      title: "Tingkat Kehadiran",
+      value: "92%",
+      change: "+3%",
+      changeType: "increase",
       icon: Calendar,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50'
-    }
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+    },
   ];
 
   const recentHafalan = [
     {
       id: 1,
-      santriName: 'Ahmad Fauzi',
-      surah: 'Al-Baqarah',
-      ayah: '1-10',
-      status: 'APPROVED',
+      santriName: "Ahmad Fauzi",
+      surah: "Al-Baqarah",
+      ayah: "1-10",
+      status: "APPROVED",
       grade: 85,
-      date: '2024-02-10'
+      date: "2024-02-10",
     },
     {
       id: 2,
-      santriName: 'Siti Aisyah',
-      surah: 'Ali Imran',
-      ayah: '1-20',
-      status: 'PENDING',
+      santriName: "Siti Aisyah",
+      surah: "Ali Imran",
+      ayah: "1-20",
+      status: "PENDING",
       grade: null,
-      date: '2024-02-11'
+      date: "2024-02-11",
     },
     {
       id: 3,
-      santriName: 'Muhammad Rizki',
-      surah: 'An-Nisa',
-      ayah: '1-15',
-      status: 'NEEDS_IMPROVEMENT',
+      santriName: "Muhammad Rizki",
+      surah: "An-Nisa",
+      ayah: "1-15",
+      status: "NEEDS_IMPROVEMENT",
       grade: 65,
-      date: '2024-02-09'
-    }
+      date: "2024-02-09",
+    },
   ];
 
   const todaySchedule = [
     {
       id: 1,
-      time: '08:00 - 09:30',
-      halaqah: 'Halaqah Al-Fatihah',
-      location: 'Ruang A',
-      participants: 8
+      time: "08:00 - 09:30",
+      halaqah: "Halaqah Al-Fatihah",
+      location: "Ruang A",
+      participants: 8,
     },
     {
       id: 2,
-      time: '10:00 - 11:30',
-      halaqah: 'Halaqah Al-Baqarah',
-      location: 'Ruang B',
-      participants: 10
+      time: "10:00 - 11:30",
+      halaqah: "Halaqah Al-Baqarah",
+      location: "Ruang B",
+      participants: 10,
     },
     {
       id: 3,
-      time: '14:00 - 15:30',
-      halaqah: 'Halaqah Ali Imran',
-      location: 'Ruang C',
-      participants: 7
-    }
+      time: "14:00 - 15:30",
+      halaqah: "Halaqah Ali Imran",
+      location: "Ruang C",
+      participants: 7,
+    },
   ];
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'APPROVED':
+      case "APPROVED":
         return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'PENDING':
+      case "PENDING":
         return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'NEEDS_IMPROVEMENT':
+      case "NEEDS_IMPROVEMENT":
         return <AlertCircle className="h-4 w-4 text-red-500" />;
       default:
         return <Clock className="h-4 w-4 text-gray-500" />;
@@ -162,14 +162,14 @@ const MusyrifDashboard = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'APPROVED':
-        return 'bg-green-100 text-green-800';
-      case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'NEEDS_IMPROVEMENT':
-        return 'bg-red-100 text-red-800';
+      case "APPROVED":
+        return "bg-green-100 text-green-800";
+      case "PENDING":
+        return "bg-yellow-100 text-yellow-800";
+      case "NEEDS_IMPROVEMENT":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -191,7 +191,10 @@ const MusyrifDashboard = () => {
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.title} className="hover:shadow-lg transition-shadow">
+              <Card
+                key={stat.title}
+                className="hover:shadow-lg transition-shadow"
+              >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -201,7 +204,7 @@ const MusyrifDashboard = () => {
                       <p className="text-2xl font-bold text-gray-900">
                         {stat.value}
                       </p>
-                      {stat.change !== '0' && (
+                      {stat.change !== "0" && (
                         <div className="flex items-center mt-2">
                           <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
                           <span className="text-sm font-medium text-green-600">
@@ -235,7 +238,10 @@ const MusyrifDashboard = () => {
             <CardContent>
               <div className="space-y-4">
                 {recentHafalan.map((hafalan) => (
-                  <div key={hafalan.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={hafalan.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
                     <div className="flex-1">
                       <h4 className="text-sm font-medium text-gray-900">
                         {hafalan.santriName}
@@ -244,7 +250,7 @@ const MusyrifDashboard = () => {
                         {hafalan.surah} ayat {hafalan.ayah}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {new Date(hafalan.date).toLocaleDateString('id-ID')}
+                        {new Date(hafalan.date).toLocaleDateString("id-ID")}
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -255,7 +261,9 @@ const MusyrifDashboard = () => {
                       )}
                       <div className="flex items-center space-x-1">
                         {getStatusIcon(hafalan.status)}
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(hafalan.status)}`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(hafalan.status)}`}
+                        >
                           {hafalan.status}
                         </span>
                       </div>
@@ -277,7 +285,10 @@ const MusyrifDashboard = () => {
             <CardContent>
               <div className="space-y-4">
                 {todaySchedule.map((schedule) => (
-                  <div key={schedule.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={schedule.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
                     <div>
                       <h4 className="text-sm font-medium text-gray-900">
                         {schedule.halaqah}
@@ -290,9 +301,7 @@ const MusyrifDashboard = () => {
                       <p className="text-sm font-medium text-teal-600">
                         {schedule.participants}
                       </p>
-                      <p className="text-xs text-gray-500">
-                        santri
-                      </p>
+                      <p className="text-xs text-gray-500">santri</p>
                     </div>
                   </div>
                 ))}
@@ -314,21 +323,21 @@ const MusyrifDashboard = () => {
                   Input Hafalan
                 </span>
               </button>
-              
+
               <button className="p-4 text-center bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
                 <Calendar className="h-8 w-8 text-blue-600 mx-auto mb-2" />
                 <span className="text-sm font-medium text-blue-900">
                   Absensi
                 </span>
               </button>
-              
+
               <button className="p-4 text-center bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
                 <Users className="h-8 w-8 text-green-600 mx-auto mb-2" />
                 <span className="text-sm font-medium text-green-900">
                   Kelola Santri
                 </span>
               </button>
-              
+
               <button className="p-4 text-center bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
                 <Target className="h-8 w-8 text-purple-600 mx-auto mb-2" />
                 <span className="text-sm font-medium text-purple-900">

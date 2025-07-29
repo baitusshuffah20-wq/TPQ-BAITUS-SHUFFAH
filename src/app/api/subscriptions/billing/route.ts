@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { SubscriptionService } from '@/lib/subscription-service';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { SubscriptionService } from "@/lib/subscription-service";
+import { prisma } from "@/lib/prisma";
 
 // GET /api/subscriptions/billing - Get billing records
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const subscriptionId = searchParams.get('subscriptionId');
-    const status = searchParams.get('status');
-    const studentId = searchParams.get('studentId');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const subscriptionId = searchParams.get("subscriptionId");
+    const status = searchParams.get("status");
+    const studentId = searchParams.get("studentId");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
 
     const skip = (page - 1) * limit;
 
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     if (status) whereClause.status = status;
     if (studentId) {
       whereClause.subscription = {
-        studentId: studentId
+        studentId: studentId,
       };
     }
 
@@ -31,16 +31,16 @@ export async function GET(request: NextRequest) {
           subscription: {
             include: {
               student: {
-                select: { id: true, name: true, email: true }
-              }
-            }
-          }
+                select: { id: true, name: true, email: true },
+              },
+            },
+          },
         },
-        orderBy: { billingDate: 'desc' },
+        orderBy: { billingDate: "desc" },
         skip,
-        take: limit
+        take: limit,
       }),
-      prisma.subscriptionBilling.count({ where: whereClause })
+      prisma.subscriptionBilling.count({ where: whereClause }),
     ]);
 
     return NextResponse.json({
@@ -51,19 +51,19 @@ export async function GET(request: NextRequest) {
           page,
           limit,
           total,
-          totalPages: Math.ceil(total / limit)
-        }
-      }
+          totalPages: Math.ceil(total / limit),
+        },
+      },
     });
   } catch (error) {
-    console.error('Error getting billing records:', error);
+    console.error("Error getting billing records:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to get billing records',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to get billing records",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -76,55 +76,64 @@ export async function POST(request: NextRequest) {
 
     if (!billingId) {
       return NextResponse.json(
-        { success: false, message: 'Billing ID is required' },
-        { status: 400 }
+        { success: false, message: "Billing ID is required" },
+        { status: 400 },
       );
     }
 
     let result;
 
     switch (action) {
-      case 'process':
+      case "process":
         result = await SubscriptionService.processBilling(billingId);
         break;
-      
-      case 'mark_paid':
+
+      case "mark_paid":
         const { paymentId } = body;
         if (!paymentId) {
           return NextResponse.json(
-            { success: false, message: 'Payment ID is required for mark_paid action' },
-            { status: 400 }
+            {
+              success: false,
+              message: "Payment ID is required for mark_paid action",
+            },
+            { status: 400 },
           );
         }
-        result = await SubscriptionService.markBillingPaid(billingId, paymentId);
+        result = await SubscriptionService.markBillingPaid(
+          billingId,
+          paymentId,
+        );
         break;
-      
-      case 'mark_failed':
+
+      case "mark_failed":
         const { reason } = body;
-        result = await SubscriptionService.markBillingFailed(billingId, reason || 'Manual failure');
+        result = await SubscriptionService.markBillingFailed(
+          billingId,
+          reason || "Manual failure",
+        );
         break;
-      
+
       default:
         return NextResponse.json(
-          { success: false, message: 'Invalid action' },
-          { status: 400 }
+          { success: false, message: "Invalid action" },
+          { status: 400 },
         );
     }
 
     return NextResponse.json({
       success: true,
       message: `Billing ${action} completed successfully`,
-      data: result
+      data: result,
     });
   } catch (error) {
-    console.error('Error processing billing:', error);
+    console.error("Error processing billing:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to process billing',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to process billing",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

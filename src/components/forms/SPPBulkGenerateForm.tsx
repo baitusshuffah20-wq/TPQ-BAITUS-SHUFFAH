@@ -1,12 +1,12 @@
-'use client';
+﻿"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Users, 
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Users,
   Calendar,
   GraduationCap,
   Plus,
@@ -14,9 +14,9 @@ import {
   Save,
   X,
   CheckCircle,
-  AlertTriangle
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  AlertTriangle,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface Santri {
   id: string;
@@ -55,19 +55,29 @@ interface SPPBulkGenerateFormProps {
 }
 
 const MONTHS = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
 ];
 
-export default function SPPBulkGenerateForm({ 
-  onSubmit, 
-  onCancel, 
-  isLoading = false 
+export default function SPPBulkGenerateForm({
+  onSubmit,
+  onCancel,
+  isLoading = false,
 }: SPPBulkGenerateFormProps) {
   const [formData, setFormData] = useState<SPPBulkGenerateFormData>({
-    sppSettingId: '',
+    sppSettingId: "",
     santriIds: [],
-    months: []
+    months: [],
   });
 
   const [santriList, setSantriList] = useState<Santri[]>([]);
@@ -83,30 +93,70 @@ export default function SPPBulkGenerateForm({
 
   const loadData = async () => {
     try {
+      console.log("?? Loading form data...");
       setLoadingData(true);
-      
+
       // Load santri
-      const santriResponse = await fetch('/api/santri');
+      console.log("?? Loading santri data...");
+      const santriResponse = await fetch("/api/santri");
       if (santriResponse.ok) {
         const santriData = await santriResponse.json();
+        console.log(
+          "? Santri data loaded:",
+          santriData.santri?.length || 0,
+          "santri",
+        );
+        console.log("?? Sample santri:", santriData.santri?.slice(0, 2));
         setSantriList(santriData.santri || []);
+      } else {
+        console.error("? Failed to load santri:", santriResponse.status);
+        toast.error("Gagal memuat data santri");
       }
 
       // Load SPP settings
-      const settingsResponse = await fetch('/api/spp/settings?isActive=true');
+      console.log("?? Loading SPP settings...");
+      const settingsResponse = await fetch("/api/spp/settings?isActive=true");
       if (settingsResponse.ok) {
         const settingsData = await settingsResponse.json();
+        console.log(
+          "? SPP settings loaded:",
+          settingsData.sppSettings?.length || 0,
+          "settings",
+        );
+        console.log("?? SPP settings:", settingsData.sppSettings);
         setSppSettings(settingsData.sppSettings || []);
         // Set default SPP setting
         if (settingsData.sppSettings && settingsData.sppSettings.length > 0) {
-          setFormData(prev => ({ ...prev, sppSettingId: settingsData.sppSettings[0].id }));
+          setFormData((prev) => ({
+            ...prev,
+            sppSettingId: settingsData.sppSettings[0].id,
+          }));
+          console.log(
+            "? Default SPP setting set:",
+            settingsData.sppSettings[0].id,
+          );
+        } else {
+          console.warn("?? No active SPP settings found");
+          toast.error("Tidak ada pengaturan SPP yang aktif");
         }
+      } else {
+        console.error(
+          "? Failed to load SPP settings:",
+          settingsResponse.status,
+        );
+        toast.error("Gagal memuat pengaturan SPP");
       }
+
+      // Log final form state
+      console.log("?? Final form state after loading:");
+      console.log("- Santri count:", santriList.length);
+      console.log("- SPP settings count:", sppSettings.length);
     } catch (error) {
-      console.error('Error loading data:', error);
-      toast.error('Gagal memuat data');
+      console.error("? Error loading data:", error);
+      toast.error("Gagal memuat data");
     } finally {
       setLoadingData(false);
+      console.log("? Form data loading completed");
     }
   };
 
@@ -114,15 +164,17 @@ export default function SPPBulkGenerateForm({
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1;
     const currentYear = currentDate.getFullYear();
-    
+
     // Initialize with current month
     const initialMonth: MonthData = {
       month: currentMonth,
       year: currentYear,
-      dueDate: new Date(currentYear, currentMonth - 1, 10).toISOString().split('T')[0] // 10th of the month
+      dueDate: new Date(currentYear, currentMonth - 1, 10)
+        .toISOString()
+        .split("T")[0], // 10th of the month
     };
-    
-    setFormData(prev => ({ ...prev, months: [initialMonth] }));
+
+    setFormData((prev) => ({ ...prev, months: [initialMonth] }));
   };
 
   const validateForm = (): boolean => {
@@ -130,23 +182,23 @@ export default function SPPBulkGenerateForm({
 
     // SPP Setting validation
     if (!formData.sppSettingId) {
-      newErrors.sppSettingId = 'Pengaturan SPP wajib dipilih';
+      newErrors.sppSettingId = "Pengaturan SPP wajib dipilih";
     }
 
     // Santri validation
     if (formData.santriIds.length === 0) {
-      newErrors.santriIds = 'Minimal pilih 1 santri';
+      newErrors.santriIds = "Minimal pilih 1 santri";
     }
 
     // Months validation
     if (formData.months.length === 0) {
-      newErrors.months = 'Minimal pilih 1 bulan';
+      newErrors.months = "Minimal pilih 1 bulan";
     }
 
     // Validate each month
     formData.months.forEach((month, index) => {
       if (!month.dueDate) {
-        newErrors[`month_${index}_dueDate`] = 'Tanggal jatuh tempo wajib diisi';
+        newErrors[`month_${index}_dueDate`] = "Tanggal jatuh tempo wajib diisi";
       }
     });
 
@@ -156,50 +208,101 @@ export default function SPPBulkGenerateForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    console.log("?? Form submission started");
+    console.log("?? Form data:", JSON.stringify(formData, null, 2));
+
     if (!validateForm()) {
-      toast.error('Mohon perbaiki kesalahan pada form');
+      console.error("? Form validation failed:", errors);
+      toast.error("Mohon perbaiki kesalahan pada form");
+      return;
+    }
+
+    // Additional validation
+    if (!formData.sppSettingId) {
+      console.error("? No SPP setting selected");
+      toast.error("Pilih pengaturan SPP terlebih dahulu");
+      return;
+    }
+
+    if (formData.santriIds.length === 0) {
+      console.error("? No santri selected");
+      toast.error("Pilih minimal 1 santri");
+      return;
+    }
+
+    if (formData.months.length === 0) {
+      console.error("? No months selected");
+      toast.error("Pilih minimal 1 bulan");
+      return;
+    }
+
+    // Validate months data
+    const invalidMonths = formData.months.filter(
+      (month) =>
+        !month.dueDate ||
+        month.month < 1 ||
+        month.month > 12 ||
+        month.year < 2024,
+    );
+
+    if (invalidMonths.length > 0) {
+      console.error("? Invalid months data:", invalidMonths);
+      toast.error("Data bulan tidak valid");
       return;
     }
 
     try {
+      console.log("? Form validation passed, calling onSubmit");
+      console.log("?? Summary:", {
+        sppSettingId: formData.sppSettingId,
+        santriCount: formData.santriIds.length,
+        monthsCount: formData.months.length,
+        totalRecords: formData.santriIds.length * formData.months.length,
+      });
+
       await onSubmit(formData);
+      console.log("? onSubmit completed successfully");
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("? Form submission error:", error);
+      toast.error("Terjadi kesalahan saat mengirim data");
     }
   };
 
   const handleSantriToggle = (santri: Santri) => {
     const isSelected = formData.santriIds.includes(santri.id);
-    
+
     if (isSelected) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        santriIds: prev.santriIds.filter(id => id !== santri.id)
+        santriIds: prev.santriIds.filter((id) => id !== santri.id),
       }));
-      setSelectedSantri(prev => prev.filter(s => s.id !== santri.id));
+      setSelectedSantri((prev) => prev.filter((s) => s.id !== santri.id));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        santriIds: [...prev.santriIds, santri.id]
+        santriIds: [...prev.santriIds, santri.id],
       }));
-      setSelectedSantri(prev => [...prev, santri]);
+      setSelectedSantri((prev) => [...prev, santri]);
     }
 
     // Clear error when user selects santri
     if (errors.santriIds) {
-      setErrors(prev => ({ ...prev, santriIds: '' }));
+      setErrors((prev) => ({ ...prev, santriIds: "" }));
     }
   };
 
   const handleSelectAllSantri = () => {
     if (formData.santriIds.length === santriList.length) {
       // Deselect all
-      setFormData(prev => ({ ...prev, santriIds: [] }));
+      setFormData((prev) => ({ ...prev, santriIds: [] }));
       setSelectedSantri([]);
     } else {
       // Select all
-      setFormData(prev => ({ ...prev, santriIds: santriList.map(s => s.id) }));
+      setFormData((prev) => ({
+        ...prev,
+        santriIds: santriList.map((s) => s.id),
+      }));
       setSelectedSantri(santriList);
     }
   };
@@ -208,42 +311,48 @@ export default function SPPBulkGenerateForm({
     const lastMonth = formData.months[formData.months.length - 1];
     let nextMonth = lastMonth.month + 1;
     let nextYear = lastMonth.year;
-    
+
     if (nextMonth > 12) {
       nextMonth = 1;
       nextYear += 1;
     }
-    
+
     const newMonth: MonthData = {
       month: nextMonth,
       year: nextYear,
-      dueDate: new Date(nextYear, nextMonth - 1, 10).toISOString().split('T')[0]
+      dueDate: new Date(nextYear, nextMonth - 1, 10)
+        .toISOString()
+        .split("T")[0],
     };
-    
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
-      months: [...prev.months, newMonth]
+      months: [...prev.months, newMonth],
     }));
   };
 
   const removeMonth = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      months: prev.months.filter((_, i) => i !== index)
+      months: prev.months.filter((_, i) => i !== index),
     }));
   };
 
-  const updateMonth = (index: number, field: keyof MonthData, value: string | number) => {
-    setFormData(prev => ({
+  const updateMonth = (
+    index: number,
+    field: keyof MonthData,
+    value: string | number,
+  ) => {
+    setFormData((prev) => ({
       ...prev,
-      months: prev.months.map((month, i) => 
-        i === index ? { ...month, [field]: value } : month
-      )
+      months: prev.months.map((month, i) =>
+        i === index ? { ...month, [field]: value } : month,
+      ),
     }));
   };
 
   const getSelectedSPPSetting = () => {
-    return sppSettings.find(s => s.id === formData.sppSettingId);
+    return sppSettings.find((s) => s.id === formData.sppSettingId);
   };
 
   const calculateTotal = () => {
@@ -277,15 +386,17 @@ export default function SPPBulkGenerateForm({
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* SPP Setting Selection */}
           <div className="border-b pb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Pengaturan SPP</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Pengaturan SPP
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {sppSettings.map((setting) => (
                 <label
                   key={setting.id}
                   className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:cursor-pointer transition-colors ${
                     formData.sppSettingId === setting.id
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-300 hover:border-blue-300'
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-300 hover:border-blue-300"
                   }`}
                 >
                   <input
@@ -293,19 +404,26 @@ export default function SPPBulkGenerateForm({
                     name="sppSettingId"
                     value={setting.id}
                     checked={formData.sppSettingId === setting.id}
-                    onChange={(e) => setFormData(prev => ({ ...prev, sppSettingId: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        sppSettingId: e.target.value,
+                      }))
+                    }
                     className="sr-only"
                     disabled={isLoading}
                   />
                   <GraduationCap className="h-5 w-5 text-blue-600" />
                   <div className="flex-1">
                     <p className="font-medium text-gray-900">{setting.name}</p>
-                    <p className="text-sm text-gray-600">{setting.level || 'Semua Level'}</p>
+                    <p className="text-sm text-gray-600">
+                      {setting.level || "Semua Level"}
+                    </p>
                     <p className="text-lg font-bold text-blue-600">
-                      {new Intl.NumberFormat('id-ID', {
-                        style: 'currency',
-                        currency: 'IDR',
-                        minimumFractionDigits: 0
+                      {new Intl.NumberFormat("id-ID", {
+                        style: "currency",
+                        currency: "IDR",
+                        minimumFractionDigits: 0,
                       }).format(setting.amount)}
                     </p>
                   </div>
@@ -320,10 +438,13 @@ export default function SPPBulkGenerateForm({
           {/* Santri Selection */}
           <div className="border-b pb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Pilih Santri</h3>
+              <h3 className="text-lg font-medium text-gray-900">
+                Pilih Santri
+              </h3>
               <div className="flex items-center gap-3">
                 <span className="text-sm text-gray-600">
-                  {formData.santriIds.length} dari {santriList.length} santri dipilih
+                  {formData.santriIds.length} dari {santriList.length} santri
+                  dipilih
                 </span>
                 <Button
                   type="button"
@@ -331,7 +452,9 @@ export default function SPPBulkGenerateForm({
                   size="sm"
                   onClick={handleSelectAllSantri}
                 >
-                  {formData.santriIds.length === santriList.length ? 'Batal Pilih Semua' : 'Pilih Semua'}
+                  {formData.santriIds.length === santriList.length
+                    ? "Batal Pilih Semua"
+                    : "Pilih Semua"}
                 </Button>
               </div>
             </div>
@@ -342,8 +465,8 @@ export default function SPPBulkGenerateForm({
                   key={santri.id}
                   className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:cursor-pointer transition-colors ${
                     formData.santriIds.includes(santri.id)
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-gray-300 hover:border-green-300'
+                      ? "border-green-500 bg-green-50"
+                      : "border-gray-300 hover:border-green-300"
                   }`}
                 >
                   <input
@@ -357,7 +480,9 @@ export default function SPPBulkGenerateForm({
                     <p className="font-medium text-gray-900">{santri.name}</p>
                     <p className="text-sm text-gray-600">{santri.nis}</p>
                     {santri.halaqah && (
-                      <p className="text-xs text-gray-500">{santri.halaqah.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {santri.halaqah.name}
+                      </p>
                     )}
                   </div>
                 </label>
@@ -386,7 +511,10 @@ export default function SPPBulkGenerateForm({
 
             <div className="space-y-3">
               {formData.months.map((month, index) => (
-                <div key={index} className="flex items-center gap-4 p-4 border rounded-lg">
+                <div
+                  key={index}
+                  className="flex items-center gap-4 p-4 border rounded-lg"
+                >
                   <Calendar className="h-5 w-5 text-blue-600" />
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
@@ -395,7 +523,9 @@ export default function SPPBulkGenerateForm({
                       </label>
                       <select
                         value={month.month}
-                        onChange={(e) => updateMonth(index, 'month', parseInt(e.target.value))}
+                        onChange={(e) =>
+                          updateMonth(index, "month", parseInt(e.target.value))
+                        }
                         className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer hover:cursor-pointer"
                         disabled={isLoading}
                       >
@@ -413,7 +543,9 @@ export default function SPPBulkGenerateForm({
                       <Input
                         type="number"
                         value={month.year}
-                        onChange={(e) => updateMonth(index, 'year', parseInt(e.target.value))}
+                        onChange={(e) =>
+                          updateMonth(index, "year", parseInt(e.target.value))
+                        }
                         min="2024"
                         max="2030"
                         disabled={isLoading}
@@ -426,7 +558,9 @@ export default function SPPBulkGenerateForm({
                       <Input
                         type="date"
                         value={month.dueDate}
-                        onChange={(e) => updateMonth(index, 'dueDate', e.target.value)}
+                        onChange={(e) =>
+                          updateMonth(index, "dueDate", e.target.value)
+                        }
                         disabled={isLoading}
                       />
                     </div>
@@ -453,40 +587,71 @@ export default function SPPBulkGenerateForm({
 
           {/* Summary */}
           <div className="border-t pt-6">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Ringkasan Generate SPP:</h4>
+            <h4 className="text-sm font-medium text-gray-700 mb-3">
+              Ringkasan Generate SPP:
+            </h4>
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
                 <div>
                   <p className="text-sm text-gray-600">Pengaturan SPP</p>
                   <p className="font-medium text-gray-900">
-                    {getSelectedSPPSetting()?.name || '-'}
+                    {getSelectedSPPSetting()?.name || "-"}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Jumlah Santri</p>
-                  <p className="font-bold text-blue-600">{formData.santriIds.length}</p>
+                  <p className="font-bold text-blue-600">
+                    {formData.santriIds.length}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Jumlah Bulan</p>
-                  <p className="font-bold text-blue-600">{formData.months.length}</p>
+                  <p className="font-bold text-blue-600">
+                    {formData.months.length}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Total SPP</p>
                   <p className="font-bold text-green-600">
-                    {new Intl.NumberFormat('id-ID', {
-                      style: 'currency',
-                      currency: 'IDR',
-                      minimumFractionDigits: 0
+                    {new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                      minimumFractionDigits: 0,
                     }).format(calculateTotal())}
                   </p>
                 </div>
               </div>
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <p className="text-sm text-gray-600 text-center">
-                  Total {formData.santriIds.length * formData.months.length} SPP akan dibuat
+                  Total {formData.santriIds.length * formData.months.length} SPP
+                  akan dibuat
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Debug Info */}
+          <div className="border-t pt-6">
+            <details className="mb-4">
+              <summary className="cursor-pointer text-sm font-medium text-gray-700 mb-2">
+                Debug Info (Click to expand)
+              </summary>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <pre className="text-xs overflow-x-auto">
+                  {JSON.stringify(
+                    {
+                      formData,
+                      santriCount: santriList.length,
+                      sppSettingsCount: sppSettings.length,
+                      selectedSantriCount: selectedSantri.length,
+                      errors,
+                    },
+                    null,
+                    2,
+                  )}
+                </pre>
+              </div>
+            </details>
           </div>
 
           {/* Form Actions */}
@@ -511,7 +676,7 @@ export default function SPPBulkGenerateForm({
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              {isLoading ? 'Memproses...' : 'Generate SPP'}
+              {isLoading ? "Memproses..." : "Generate SPP"}
             </Button>
           </div>
         </form>

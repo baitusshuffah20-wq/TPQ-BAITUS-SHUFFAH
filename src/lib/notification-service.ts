@@ -1,69 +1,65 @@
-import { PrismaClient } from '@prisma/client';
-import { WhatsAppService } from './whatsapp-service';
-import { EmailService } from './email-service';
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 // Notification Types
 export const NotificationType = {
-  PAYMENT_REMINDER: 'PAYMENT_REMINDER',
-  PAYMENT_CONFIRMATION: 'PAYMENT_CONFIRMATION',
-  SPP_OVERDUE: 'SPP_OVERDUE',
-  ATTENDANCE_ALERT: 'ATTENDANCE_ALERT',
-  HAFALAN_PROGRESS: 'HAFALAN_PROGRESS',
-  SYSTEM_ANNOUNCEMENT: 'SYSTEM_ANNOUNCEMENT',
-  ACCOUNT_UPDATE: 'ACCOUNT_UPDATE',
-  REPORT_READY: 'REPORT_READY',
-  MAINTENANCE_NOTICE: 'MAINTENANCE_NOTICE',
-  EMERGENCY_ALERT: 'EMERGENCY_ALERT'
+  PAYMENT_REMINDER: "PAYMENT_REMINDER",
+  PAYMENT_CONFIRMATION: "PAYMENT_CONFIRMATION",
+  SPP_OVERDUE: "SPP_OVERDUE",
+  ATTENDANCE_ALERT: "ATTENDANCE_ALERT",
+  HAFALAN_PROGRESS: "HAFALAN_PROGRESS",
+  SYSTEM_ANNOUNCEMENT: "SYSTEM_ANNOUNCEMENT",
+  ACCOUNT_UPDATE: "ACCOUNT_UPDATE",
+  REPORT_READY: "REPORT_READY",
+  MAINTENANCE_NOTICE: "MAINTENANCE_NOTICE",
+  EMERGENCY_ALERT: "EMERGENCY_ALERT",
 } as const;
 
 // Notification Priorities
 export const NotificationPriority = {
-  LOW: 'LOW',
-  NORMAL: 'NORMAL',
-  HIGH: 'HIGH',
-  URGENT: 'URGENT'
+  LOW: "LOW",
+  NORMAL: "NORMAL",
+  HIGH: "HIGH",
+  URGENT: "URGENT",
 } as const;
 
 // Notification Channels
 export const NotificationChannel = {
-  IN_APP: 'IN_APP',
-  EMAIL: 'EMAIL',
-  WHATSAPP: 'WHATSAPP',
-  SMS: 'SMS'
+  IN_APP: "IN_APP",
+  EMAIL: "EMAIL",
+  WHATSAPP: "WHATSAPP",
+  SMS: "SMS",
 } as const;
 
 // Notification Status
 export const NotificationStatus = {
-  PENDING: 'PENDING',
-  SCHEDULED: 'SCHEDULED',
-  SENDING: 'SENDING',
-  SENT: 'SENT',
-  FAILED: 'FAILED',
-  CANCELLED: 'CANCELLED'
+  PENDING: "PENDING",
+  SCHEDULED: "SCHEDULED",
+  SENDING: "SENDING",
+  SENT: "SENT",
+  FAILED: "FAILED",
+  CANCELLED: "CANCELLED",
 } as const;
 
 // Recipient Types
 export const RecipientType = {
-  USER: 'USER',
-  SANTRI: 'SANTRI',
-  WALI: 'WALI',
-  MUSYRIF: 'MUSYRIF',
-  ADMIN: 'ADMIN',
-  ALL_USERS: 'ALL_USERS',
-  ALL_WALI: 'ALL_WALI',
-  ALL_MUSYRIF: 'ALL_MUSYRIF'
+  USER: "USER",
+  SANTRI: "SANTRI",
+  WALI: "WALI",
+  MUSYRIF: "MUSYRIF",
+  ADMIN: "ADMIN",
+  ALL_USERS: "ALL_USERS",
+  ALL_WALI: "ALL_WALI",
+  ALL_MUSYRIF: "ALL_MUSYRIF",
 } as const;
 
 // Delivery Status
 export const DeliveryStatus = {
-  PENDING: 'PENDING',
-  SENT: 'SENT',
-  DELIVERED: 'DELIVERED',
-  READ: 'READ',
-  FAILED: 'FAILED',
-  BOUNCED: 'BOUNCED'
+  PENDING: "PENDING",
+  SENT: "SENT",
+  DELIVERED: "DELIVERED",
+  READ: "READ",
+  FAILED: "FAILED",
+  BOUNCED: "BOUNCED",
 } as const;
 
 interface CreateNotificationData {
@@ -99,13 +95,13 @@ export class NotificationService {
           type: data.type,
           priority: data.priority || NotificationPriority.NORMAL,
           status: NotificationStatus.PENDING,
-          channels: data.channels.join(','),
+          channels: data.channels.join(","),
           recipientId: data.recipientId,
           recipientType: data.recipientType,
           metadata: data.metadata ? JSON.stringify(data.metadata) : null,
           scheduledAt: data.scheduledAt,
-          createdBy: data.createdBy
-        }
+          createdBy: data.createdBy,
+        },
       });
 
       // Process notification immediately if not scheduled
@@ -115,7 +111,7 @@ export class NotificationService {
 
       return notification;
     } catch (error) {
-      console.error('Error creating notification:', error);
+      console.error("Error creating notification:", error);
       throw error;
     }
   }
@@ -126,21 +122,21 @@ export class NotificationService {
       const notification = await prisma.notification.findUnique({
         where: { id: notificationId },
         include: {
-          recipient: true
-        }
+          recipient: true,
+        },
       });
 
       if (!notification) {
-        throw new Error('Notification not found');
+        throw new Error("Notification not found");
       }
 
       // Update status to sending
       await prisma.notification.update({
         where: { id: notificationId },
-        data: { status: NotificationStatus.SENDING }
+        data: { status: NotificationStatus.SENDING },
       });
 
-      const channels = notification.channels.split(',');
+      const channels = notification.channels.split(",");
       const results = [];
 
       // Send through each channel
@@ -161,7 +157,7 @@ export class NotificationService {
               result = await this.sendSMSNotification(notification);
               break;
             default:
-              result = { success: false, error: 'Unknown channel' };
+              result = { success: false, error: "Unknown channel" };
           }
 
           // Log the result
@@ -170,16 +166,18 @@ export class NotificationService {
               notificationId: notification.id,
               channel: channel.trim(),
               recipient: this.getRecipientAddress(notification, channel.trim()),
-              status: result.success ? DeliveryStatus.SENT : DeliveryStatus.FAILED,
+              status: result.success
+                ? DeliveryStatus.SENT
+                : DeliveryStatus.FAILED,
               response: JSON.stringify(result),
-              errorMessage: result.error || null
-            }
+              errorMessage: result.error || null,
+            },
           });
 
           results.push({ channel, ...result });
         } catch (error) {
           console.error(`Error sending notification via ${channel}:`, error);
-          
+
           // Log the error
           await prisma.notificationLog.create({
             data: {
@@ -187,32 +185,39 @@ export class NotificationService {
               channel: channel.trim(),
               recipient: this.getRecipientAddress(notification, channel.trim()),
               status: DeliveryStatus.FAILED,
-              errorMessage: error instanceof Error ? error.message : 'Unknown error'
-            }
+              errorMessage:
+                error instanceof Error ? error.message : "Unknown error",
+            },
           });
 
-          results.push({ channel, success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+          results.push({
+            channel,
+            success: false,
+            error: error instanceof Error ? error.message : "Unknown error",
+          });
         }
       }
 
       // Update notification status
-      const allSuccessful = results.every(r => r.success);
+      const allSuccessful = results.every((r) => r.success);
       await prisma.notification.update({
         where: { id: notificationId },
         data: {
-          status: allSuccessful ? NotificationStatus.SENT : NotificationStatus.FAILED,
-          sentAt: new Date()
-        }
+          status: allSuccessful
+            ? NotificationStatus.SENT
+            : NotificationStatus.FAILED,
+          sentAt: new Date(),
+        },
       });
 
       return { success: allSuccessful, results };
     } catch (error) {
-      console.error('Error processing notification:', error);
-      
+      console.error("Error processing notification:", error);
+
       // Update notification status to failed
       await prisma.notification.update({
         where: { id: notificationId },
-        data: { status: NotificationStatus.FAILED }
+        data: { status: NotificationStatus.FAILED },
       });
 
       throw error;
@@ -226,7 +231,10 @@ export class NotificationService {
       // Just mark as delivered
       return { success: true, messageId: notification.id };
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
     }
   }
 
@@ -234,7 +242,7 @@ export class NotificationService {
   private static async sendEmailNotification(notification: any) {
     try {
       if (!notification.recipient?.email) {
-        throw new Error('Recipient email address not found');
+        throw new Error("Recipient email address not found");
       }
 
       const emailService = new EmailService();
@@ -248,16 +256,23 @@ export class NotificationService {
           <div style="padding: 20px;">
             <h2 style="color: #374151;">${notification.title}</h2>
             <div style="color: #6b7280; line-height: 1.6;">
-              ${notification.message.replace(/\n/g, '<br>')}
+              ${notification.message.replace(/\n/g, "<br>")}
             </div>
-            ${notification.data ? `
+            ${
+              notification.data
+                ? `
               <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #374151; margin-top: 0;">Detail Informasi</h3>
-                ${Object.entries(notification.data).map(([key, value]) =>
-                  `<p><strong>${key}:</strong> ${value}</p>`
-                ).join('')}
+                ${Object.entries(notification.data)
+                  .map(
+                    ([key, value]) =>
+                      `<p><strong>${key}:</strong> ${value}</p>`,
+                  )
+                  .join("")}
               </div>
-            ` : ''}
+            `
+                : ""
+            }
           </div>
           <div style="background: #f3f4f6; padding: 15px; text-align: center; color: #6b7280; font-size: 14px;">
             <p>Email ini dikirim secara otomatis dari sistem TPQ Baitus Shuffah.</p>
@@ -266,26 +281,29 @@ export class NotificationService {
         </div>
       `;
 
-      const result = await emailService.sendEmail({
-        to: notification.recipient.email,
-        subject: notification.title,
-        html,
-        priority: notification.priority || 'NORMAL'
-      }, {
-        notificationId: notification.id,
-        type: notification.type,
-        priority: notification.priority
-      });
+      const result = await emailService.sendEmail(
+        {
+          to: notification.recipient.email,
+          subject: notification.title,
+          html,
+          priority: notification.priority || "NORMAL",
+        },
+        {
+          notificationId: notification.id,
+          type: notification.type,
+          priority: notification.priority,
+        },
+      );
 
       return {
         success: true,
-        messageId: result.messageId || `email_${Date.now()}`
+        messageId: result.messageId || `email_${Date.now()}`,
       };
     } catch (error) {
-      console.error('Email notification error:', error);
+      console.error("Email notification error:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -294,7 +312,7 @@ export class NotificationService {
   private static async sendWhatsAppNotification(notification: any) {
     try {
       if (!notification.recipient?.phone) {
-        throw new Error('Recipient phone number not found');
+        throw new Error("Recipient phone number not found");
       }
 
       const whatsappService = new WhatsAppService();
@@ -306,19 +324,19 @@ export class NotificationService {
         {
           notificationId: notification.id,
           type: notification.type,
-          priority: notification.priority
-        }
+          priority: notification.priority,
+        },
       );
 
       return {
         success: true,
-        messageId: result.messages?.[0]?.id || `whatsapp_${Date.now()}`
+        messageId: result.messages?.[0]?.id || `whatsapp_${Date.now()}`,
       };
     } catch (error) {
-      console.error('WhatsApp notification error:', error);
+      console.error("WhatsApp notification error:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -328,34 +346,42 @@ export class NotificationService {
     try {
       // TODO: Implement SMS API integration
       // For now, just simulate success
-      console.log('Sending SMS notification:', {
+      console.log("Sending SMS notification:", {
         to: notification.recipient?.phone,
-        message: `${notification.title}: ${notification.message}`
+        message: `${notification.title}: ${notification.message}`,
       });
 
       return { success: true, messageId: `sms_${Date.now()}` };
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
     }
   }
 
   // Get recipient address for specific channel
-  private static getRecipientAddress(notification: any, channel: string): string {
+  private static getRecipientAddress(
+    notification: any,
+    channel: string,
+  ): string {
     switch (channel) {
       case NotificationChannel.EMAIL:
-        return notification.recipient?.email || 'unknown@email.com';
+        return notification.recipient?.email || "unknown@email.com";
       case NotificationChannel.WHATSAPP:
       case NotificationChannel.SMS:
-        return notification.recipient?.phone || 'unknown-phone';
+        return notification.recipient?.phone || "unknown-phone";
       case NotificationChannel.IN_APP:
-        return notification.recipientId || 'unknown-user';
+        return notification.recipientId || "unknown-user";
       default:
-        return 'unknown';
+        return "unknown";
     }
   }
 
   // Create notification template
-  static async createTemplate(template: NotificationTemplate & { createdBy: string }) {
+  static async createTemplate(
+    template: NotificationTemplate & { createdBy: string },
+  ) {
     try {
       return await prisma.notificationTemplate.create({
         data: {
@@ -363,13 +389,15 @@ export class NotificationService {
           title: template.title,
           message: template.message,
           type: template.type,
-          channels: template.channels.join(','),
-          variables: template.variables ? JSON.stringify(template.variables) : null,
-          createdBy: template.createdBy
-        }
+          channels: template.channels.join(","),
+          variables: template.variables
+            ? JSON.stringify(template.variables)
+            : null,
+          createdBy: template.createdBy,
+        },
       });
     } catch (error) {
-      console.error('Error creating notification template:', error);
+      console.error("Error creating notification template:", error);
       throw error;
     }
   }
@@ -379,11 +407,11 @@ export class NotificationService {
     templateName: string,
     recipientId: string,
     variables: Record<string, any> = {},
-    createdBy: string
+    createdBy: string,
   ) {
     try {
       const template = await prisma.notificationTemplate.findUnique({
-        where: { name: templateName, isActive: true }
+        where: { name: templateName, isActive: true },
       });
 
       if (!template) {
@@ -396,20 +424,20 @@ export class NotificationService {
 
       Object.entries(variables).forEach(([key, value]) => {
         const placeholder = `{${key}}`;
-        title = title.replace(new RegExp(placeholder, 'g'), String(value));
-        message = message.replace(new RegExp(placeholder, 'g'), String(value));
+        title = title.replace(new RegExp(placeholder, "g"), String(value));
+        message = message.replace(new RegExp(placeholder, "g"), String(value));
       });
 
       return await this.createNotification({
         title,
         message,
         type: template.type,
-        channels: template.channels.split(','),
+        channels: template.channels.split(","),
         recipientId,
-        createdBy
+        createdBy,
       });
     } catch (error) {
-      console.error('Error sending notification from template:', error);
+      console.error("Error sending notification from template:", error);
       throw error;
     }
   }
@@ -421,15 +449,15 @@ export class NotificationService {
         where: {
           recipientId: userId,
           channels: {
-            contains: NotificationChannel.IN_APP
-          }
+            contains: NotificationChannel.IN_APP,
+          },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: limit,
-        skip: offset
+        skip: offset,
       });
     } catch (error) {
-      console.error('Error getting user notifications:', error);
+      console.error("Error getting user notifications:", error);
       throw error;
     }
   }
@@ -439,10 +467,10 @@ export class NotificationService {
     try {
       return await prisma.notification.update({
         where: { id: notificationId },
-        data: { readAt: new Date() }
+        data: { readAt: new Date() },
       });
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      console.error("Error marking notification as read:", error);
       throw error;
     }
   }
@@ -454,35 +482,45 @@ export class NotificationService {
 
       const [total, unread, byType, byStatus] = await Promise.all([
         prisma.notification.count({ where }),
-        prisma.notification.count({ 
-          where: { ...where, readAt: null, channels: { contains: NotificationChannel.IN_APP } }
+        prisma.notification.count({
+          where: {
+            ...where,
+            readAt: null,
+            channels: { contains: NotificationChannel.IN_APP },
+          },
         }),
         prisma.notification.groupBy({
-          by: ['type'],
+          by: ["type"],
           where,
-          _count: true
+          _count: true,
         }),
         prisma.notification.groupBy({
-          by: ['status'],
+          by: ["status"],
           where,
-          _count: true
-        })
+          _count: true,
+        }),
       ]);
 
       return {
         total,
         unread,
-        byType: byType.reduce((acc, item) => {
-          acc[item.type] = item._count;
-          return acc;
-        }, {} as Record<string, number>),
-        byStatus: byStatus.reduce((acc, item) => {
-          acc[item.status] = item._count;
-          return acc;
-        }, {} as Record<string, number>)
+        byType: byType.reduce(
+          (acc, item) => {
+            acc[item.type] = item._count;
+            return acc;
+          },
+          {} as Record<string, number>,
+        ),
+        byStatus: byStatus.reduce(
+          (acc, item) => {
+            acc[item.status] = item._count;
+            return acc;
+          },
+          {} as Record<string, number>,
+        ),
       };
     } catch (error) {
-      console.error('Error getting notification stats:', error);
+      console.error("Error getting notification stats:", error);
       throw error;
     }
   }

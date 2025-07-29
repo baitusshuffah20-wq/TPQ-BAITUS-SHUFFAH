@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { AchievementEngine } from "@/lib/achievement-engine";
 
 // GET /api/hafalan/[id] - Get hafalan by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const hafalan = await prisma.hafalan.findUnique({
@@ -16,37 +17,36 @@ export async function GET(
             nis: true,
             name: true,
             status: true,
-            photo: true
-          }
+            photo: true,
+          },
         },
         musyrif: {
           select: {
             id: true,
             name: true,
             email: true,
-            role: true
-          }
-        }
-      }
+            role: true,
+          },
+        },
+      },
     });
 
     if (!hafalan) {
       return NextResponse.json(
-        { success: false, message: 'Hafalan tidak ditemukan' },
-        { status: 404 }
+        { success: false, message: "Hafalan tidak ditemukan" },
+        { status: 404 },
       );
     }
 
     return NextResponse.json({
       success: true,
-      hafalan
+      hafalan,
     });
-
   } catch (error) {
-    console.error('Error fetching hafalan:', error);
+    console.error("Error fetching hafalan:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengambil data hafalan' },
-      { status: 500 }
+      { success: false, message: "Gagal mengambil data hafalan" },
+      { status: 500 },
     );
   }
 }
@@ -54,32 +54,32 @@ export async function GET(
 // PUT /api/hafalan/[id] - Update hafalan
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const body = await request.json();
-    const { 
-      santriId, 
-      surahId, 
-      surahName, 
-      ayahStart, 
-      ayahEnd, 
-      type, 
+    const {
+      santriId,
+      surahId,
+      surahName,
+      ayahStart,
+      ayahEnd,
+      type,
       status,
       grade,
       notes,
-      musyrifId
+      musyrifId,
     } = body;
 
     // Check if hafalan exists
     const existingHafalan = await prisma.hafalan.findUnique({
-      where: { id: params.id }
+      where: { id: params.id },
     });
 
     if (!existingHafalan) {
       return NextResponse.json(
-        { success: false, message: 'Hafalan tidak ditemukan' },
-        { status: 404 }
+        { success: false, message: "Hafalan tidak ditemukan" },
+        { status: 404 },
       );
     }
 
@@ -96,7 +96,7 @@ export async function PUT(
         status,
         grade,
         notes,
-        musyrifId
+        musyrifId,
       },
       include: {
         santri: {
@@ -105,31 +105,41 @@ export async function PUT(
             nis: true,
             name: true,
             status: true,
-            photo: true
-          }
+            photo: true,
+          },
         },
         musyrif: {
           select: {
             id: true,
             name: true,
             email: true,
-            role: true
-          }
-        }
-      }
+            role: true,
+          },
+        },
+      },
     });
+
+    // Trigger achievement check after hafalan update (especially if grade was updated)
+    try {
+      await AchievementEngine.onHafalanAdded(santriId);
+    } catch (achievementError) {
+      console.error(
+        "Error checking achievements after hafalan update:",
+        achievementError,
+      );
+      // Don't fail the hafalan update if achievement check fails
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Hafalan berhasil diupdate',
-      hafalan
+      message: "Hafalan berhasil diupdate",
+      hafalan,
     });
-
   } catch (error) {
-    console.error('Error updating hafalan:', error);
+    console.error("Error updating hafalan:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengupdate hafalan' },
-      { status: 500 }
+      { success: false, message: "Gagal mengupdate hafalan" },
+      { status: 500 },
     );
   }
 }
@@ -137,36 +147,35 @@ export async function PUT(
 // DELETE /api/hafalan/[id] - Delete hafalan
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     // Check if hafalan exists
     const existingHafalan = await prisma.hafalan.findUnique({
-      where: { id: params.id }
+      where: { id: params.id },
     });
 
     if (!existingHafalan) {
       return NextResponse.json(
-        { success: false, message: 'Hafalan tidak ditemukan' },
-        { status: 404 }
+        { success: false, message: "Hafalan tidak ditemukan" },
+        { status: 404 },
       );
     }
 
     // Delete hafalan
     await prisma.hafalan.delete({
-      where: { id: params.id }
+      where: { id: params.id },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Hafalan berhasil dihapus'
+      message: "Hafalan berhasil dihapus",
     });
-
   } catch (error) {
-    console.error('Error deleting hafalan:', error);
+    console.error("Error deleting hafalan:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal menghapus hafalan' },
-      { status: 500 }
+      { success: false, message: "Gagal menghapus hafalan" },
+      { status: 500 },
     );
   }
 }

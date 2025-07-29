@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   ShoppingCart as CartIcon,
   Plus,
@@ -17,9 +17,9 @@ import {
   X,
   CheckCircle,
   Clock,
-  AlertCircle
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  AlertCircle,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface CartItem {
   id: string;
@@ -49,7 +49,12 @@ interface ShoppingCartProps {
   className?: string;
 }
 
-export default function ShoppingCart({ cartId, userId, onCheckout, className }: ShoppingCartProps) {
+export default function ShoppingCart({
+  cartId,
+  userId,
+  onCheckout,
+  className,
+}: ShoppingCartProps) {
   const [cartSummary, setCartSummary] = useState<CartSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -67,8 +72,8 @@ export default function ShoppingCart({ cartId, userId, onCheckout, className }: 
         setCartSummary(data.data);
       }
     } catch (error) {
-      console.error('Error loading cart:', error);
-      toast.error('Gagal memuat keranjang');
+      console.error("Error loading cart:", error);
+      toast.error("Gagal memuat keranjang");
     } finally {
       setLoading(false);
     }
@@ -77,21 +82,21 @@ export default function ShoppingCart({ cartId, userId, onCheckout, className }: 
   const updateQuantity = async (itemId: string, quantity: number) => {
     try {
       setUpdating(itemId);
-      const response = await fetch('/api/cart', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cartId, itemId, quantity })
+      const response = await fetch("/api/cart", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cartId, itemId, quantity }),
       });
 
       if (response.ok) {
         await loadCart();
-        toast.success('Keranjang diperbarui');
+        toast.success("Keranjang diperbarui");
       } else {
-        toast.error('Gagal memperbarui keranjang');
+        toast.error("Gagal memperbarui keranjang");
       }
     } catch (error) {
-      console.error('Error updating quantity:', error);
-      toast.error('Gagal memperbarui keranjang');
+      console.error("Error updating quantity:", error);
+      toast.error("Gagal memperbarui keranjang");
     } finally {
       setUpdating(null);
     }
@@ -100,19 +105,22 @@ export default function ShoppingCart({ cartId, userId, onCheckout, className }: 
   const removeItem = async (itemId: string) => {
     try {
       setUpdating(itemId);
-      const response = await fetch(`/api/cart?cartId=${cartId}&itemId=${itemId}`, {
-        method: 'DELETE'
-      });
+      const response = await fetch(
+        `/api/cart?cartId=${cartId}&itemId=${itemId}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       if (response.ok) {
         await loadCart();
-        toast.success('Item dihapus dari keranjang');
+        toast.success("Item dihapus dari keranjang");
       } else {
-        toast.error('Gagal menghapus item');
+        toast.error("Gagal menghapus item");
       }
     } catch (error) {
-      console.error('Error removing item:', error);
-      toast.error('Gagal menghapus item');
+      console.error("Error removing item:", error);
+      toast.error("Gagal menghapus item");
     } finally {
       setUpdating(null);
     }
@@ -121,33 +129,33 @@ export default function ShoppingCart({ cartId, userId, onCheckout, className }: 
   const clearCart = async () => {
     try {
       const response = await fetch(`/api/cart?cartId=${cartId}&action=clear`, {
-        method: 'DELETE'
+        method: "DELETE",
       });
 
       if (response.ok) {
         await loadCart();
-        toast.success('Keranjang dikosongkan');
+        toast.success("Keranjang dikosongkan");
       } else {
-        toast.error('Gagal mengosongkan keranjang');
+        toast.error("Gagal mengosongkan keranjang");
       }
     } catch (error) {
-      console.error('Error clearing cart:', error);
-      toast.error('Gagal mengosongkan keranjang');
+      console.error("Error clearing cart:", error);
+      toast.error("Gagal mengosongkan keranjang");
     }
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR'
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
     }).format(amount);
   };
 
   const getItemIcon = (itemType: string) => {
     switch (itemType) {
-      case 'SPP':
+      case "SPP":
         return <Building className="h-5 w-5 text-blue-600" />;
-      case 'DONATION':
+      case "DONATION":
         return <Wallet className="h-5 w-5 text-green-600" />;
       default:
         return <CartIcon className="h-5 w-5 text-gray-600" />;
@@ -156,10 +164,18 @@ export default function ShoppingCart({ cartId, userId, onCheckout, className }: 
 
   const getItemBadge = (itemType: string) => {
     switch (itemType) {
-      case 'SPP':
-        return <Badge variant="outline" className="text-blue-600 border-blue-200">SPP</Badge>;
-      case 'DONATION':
-        return <Badge variant="outline" className="text-green-600 border-green-200">Donasi</Badge>;
+      case "SPP":
+        return (
+          <Badge variant="outline" className="text-blue-600 border-blue-200">
+            SPP
+          </Badge>
+        );
+      case "DONATION":
+        return (
+          <Badge variant="outline" className="text-green-600 border-green-200">
+            Donasi
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{itemType}</Badge>;
     }
@@ -191,7 +207,9 @@ export default function ShoppingCart({ cartId, userId, onCheckout, className }: 
           <div className="text-center py-8">
             <CartIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">Keranjang belanja kosong</p>
-            <p className="text-sm text-gray-500">Tambahkan item untuk melanjutkan pembayaran</p>
+            <p className="text-sm text-gray-500">
+              Tambahkan item untuk melanjutkan pembayaran
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -226,17 +244,19 @@ export default function ShoppingCart({ cartId, userId, onCheckout, className }: 
               key={item.id}
               className="flex items-center gap-3 p-3 border rounded-lg hover:shadow-sm transition-shadow"
             >
-              <div className="flex-shrink-0">
-                {getItemIcon(item.itemType)}
-              </div>
-              
+              <div className="flex-shrink-0">{getItemIcon(item.itemType)}</div>
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-medium text-gray-900 truncate">{item.name}</h4>
+                  <h4 className="font-medium text-gray-900 truncate">
+                    {item.name}
+                  </h4>
                   {getItemBadge(item.itemType)}
                 </div>
                 {item.description && (
-                  <p className="text-sm text-gray-600 truncate">{item.description}</p>
+                  <p className="text-sm text-gray-600 truncate">
+                    {item.description}
+                  </p>
                 )}
                 <p className="text-sm font-medium text-blue-600">
                   {formatCurrency(item.price)}
@@ -253,11 +273,11 @@ export default function ShoppingCart({ cartId, userId, onCheckout, className }: 
                 >
                   <Minus className="h-3 w-3" />
                 </Button>
-                
+
                 <span className="w-8 text-center text-sm font-medium">
                   {item.quantity}
                 </span>
-                
+
                 <Button
                   onClick={() => updateQuantity(item.id!, item.quantity + 1)}
                   disabled={updating === item.id}
@@ -290,26 +310,34 @@ export default function ShoppingCart({ cartId, userId, onCheckout, className }: 
         <div className="border-t pt-4 space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Subtotal</span>
-            <span className="font-medium">{formatCurrency(cartSummary.subtotal)}</span>
+            <span className="font-medium">
+              {formatCurrency(cartSummary.subtotal)}
+            </span>
           </div>
-          
+
           {cartSummary.tax > 0 && (
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Pajak</span>
-              <span className="font-medium">{formatCurrency(cartSummary.tax)}</span>
+              <span className="font-medium">
+                {formatCurrency(cartSummary.tax)}
+              </span>
             </div>
           )}
-          
+
           {cartSummary.discount > 0 && (
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Diskon</span>
-              <span className="font-medium text-green-600">-{formatCurrency(cartSummary.discount)}</span>
+              <span className="font-medium text-green-600">
+                -{formatCurrency(cartSummary.discount)}
+              </span>
             </div>
           )}
-          
+
           <div className="flex justify-between text-lg font-bold border-t pt-2">
             <span>Total</span>
-            <span className="text-blue-600">{formatCurrency(cartSummary.total)}</span>
+            <span className="text-blue-600">
+              {formatCurrency(cartSummary.total)}
+            </span>
           </div>
         </div>
 
@@ -325,7 +353,9 @@ export default function ShoppingCart({ cartId, userId, onCheckout, className }: 
 
         {/* Payment Methods Preview */}
         <div className="text-center">
-          <p className="text-xs text-gray-500 mb-2">Metode pembayaran yang tersedia:</p>
+          <p className="text-xs text-gray-500 mb-2">
+            Metode pembayaran yang tersedia:
+          </p>
           <div className="flex justify-center gap-2">
             <div className="p-1 border rounded">
               <CreditCard className="h-4 w-4 text-gray-400" />

@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "./scripts/dist",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2020",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "types": ["node"],
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "outFile": "./scripts/dist/fix-musyrif-data.cjs"
+  },
+  "include": ["scripts/**/*.ts"],
+  "exclude": ["node_modules"]
+}

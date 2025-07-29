@@ -1,0 +1,15 @@
+{
+  "enabled": [
+    "dashboard",
+    "progress",
+    "payment",
+    "messages",
+    "profile",
+    "attendance",
+    "schedule",
+    "achievements",
+    "donations",
+    "events"
+  ],
+  "disabled": []
+}

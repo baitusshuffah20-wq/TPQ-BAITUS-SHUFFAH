@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 // GET /api/payment/receipt - Generate payment receipt
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const orderId = searchParams.get('orderId');
-    const paymentId = searchParams.get('paymentId');
+    const orderId = searchParams.get("orderId");
+    const paymentId = searchParams.get("paymentId");
 
     if (!orderId && !paymentId) {
       return NextResponse.json(
-        { success: false, message: 'Order ID or Payment ID is required' },
-        { status: 400 }
+        { success: false, message: "Order ID or Payment ID is required" },
+        { status: 400 },
       );
     }
 
@@ -23,13 +23,13 @@ export async function GET(request: NextRequest) {
         where: { id: orderId },
         include: {
           customer: {
-            select: { id: true, name: true, email: true }
-          }
-        }
+            select: { id: true, name: true, email: true },
+          },
+        },
       });
     } else if (paymentId) {
       const paymentTransaction = await prisma.paymentTransaction.findUnique({
-        where: { paymentId }
+        where: { paymentId },
       });
 
       if (paymentTransaction) {
@@ -37,17 +37,17 @@ export async function GET(request: NextRequest) {
           where: { id: paymentTransaction.orderId },
           include: {
             customer: {
-              select: { id: true, name: true, email: true }
-            }
-          }
+              select: { id: true, name: true, email: true },
+            },
+          },
         });
       }
     }
 
     if (!order) {
       return NextResponse.json(
-        { success: false, message: 'Order not found' },
-        { status: 404 }
+        { success: false, message: "Order not found" },
+        { status: 404 },
       );
     }
 
@@ -68,25 +68,25 @@ export async function GET(request: NextRequest) {
       total: order.total,
       paymentMethod: order.paymentMethod,
       paidAt: order.paidAt,
-      createdAt: order.createdAt
+      createdAt: order.createdAt,
     });
 
     // For now, return HTML. In production, you'd want to use a PDF library like puppeteer
     return new NextResponse(receiptHtml, {
       headers: {
-        'Content-Type': 'text/html',
-        'Content-Disposition': `inline; filename="receipt-${order.id}.html"`
-      }
+        "Content-Type": "text/html",
+        "Content-Disposition": `inline; filename="receipt-${order.id}.html"`,
+      },
     });
   } catch (error) {
-    console.error('Error generating receipt:', error);
+    console.error("Error generating receipt:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to generate receipt',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to generate receipt",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -94,19 +94,19 @@ export async function GET(request: NextRequest) {
 // Generate HTML receipt
 function generateReceiptHtml(data: any): string {
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR'
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
     }).format(amount);
   };
 
   const formatDate = (dateString: string | Date) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -304,15 +304,15 @@ function generateReceiptHtml(data: any): string {
               </div>
               <div class="info-item">
                 <span class="info-label">Payment ID</span>
-                <span class="info-value">${data.paymentId || '-'}</span>
+                <span class="info-value">${data.paymentId || "-"}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">Tanggal Pembayaran</span>
-                <span class="info-value">${data.paidAt ? formatDate(data.paidAt) : '-'}</span>
+                <span class="info-value">${data.paidAt ? formatDate(data.paidAt) : "-"}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">Metode Pembayaran</span>
-                <span class="info-value">${data.paymentMethod || '-'}</span>
+                <span class="info-value">${data.paymentMethod || "-"}</span>
               </div>
             </div>
           </div>
@@ -327,12 +327,16 @@ function generateReceiptHtml(data: any): string {
               <span class="info-label">Email</span>
               <span class="info-value">${data.customerEmail}</span>
             </div>
-            ${data.customerPhone ? `
+            ${
+              data.customerPhone
+                ? `
             <div class="info-item">
               <span class="info-label">Telepon</span>
               <span class="info-value">${data.customerPhone}</span>
             </div>
-            ` : ''}
+            `
+                : ""
+            }
           </div>
 
           <div class="section">
@@ -347,17 +351,21 @@ function generateReceiptHtml(data: any): string {
                 </tr>
               </thead>
               <tbody>
-                ${data.items.map((item: any) => `
+                ${data.items
+                  .map(
+                    (item: any) => `
                   <tr>
                     <td>
                       <div class="item-name">${item.name}</div>
-                      ${item.description ? `<div class="item-description">${item.description}</div>` : ''}
+                      ${item.description ? `<div class="item-description">${item.description}</div>` : ""}
                     </td>
                     <td style="text-align: center;">${item.quantity}</td>
                     <td style="text-align: right;">${formatCurrency(item.price)}</td>
                     <td style="text-align: right;">${formatCurrency(item.price * item.quantity)}</td>
                   </tr>
-                `).join('')}
+                `,
+                  )
+                  .join("")}
               </tbody>
             </table>
 
@@ -366,18 +374,26 @@ function generateReceiptHtml(data: any): string {
                 <span>Subtotal</span>
                 <span>${formatCurrency(data.subtotal)}</span>
               </div>
-              ${data.tax > 0 ? `
+              ${
+                data.tax > 0
+                  ? `
               <div class="total-row">
                 <span>Pajak</span>
                 <span>${formatCurrency(data.tax)}</span>
               </div>
-              ` : ''}
-              ${data.discount > 0 ? `
+              `
+                  : ""
+              }
+              ${
+                data.discount > 0
+                  ? `
               <div class="total-row">
                 <span>Diskon</span>
                 <span style="color: #16a34a;">-${formatCurrency(data.discount)}</span>
               </div>
-              ` : ''}
+              `
+                  : ""
+              }
               <div class="total-row final">
                 <span>Total Pembayaran</span>
                 <span>${formatCurrency(data.total)}</span>

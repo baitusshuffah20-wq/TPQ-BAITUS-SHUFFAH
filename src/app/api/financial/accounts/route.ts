@@ -1,21 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 // GET /api/financial/accounts - Get all financial accounts
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type');
-    const isActive = searchParams.get('isActive');
+    const type = searchParams.get("type");
+    const isActive = searchParams.get("isActive");
 
     const where: any = {};
 
-    if (type && type !== 'ALL') {
+    if (type && type !== "ALL") {
       where.type = type;
     }
 
-    if (isActive && isActive !== 'ALL') {
-      where.isActive = isActive === 'true';
+    if (isActive && isActive !== "ALL") {
+      where.isActive = isActive === "true";
     }
 
     const accounts = await prisma.financialAccount.findMany({
@@ -26,22 +26,22 @@ export async function GET(request: NextRequest) {
             id: true,
             type: true,
             amount: true,
-            transactionDate: true
+            transactionDate: true,
           },
           orderBy: {
-            transactionDate: 'desc'
+            transactionDate: "desc",
           },
-          take: 5
+          take: 5,
         },
         _count: {
           select: {
-            transactions: true
-          }
-        }
+            transactions: true,
+          },
+        },
       },
       orderBy: {
-        name: 'asc'
-      }
+        name: "asc",
+      },
     });
 
     // Calculate actual balance from transactions
@@ -51,34 +51,33 @@ export async function GET(request: NextRequest) {
           where: { accountId: account.id },
           select: {
             type: true,
-            amount: true
-          }
+            amount: true,
+          },
         });
 
         const actualBalance = transactions.reduce((balance, transaction) => {
-          return transaction.type === 'INCOME' 
-            ? balance + transaction.amount 
+          return transaction.type === "INCOME"
+            ? balance + transaction.amount
             : balance - transaction.amount;
         }, 0);
 
         return {
           ...account,
-          actualBalance
+          actualBalance,
         };
-      })
+      }),
     );
 
     return NextResponse.json({
       success: true,
       accounts: accountsWithBalance,
-      total: accountsWithBalance.length
+      total: accountsWithBalance.length,
     });
-
   } catch (error) {
-    console.error('Error fetching financial accounts:', error);
+    console.error("Error fetching financial accounts:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengambil data akun keuangan' },
-      { status: 500 }
+      { success: false, message: "Gagal mengambil data akun keuangan" },
+      { status: 500 },
     );
   }
 }
@@ -87,32 +86,32 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { 
-      name, 
-      type, 
-      accountNumber, 
-      balance = 0, 
-      isActive = true, 
-      description 
+    const {
+      name,
+      type,
+      accountNumber,
+      balance = 0,
+      isActive = true,
+      description,
     } = body;
 
     // Validation
     if (!name || !type) {
       return NextResponse.json(
-        { success: false, message: 'Nama dan tipe akun wajib diisi' },
-        { status: 400 }
+        { success: false, message: "Nama dan tipe akun wajib diisi" },
+        { status: 400 },
       );
     }
 
     // Check if account name already exists
     const existingAccount = await prisma.financialAccount.findFirst({
-      where: { name }
+      where: { name },
     });
 
     if (existingAccount) {
       return NextResponse.json(
-        { success: false, message: 'Nama akun sudah digunakan' },
-        { status: 400 }
+        { success: false, message: "Nama akun sudah digunakan" },
+        { status: 400 },
       );
     }
 
@@ -124,28 +123,27 @@ export async function POST(request: NextRequest) {
         accountNumber: accountNumber || null,
         balance: parseFloat(balance.toString()),
         isActive,
-        description: description || null
+        description: description || null,
       },
       include: {
         _count: {
           select: {
-            transactions: true
-          }
-        }
-      }
+            transactions: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Akun keuangan berhasil dibuat',
-      account
+      message: "Akun keuangan berhasil dibuat",
+      account,
     });
-
   } catch (error) {
-    console.error('Error creating financial account:', error);
+    console.error("Error creating financial account:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal membuat akun keuangan' },
-      { status: 500 }
+      { success: false, message: "Gagal membuat akun keuangan" },
+      { status: 500 },
     );
   }
 }

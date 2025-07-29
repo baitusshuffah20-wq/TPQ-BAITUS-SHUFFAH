@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import mysql from 'mysql2/promise';
+import { NextRequest, NextResponse } from "next/server";
+import mysql from "mysql2/promise";
 
 // Database connection configuration
 const dbConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: 'admin123',
-  database: 'tpq_baitus_shuffah_new'
+  host: "localhost",
+  user: "root",
+  password: "admin123",
+  database: "db_tpq",
 };
 
 // Helper function to determine the correct table name
@@ -16,40 +16,48 @@ async function getTableName(connection: mysql.Connection): Promise<string> {
     try {
       await connection.query(`USE ${dbConfig.database}`);
     } catch (dbError) {
-      console.log(`Database ${dbConfig.database} does not exist, creating it...`);
-      await connection.query(`CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`);
+      console.log(
+        `Database ${dbConfig.database} does not exist, creating it...`,
+      );
+      await connection.query(
+        `CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`,
+      );
       await connection.query(`USE ${dbConfig.database}`);
     }
-    
+
     // Try to query hafalan_targets
     try {
-      await connection.execute('SELECT 1 FROM hafalan_targets LIMIT 1');
-      console.log('Table hafalan_targets exists');
-      return 'hafalan_targets';
+      await connection.execute("SELECT 1 FROM hafalan_targets LIMIT 1");
+      console.log("Table hafalan_targets exists");
+      return "hafalan_targets";
     } catch (error) {
-      console.log('Table hafalan_targets does not exist, checking alternatives...');
+      console.log(
+        "Table hafalan_targets does not exist, checking alternatives...",
+      );
     }
-    
+
     // Try to query hafalan_target
     try {
-      await connection.execute('SELECT 1 FROM hafalan_target LIMIT 1');
-      console.log('Table hafalan_target exists');
-      return 'hafalan_target';
+      await connection.execute("SELECT 1 FROM hafalan_target LIMIT 1");
+      console.log("Table hafalan_target exists");
+      return "hafalan_target";
     } catch (error) {
-      console.log('Table hafalan_target does not exist, checking alternatives...');
+      console.log(
+        "Table hafalan_target does not exist, checking alternatives...",
+      );
     }
-    
+
     // Try to query HafalanTarget
     try {
-      await connection.execute('SELECT 1 FROM HafalanTarget LIMIT 1');
-      console.log('Table HafalanTarget exists');
-      return 'HafalanTarget';
+      await connection.execute("SELECT 1 FROM HafalanTarget LIMIT 1");
+      console.log("Table HafalanTarget exists");
+      return "HafalanTarget";
     } catch (error) {
-      console.log('No existing target table found, creating new one...');
+      console.log("No existing target table found, creating new one...");
     }
-    
+
     // Create the table if it doesn't exist
-    console.log('Creating table hafalan_targets...');
+    console.log("Creating table hafalan_targets...");
     await connection.execute(`
       CREATE TABLE hafalan_targets (
         id VARCHAR(50) PRIMARY KEY,
@@ -78,10 +86,10 @@ async function getTableName(connection: mysql.Connection): Promise<string> {
         INDEX (targetDate)
       )
     `);
-    console.log('Table hafalan_targets created successfully');
-    return 'hafalan_targets';
+    console.log("Table hafalan_targets created successfully");
+    return "hafalan_targets";
   } catch (error) {
-    console.error('Error in getTableName:', error);
+    console.error("Error in getTableName:", error);
     throw error;
   }
 }
@@ -89,50 +97,50 @@ async function getTableName(connection: mysql.Connection): Promise<string> {
 // GET /api/hafalan-targets/[id] - Get hafalan target by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   let connection: mysql.Connection | null = null;
-  
+
   try {
-    const targetId: string =  di.id;
+    const targetId: string = di.id;
     console.log(`GET /api/hafalan-targets/${targetId} - Fetching target`);
-    
+
     // Create connection
     connection = await mysql.createConnection(dbConfig);
-    
+
     // Ensure connection is not null
     if (!connection) {
-      throw new Error('Failed to create database connection');
+      throw new Error("Failed to create database connection");
     }
-    
+
     // Get the correct table name
     const tableName = await getTableName(connection);
     console.log(`Using table name: ${tableName}`);
-    
+
     // Check if santri table exists
     let santriTableExists = true;
     try {
-      await connection.execute('SELECT 1 FROM santri LIMIT 1');
-      console.log('Table santri exists');
+      await connection.execute("SELECT 1 FROM santri LIMIT 1");
+      console.log("Table santri exists");
     } catch (error) {
-      console.log('Table santri does not exist, using simplified query');
+      console.log("Table santri does not exist, using simplified query");
       santriTableExists = false;
     }
-    
+
     // Check if halaqah table exists
     let halaqahTableExists = true;
     try {
-      await connection.execute('SELECT 1 FROM halaqah LIMIT 1');
-      console.log('Table halaqah exists');
+      await connection.execute("SELECT 1 FROM halaqah LIMIT 1");
+      console.log("Table halaqah exists");
     } catch (error) {
-      console.log('Table halaqah does not exist, using simplified query');
+      console.log("Table halaqah does not exist, using simplified query");
       halaqahTableExists = false;
     }
-    
+
     // Build query based on available tables
-    let queryString = '';
-    let queryParams = [params.id];  // Fixed: Using params.id instead of undefined id
-    
+    let queryString = "";
+    const queryParams = [params.id]; // Fixed: Using params.id instead of undefined id
+
     if (santriTableExists && halaqahTableExists) {
       queryString = `
         SELECT 
@@ -176,27 +184,27 @@ export async function GET(
           ht.id = ?
       `;
     }
-    
-    console.log('Executing query:', queryString);
-    console.log('With params:', queryParams);
-    
+
+    console.log("Executing query:", queryString);
+    console.log("With params:", queryParams);
+
     // Get target
     const [rows] = await connection.execute(queryString, queryParams);
-    
+
     if ((rows as any[]).length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Target hafalan tidak ditemukan' },
-        { status: 404 }
+        { success: false, message: "Target hafalan tidak ditemukan" },
+        { status: 404 },
       );
     }
-    
+
     const target = (rows as any[])[0];
-    
+
     // Format response
     const formattedTarget: any = {
       id: target.id,
       santriId: target.santriId,
-      santriName: target.santriName || 'Santri',
+      santriName: target.santriName || "Santri",
       surahId: target.surahId,
       surahName: target.surahName,
       targetType: target.targetType,
@@ -213,42 +221,49 @@ export async function GET(
       priority: target.priority,
       description: target.description,
       notes: target.notes,
-      reminders: target.reminders ? (typeof target.reminders === 'string' ? JSON.parse(target.reminders) : target.reminders) : null,
-      milestones: target.milestones ? (typeof target.milestones === 'string' ? JSON.parse(target.milestones) : target.milestones) : null
+      reminders: target.reminders
+        ? typeof target.reminders === "string"
+          ? JSON.parse(target.reminders)
+          : target.reminders
+        : null,
+      milestones: target.milestones
+        ? typeof target.milestones === "string"
+          ? JSON.parse(target.milestones)
+          : target.milestones
+        : null,
     };
-    
+
     // Add santri info if available
     if (target.santriNis) {
       formattedTarget.santriNis = target.santriNis;
     }
-    
+
     if (target.santriPhoto) {
       formattedTarget.santriPhoto = target.santriPhoto;
     }
-    
+
     // Add halaqah info if available
     if (target.halaqahId) {
       formattedTarget.halaqah = {
         id: target.halaqahId,
         name: target.halaqahName,
-        level: target.halaqahLevel
+        level: target.halaqahLevel,
       };
     }
-    
+
     return NextResponse.json({
       success: true,
-      target: formattedTarget
+      target: formattedTarget,
     });
-
   } catch (error) {
-    console.error('Error fetching hafalan target:', error);
+    console.error("Error fetching hafalan target:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Gagal mengambil data target hafalan',
-        error: String(error)
+      {
+        success: false,
+        message: "Gagal mengambil data target hafalan",
+        error: String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   } finally {
     if (connection) {
@@ -260,23 +275,23 @@ export async function GET(
 // PUT /api/hafalan-targets/[id] - Update hafalan target
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   let connection: mysql.Connection | null = null;
-  
+
   try {
     const id = params.id;
     console.log(`PUT /api/hafalan-targets/${id} - Updating target`);
-    
+
     if (!id) {
       return NextResponse.json(
-        { success: false, message: 'ID target hafalan wajib diisi' },
-        { status: 400 }
+        { success: false, message: "ID target hafalan wajib diisi" },
+        { status: 400 },
       );
     }
-    
+
     const body = await request.json();
-    const { 
+    const {
       targetAyahs,
       completedAyahs,
       targetDate,
@@ -284,149 +299,160 @@ export async function PUT(
       priority,
       description,
       notes,
-      reminders
+      reminders,
     } = body;
-    
-    console.log('Update data:', body);
-    
+
+    console.log("Update data:", body);
+
     // Create connection
     connection = await mysql.createConnection(dbConfig);
-    
+
     // Ensure connection is not null
     if (!connection) {
-      throw new Error('Failed to create database connection');
+      throw new Error("Failed to create database connection");
     }
-    
+
     // Get the correct table name
     const tableName = await getTableName(connection);
     console.log(`Using table name: ${tableName}`);
-    
+
     // Check if target exists
     const [targetRows] = await connection.execute(
       `SELECT * FROM ${tableName} WHERE id = ?`,
-      [id]
+      [id],
     );
-    
+
     if ((targetRows as any[]).length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Target hafalan tidak ditemukan' },
-        { status: 404 }
+        { success: false, message: "Target hafalan tidak ditemukan" },
+        { status: 404 },
       );
     }
-    
+
     const existingTarget = (targetRows as any[])[0];
-    
+
     // Prepare update data
     const updateData: any = {};
     const queryParams: any[] = [];
-    
+
     if (targetAyahs !== undefined) {
       updateData.targetAyahs = parseInt(targetAyahs.toString());
     }
-    
+
     if (completedAyahs !== undefined) {
       updateData.completedAyahs = parseInt(completedAyahs.toString());
       // Calculate progress
-      const targetAyahsValue = targetAyahs !== undefined ? parseInt(targetAyahs.toString()) : existingTarget.targetAyahs;
-      updateData.progress = Math.min(Math.round((parseInt(completedAyahs.toString()) / targetAyahsValue) * 100), 100);
-      
+      const targetAyahsValue =
+        targetAyahs !== undefined
+          ? parseInt(targetAyahs.toString())
+          : existingTarget.targetAyahs;
+      updateData.progress = Math.min(
+        Math.round(
+          (parseInt(completedAyahs.toString()) / targetAyahsValue) * 100,
+        ),
+        100,
+      );
+
       // Update status if completed
-      if (updateData.progress === 100 && existingTarget.status !== 'COMPLETED') {
-        updateData.status = 'COMPLETED';
+      if (
+        updateData.progress === 100 &&
+        existingTarget.status !== "COMPLETED"
+      ) {
+        updateData.status = "COMPLETED";
       }
     }
-    
+
     if (targetDate !== undefined) {
       updateData.targetDate = targetDate ? new Date(targetDate) : null;
     }
-    
+
     if (status !== undefined) {
       updateData.status = status;
     }
-    
+
     if (priority !== undefined) {
       updateData.priority = priority;
     }
-    
+
     if (description !== undefined) {
       updateData.description = description;
     }
-    
+
     if (notes !== undefined) {
       updateData.notes = notes;
     }
-    
+
     if (reminders !== undefined) {
       updateData.reminders = JSON.stringify(reminders);
     }
-    
+
     // Add updatedAt
     updateData.updatedAt = new Date();
-    
+
     // Build update query
     let query = `UPDATE ${tableName} SET `;
     const setClauses = [];
-    
+
     // Check if updateData is empty
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Tidak ada data yang diperbarui' },
-        { status: 400 }
+        { success: false, message: "Tidak ada data yang diperbarui" },
+        { status: 400 },
       );
     }
-    
+
     for (const [key, value] of Object.entries(updateData)) {
       setClauses.push(`${key} = ?`);
       queryParams.push(value);
     }
-    
-    query += setClauses.join(', ');
+
+    query += setClauses.join(", ");
     query += ` WHERE id = ?`;
     queryParams.push(id);
-    
-    console.log('Executing update query:', query);
-    console.log('With params:', queryParams);
-    
+
+    console.log("Executing update query:", query);
+    console.log("With params:", queryParams);
+
     try {
       // Execute update
       await connection.execute(query, queryParams);
-      console.log('Update executed successfully');
+      console.log("Update executed successfully");
     } catch (error) {
-      console.error('Error executing update query:', error);
+      console.error("Error executing update query:", error);
       return NextResponse.json(
-        { 
-          success: false, 
-          message: 'Gagal mengeksekusi query update',
-          error: String(error)
+        {
+          success: false,
+          message: "Gagal mengeksekusi query update",
+          error: String(error),
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
-    
+
     // Check if santri table exists
     let santriTableExists = true;
     try {
-      await connection.execute('SELECT 1 FROM santri LIMIT 1');
-      console.log('Table santri exists');
+      await connection.execute("SELECT 1 FROM santri LIMIT 1");
+      console.log("Table santri exists");
     } catch (error) {
-      console.log('Table santri does not exist, using simplified query');
+      console.log("Table santri does not exist, using simplified query");
       santriTableExists = false;
     }
-    
+
     // Check if halaqah table exists
     let halaqahTableExists = true;
     try {
-      await connection.execute('SELECT 1 FROM halaqah LIMIT 1');
-      console.log('Table halaqah exists');
+      await connection.execute("SELECT 1 FROM halaqah LIMIT 1");
+      console.log("Table halaqah exists");
     } catch (error) {
-      console.log('Table halaqah does not exist, using simplified query');
+      console.log("Table halaqah does not exist, using simplified query");
       halaqahTableExists = false;
     }
-    
+
     // Build query based on available tables
-    let fetchQuery = '';
-    let fetchParams = [params.id];  // Fixed: Using params.id
-    
+    let fetchQuery = "";
+    const fetchParams = [params.id]; // Fixed: Using params.id
+
     if (santriTableExists && halaqahTableExists) {
       fetchQuery = `
         SELECT 
@@ -471,26 +497,26 @@ export async function PUT(
       `;
     }
 
-    console.log('Executing query:', fetchQuery);
-    console.log('With params:', fetchParams);
-    
+    console.log("Executing query:", fetchQuery);
+    console.log("With params:", fetchParams);
+
     // Get updated record
     const [updatedRows] = await connection.execute(fetchQuery, fetchParams);
-    
+
     if ((updatedRows as any[]).length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Gagal mendapatkan data yang diperbarui' },
-        { status: 500 }
+        { success: false, message: "Gagal mendapatkan data yang diperbarui" },
+        { status: 500 },
       );
     }
-    
+
     const updatedTarget = (updatedRows as any[])[0];
-    
+
     // Format response
     const formattedTarget: any = {
       id: updatedTarget.id,
       santriId: updatedTarget.santriId,
-      santriName: updatedTarget.santriName || 'Santri',
+      santriName: updatedTarget.santriName || "Santri",
       surahId: updatedTarget.surahId,
       surahName: updatedTarget.surahName,
       targetType: updatedTarget.targetType,
@@ -507,45 +533,52 @@ export async function PUT(
       priority: updatedTarget.priority,
       description: updatedTarget.description,
       notes: updatedTarget.notes,
-      reminders: updatedTarget.reminders ? (typeof updatedTarget.reminders === 'string' ? JSON.parse(updatedTarget.reminders) : updatedTarget.reminders) : null,
-      milestones: updatedTarget.milestones ? (typeof updatedTarget.milestones === 'string' ? JSON.parse(updatedTarget.milestones) : updatedTarget.milestones) : null
+      reminders: updatedTarget.reminders
+        ? typeof updatedTarget.reminders === "string"
+          ? JSON.parse(updatedTarget.reminders)
+          : updatedTarget.reminders
+        : null,
+      milestones: updatedTarget.milestones
+        ? typeof updatedTarget.milestones === "string"
+          ? JSON.parse(updatedTarget.milestones)
+          : updatedTarget.milestones
+        : null,
     };
-    
+
     // Add santri info if available
     if (updatedTarget.santriNis) {
       formattedTarget.santriNis = updatedTarget.santriNis;
     }
-    
+
     if (updatedTarget.santriPhoto) {
       formattedTarget.santriPhoto = updatedTarget.santriPhoto;
     }
-    
+
     // Add halaqah info if available
     if (updatedTarget.halaqahId) {
       formattedTarget.halaqah = {
         id: updatedTarget.halaqahId,
         name: updatedTarget.halaqahName,
-        level: updatedTarget.halaqahLevel
+        level: updatedTarget.halaqahLevel,
       };
     }
-    
-    console.log('Update successful, returning updated data');
-    
+
+    console.log("Update successful, returning updated data");
+
     return NextResponse.json({
       success: true,
-      message: 'Target hafalan berhasil diperbarui',
-      target: formattedTarget
+      message: "Target hafalan berhasil diperbarui",
+      target: formattedTarget,
     });
-    
   } catch (error) {
-    console.error('Error updating hafalan target:', error);
+    console.error("Error updating hafalan target:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Gagal memperbarui target hafalan',
-        error: String(error)
+      {
+        success: false,
+        message: "Gagal memperbarui target hafalan",
+        error: String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   } finally {
     if (connection) {
@@ -557,68 +590,64 @@ export async function PUT(
 // DELETE /api/hafalan-targets/[id] - Delete hafalan target
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   let connection: mysql.Connection | null = null;
-  
+
   try {
     const id = params.id;
     console.log(`DELETE /api/hafalan-targets/${id} - Deleting target`);
-    
+
     if (!id) {
       return NextResponse.json(
-        { success: false, message: 'ID target hafalan wajib diisi' },
-        { status: 400 }
+        { success: false, message: "ID target hafalan wajib diisi" },
+        { status: 400 },
       );
     }
-    
+
     // Create connection
     connection = await mysql.createConnection(dbConfig);
-    
+
     // Ensure connection is not null
     if (!connection) {
-      throw new Error('Failed to create database connection');
+      throw new Error("Failed to create database connection");
     }
-    
+
     // Get the correct table name
     const tableName = await getTableName(connection);
     console.log(`Using table name: ${tableName}`);
-    
+
     // Check if target exists
     const [targetRows] = await connection.execute(
       `SELECT * FROM ${tableName} WHERE id = ?`,
-      [id]
+      [id],
     );
-    
+
     if ((targetRows as any[]).length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Target hafalan tidak ditemukan' },
-        { status: 404 }
+        { success: false, message: "Target hafalan tidak ditemukan" },
+        { status: 404 },
       );
     }
-    
+
     // Delete target
-    await connection.execute(
-      `DELETE FROM ${tableName} WHERE id = ?`,
-      [id]
-    );
-    
-    console.log('Delete successful');
-    
+    await connection.execute(`DELETE FROM ${tableName} WHERE id = ?`, [id]);
+
+    console.log("Delete successful");
+
     return NextResponse.json({
       success: true,
-      message: 'Target hafalan berhasil dihapus'
+      message: "Target hafalan berhasil dihapus",
     });
-    
   } catch (error) {
-    console.error('Error deleting hafalan target:', error);
+    console.error("Error deleting hafalan target:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Gagal menghapus target hafalan',
-        error: String(error)
+      {
+        success: false,
+        message: "Gagal menghapus target hafalan",
+        error: String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   } finally {
     if (connection) {

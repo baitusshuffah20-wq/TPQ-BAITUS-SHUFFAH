@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { Badge } from '@/components/ui/badge';
-import ShoppingCart from '@/components/payment/ShoppingCart';
-import { CartService } from '@/lib/cart-service';
-import { useAuth } from '@/components/providers/AuthProvider';
-import PublicLayout from '@/components/layout/PublicLayout';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import ShoppingCart from "@/components/payment/ShoppingCart";
+import { CartService } from "@/lib/cart-service";
+import { useAuth } from "@/components/providers/AuthProvider";
+import PublicLayout from "@/components/layout/PublicLayout";
 import {
   ShoppingCart as CartIcon,
   Plus,
@@ -22,9 +22,9 @@ import {
   Loader2,
   Star,
   TrendingUp,
-  LogIn
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  LogIn,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface PaymentItem {
   type: string;
@@ -34,11 +34,11 @@ interface PaymentItem {
   price: number;
   category: string;
   isCustomAmount?: boolean;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 interface CartSummary {
-  items: any[];
+  items: PaymentItem[];
   subtotal: number;
   tax: number;
   discount: number;
@@ -52,15 +52,15 @@ export default function PaymentPage() {
   const [availableItems, setAvailableItems] = useState<PaymentItem[]>([]);
   const [cartSummary, setCartSummary] = useState<CartSummary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [cartId, setCartId] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [cartId, setCartId] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [customDonationAmount, setCustomDonationAmount] = useState<number>(0);
-  const [donationMessage, setDonationMessage] = useState<string>('');
+  const [donationMessage, setDonationMessage] = useState<string>("");
 
   const categories = [
-    { id: 'all', name: 'Semua', icon: <CreditCard className="h-4 w-4" /> },
-    { id: 'spp', name: 'SPP', icon: <Building className="h-4 w-4" /> },
-    { id: 'donasi', name: 'Donasi', icon: <Heart className="h-4 w-4" /> }
+    { id: "all", name: "Semua", icon: <CreditCard className="h-4 w-4" /> },
+    { id: "spp", name: "SPP", icon: <Building className="h-4 w-4" /> },
+    { id: "donasi", name: "Donasi", icon: <Heart className="h-4 w-4" /> },
   ];
 
   useEffect(() => {
@@ -79,19 +79,19 @@ export default function PaymentPage() {
   const initializePayment = async () => {
     try {
       setLoading(true);
-      
+
       // Generate or get cart ID
       const guestCartId = CartService.generateCartId();
       setCartId(guestCartId);
-      
+
       // Load available items (mock user ID for now)
-      await loadAvailableItems('mock-user-id');
-      
+      await loadAvailableItems("mock-user-id");
+
       // Load cart summary
       await loadCartSummary(guestCartId);
     } catch (error) {
-      console.error('Error initializing payment:', error);
-      toast.error('Gagal memuat halaman pembayaran');
+      console.error("Error initializing payment:", error);
+      toast.error("Gagal memuat halaman pembayaran");
     } finally {
       setLoading(false);
     }
@@ -99,13 +99,15 @@ export default function PaymentPage() {
 
   const loadAvailableItems = async (userId: string) => {
     try {
-      const response = await fetch(`/api/cart/items?userId=${userId}&category=${selectedCategory}`);
+      const response = await fetch(
+        `/api/cart/items?userId=${userId}&category=${selectedCategory}`,
+      );
       if (response.ok) {
         const data = await response.json();
         setAvailableItems(data.data.items);
       }
     } catch (error) {
-      console.error('Error loading available items:', error);
+      console.error("Error loading available items:", error);
     }
   };
 
@@ -117,7 +119,7 @@ export default function PaymentPage() {
         setCartSummary(data.data);
       }
     } catch (error) {
-      console.error('Error loading cart summary:', error);
+      console.error("Error loading cart summary:", error);
     }
   };
 
@@ -131,106 +133,113 @@ export default function PaymentPage() {
         description: item.description,
         price: customAmount || item.price,
         quantity: 1,
-        metadata: item.metadata
+        metadata: item.metadata,
       };
 
-      const response = await fetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
+      const response = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
       });
 
       if (response.ok) {
-        toast.success('Item berhasil ditambahkan ke keranjang');
+        toast.success("Item berhasil ditambahkan ke keranjang");
         await loadCartSummary(cartId);
       } else {
         const error = await response.json();
-        toast.error(error.message || 'Gagal menambahkan item');
+        toast.error(error.message || "Gagal menambahkan item");
       }
     } catch (error) {
-      console.error('Error adding to cart:', error);
-      toast.error('Gagal menambahkan item ke keranjang');
+      console.error("Error adding to cart:", error);
+      toast.error("Gagal menambahkan item ke keranjang");
     }
   };
 
   const addSPPToCart = async (studentId: string) => {
     try {
-      const response = await fetch('/api/cart/items/spp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cartId, studentId })
+      const response = await fetch("/api/cart/items/spp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cartId, studentId }),
       });
 
       if (response.ok) {
-        toast.success('SPP berhasil ditambahkan ke keranjang');
+        toast.success("SPP berhasil ditambahkan ke keranjang");
         await loadCartSummary(cartId);
       } else {
         const error = await response.json();
-        toast.error(error.message || 'Gagal menambahkan SPP');
+        toast.error(error.message || "Gagal menambahkan SPP");
       }
     } catch (error) {
-      console.error('Error adding SPP to cart:', error);
-      toast.error('Gagal menambahkan SPP ke keranjang');
+      console.error("Error adding SPP to cart:", error);
+      toast.error("Gagal menambahkan SPP ke keranjang");
     }
   };
 
-  const addDonationToCart = async (donationType: string, amount: number, message: string) => {
+  const addDonationToCart = async (
+    donationType: string,
+    amount: number,
+    message: string,
+  ) => {
     try {
-      const response = await fetch('/api/cart/donation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          cartId, 
-          donationType, 
-          amount, 
-          message 
-        })
+      const response = await fetch("/api/cart/donation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cartId,
+          donationType,
+          amount,
+          message,
+        }),
       });
 
       if (response.ok) {
-        toast.success('Donasi berhasil ditambahkan ke keranjang');
+        toast.success("Donasi berhasil ditambahkan ke keranjang");
         await loadCartSummary(cartId);
         setCustomDonationAmount(0);
-        setDonationMessage('');
+        setDonationMessage("");
       } else {
         const error = await response.json();
-        toast.error(error.message || 'Gagal menambahkan donasi');
+        toast.error(error.message || "Gagal menambahkan donasi");
       }
     } catch (error) {
-      console.error('Error adding donation to cart:', error);
-      toast.error('Gagal menambahkan donasi ke keranjang');
+      console.error("Error adding donation to cart:", error);
+      toast.error("Gagal menambahkan donasi ke keranjang");
     }
   };
 
   const proceedToCheckout = () => {
     if (!cartSummary || cartSummary.items.length === 0) {
-      toast.error('Keranjang masih kosong');
+      toast.error("Keranjang masih kosong");
       return;
     }
     router.push(`/checkout?cartId=${cartId}`);
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR'
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
     }).format(amount);
   };
 
   const getItemIcon = (category: string) => {
     switch (category.toLowerCase()) {
-      case 'spp':
+      case "spp":
         return <Building className="h-6 w-6 text-blue-600" />;
-      case 'donasi':
+      case "donasi":
         return <Heart className="h-6 w-6 text-red-600" />;
       default:
         return <CreditCard className="h-6 w-6 text-gray-600" />;
     }
   };
 
-  const filteredItems = selectedCategory === 'all' 
-    ? availableItems 
-    : availableItems.filter(item => item.category.toLowerCase() === selectedCategory);
+  const filteredItems =
+    selectedCategory === "all"
+      ? availableItems
+      : availableItems.filter(
+          (item) => item.category.toLowerCase() === selectedCategory,
+        );
 
   if (authLoading || loading) {
     return (
@@ -238,7 +247,9 @@ export default function PaymentPage() {
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">
-            {authLoading ? 'Memeriksa autentikasi...' : 'Memuat halaman pembayaran...'}
+            {authLoading
+              ? "Memeriksa autentikasi..."
+              : "Memuat halaman pembayaran..."}
           </p>
         </div>
       </div>
@@ -256,12 +267,15 @@ export default function PaymentPage() {
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CreditCard className="h-8 w-8 text-blue-600" />
                 </div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Pembayaran TPQ Baitus Shuffah</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  Pembayaran TPQ Baitus Shuffah
+                </h1>
                 <p className="text-gray-600 mb-6">
-                  Silakan login terlebih dahulu untuk mengakses sistem pembayaran online
+                  Silakan login terlebih dahulu untuk mengakses sistem
+                  pembayaran online
                 </p>
                 <Button
-                  onClick={() => router.push('/login')}
+                  onClick={() => router.push("/login")}
                   className="w-full flex items-center justify-center gap-2"
                 >
                   <LogIn className="h-4 w-4" />
@@ -283,8 +297,12 @@ export default function PaymentPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Pembayaran Online</h1>
-          <p className="text-gray-600">Kelola pembayaran SPP dan donasi TPQ Baitus Shuffah</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Pembayaran Online
+          </h1>
+          <p className="text-gray-600">
+            Kelola pembayaran SPP dan donasi TPQ Baitus Shuffah
+          </p>
         </div>
         <div className="flex items-center gap-4">
           {cartSummary && cartSummary.itemCount > 0 && (
@@ -307,13 +325,17 @@ export default function PaymentPage() {
             {/* Category Filter */}
             <Card>
               <CardContent className="p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Pilih Kategori Pembayaran</h2>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                  Pilih Kategori Pembayaran
+                </h2>
                 <div className="flex gap-3 overflow-x-auto pb-2">
                   {categories.map((category) => (
                     <Button
                       key={category.id}
                       onClick={() => setSelectedCategory(category.id)}
-                      variant={selectedCategory === category.id ? "default" : "outline"}
+                      variant={
+                        selectedCategory === category.id ? "default" : "outline"
+                      }
                       className="flex items-center gap-2 whitespace-nowrap"
                     >
                       {category.icon}
@@ -327,7 +349,10 @@ export default function PaymentPage() {
             {/* Payment Items */}
             <div className="space-y-4">
               {filteredItems.map((item) => (
-                <Card key={`${item.type}-${item.id}`} className="hover:shadow-md transition-shadow">
+                <Card
+                  key={`${item.type}-${item.id}`}
+                  className="hover:shadow-md transition-shadow"
+                >
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
@@ -336,16 +361,23 @@ export default function PaymentPage() {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                            <h3 className="font-semibold text-gray-900">
+                              {item.name}
+                            </h3>
                             <Badge variant="outline">{item.category}</Badge>
-                            {item.type === 'SPP' && (
-                              <Badge variant="default" className="bg-blue-100 text-blue-800">
+                            {item.type === "SPP" && (
+                              <Badge
+                                variant="default"
+                                className="bg-blue-100 text-blue-800"
+                              >
                                 <Star className="h-3 w-3 mr-1" />
                                 Populer
                               </Badge>
                             )}
                           </div>
-                          <p className="text-gray-600 text-sm">{item.description}</p>
+                          <p className="text-gray-600 text-sm">
+                            {item.description}
+                          </p>
                           {!item.isCustomAmount && (
                             <p className="text-lg font-bold text-blue-600 mt-2">
                               {formatCurrency(item.price)}
@@ -353,24 +385,30 @@ export default function PaymentPage() {
                           )}
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-3">
                         {item.isCustomAmount ? (
                           <div className="flex items-center gap-2">
                             <input
                               type="number"
                               placeholder="Jumlah donasi"
-                              value={customDonationAmount || ''}
-                              onChange={(e) => setCustomDonationAmount(Number(e.target.value))}
+                              value={customDonationAmount || ""}
+                              onChange={(e) =>
+                                setCustomDonationAmount(Number(e.target.value))
+                              }
                               className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               min="10000"
                             />
                             <Button
                               onClick={() => {
                                 if (customDonationAmount >= 10000) {
-                                  addDonationToCart(item.id, customDonationAmount, donationMessage);
+                                  addDonationToCart(
+                                    item.id,
+                                    customDonationAmount,
+                                    donationMessage,
+                                  );
                                 } else {
-                                  toast.error('Minimum donasi Rp 10,000');
+                                  toast.error("Minimum donasi Rp 10,000");
                                 }
                               }}
                               disabled={customDonationAmount < 10000}
@@ -383,7 +421,7 @@ export default function PaymentPage() {
                         ) : (
                           <Button
                             onClick={() => {
-                              if (item.type === 'SPP') {
+                              if (item.type === "SPP") {
                                 addSPPToCart(item.id);
                               } else {
                                 addToCart(item);
@@ -407,15 +445,19 @@ export default function PaymentPage() {
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <CreditCard className="h-8 w-8 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Tidak ada item tersedia</h3>
-                    <p className="text-gray-600">Pilih kategori lain atau coba lagi nanti.</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Tidak ada item tersedia
+                    </h3>
+                    <p className="text-gray-600">
+                      Pilih kategori lain atau coba lagi nanti.
+                    </p>
                   </CardContent>
                 </Card>
               )}
             </div>
 
             {/* Custom Donation Message */}
-            {selectedCategory === 'donasi' && (
+            {selectedCategory === "donasi" && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">

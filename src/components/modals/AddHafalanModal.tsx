@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   X,
   Save,
@@ -12,8 +12,8 @@ import {
   Star,
   CheckCircle,
   Clock,
-  Award
-} from 'lucide-react';
+  Award,
+} from "lucide-react";
 
 interface AddHafalanModalProps {
   isOpen: boolean;
@@ -26,106 +26,116 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
   isOpen,
   onClose,
   onSave,
-  editData
+  editData,
 }) => {
   const [formData, setFormData] = useState({
-    santriId: editData?.santriId || '',
-    santriName: editData?.santriName || '',
-    surah: editData?.surah || '',
-    ayahStart: editData?.ayahStart || '',
-    ayahEnd: editData?.ayahEnd || '',
-    type: editData?.type || 'SETORAN', // SETORAN, MURAJAAH, TASMI
-    date: editData?.date || new Date().toISOString().split('T')[0],
-    musyrifId: editData?.musyrifId || '',
-    musyrifName: editData?.musyrifName || '',
-    
+    santriId: editData?.santriId || "",
+    santriName: editData?.santriName || "",
+    surah: editData?.surah || "",
+    ayahStart: editData?.ayahStart || "",
+    ayahEnd: editData?.ayahEnd || "",
+    type: editData?.type || "SETORAN", // SETORAN, MURAJAAH, TASMI
+    date: editData?.date || new Date().toISOString().split("T")[0],
+    musyrifId: editData?.musyrifId || "",
+    musyrifName: editData?.musyrifName || "",
+
     // Evaluation scores
-    tajwid: editData?.tajwid || '',
-    kelancaran: editData?.kelancaran || '',
-    fashahah: editData?.fashahah || '',
-    
+    tajwid: editData?.tajwid || "",
+    kelancaran: editData?.kelancaran || "",
+    fashahah: editData?.fashahah || "",
+
     // Overall assessment
-    grade: editData?.grade || '',
-    status: editData?.status || 'PENDING', // PENDING, APPROVED, NEEDS_IMPROVEMENT
-    notes: editData?.notes || '',
-    
+    grade: editData?.grade || "",
+    status: editData?.status || "PENDING", // PENDING, APPROVED, NEEDS_IMPROVEMENT
+    notes: editData?.notes || "",
+
     // Additional info
-    duration: editData?.duration || '', // in minutes
-    corrections: editData?.corrections || '',
-    recommendations: editData?.recommendations || ''
+    duration: editData?.duration || "", // in minutes
+    corrections: editData?.corrections || "",
+    recommendations: editData?.recommendations || "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Mock data for dropdowns
   const santriList = [
-    { id: '1', name: 'Ahmad Fauzi', nis: '24001' },
-    { id: '2', name: 'Siti Aisyah', nis: '24002' },
-    { id: '3', name: 'Muhammad Rizki', nis: '24003' }
+    { id: "1", name: "Ahmad Fauzi", nis: "24001" },
+    { id: "2", name: "Siti Aisyah", nis: "24002" },
+    { id: "3", name: "Muhammad Rizki", nis: "24003" },
   ];
 
   const surahList = [
-    'Al-Fatihah', 'Al-Baqarah', 'Ali Imran', 'An-Nisa', 'Al-Maidah',
-    'Al-An\'am', 'Al-A\'raf', 'Al-Anfal', 'At-Taubah', 'Yunus'
+    "Al-Fatihah",
+    "Al-Baqarah",
+    "Ali Imran",
+    "An-Nisa",
+    "Al-Maidah",
+    "Al-An'am",
+    "Al-A'raf",
+    "Al-Anfal",
+    "At-Taubah",
+    "Yunus",
   ];
 
   const musyrifList = [
-    { id: '1', name: 'Ustadz Abdullah' },
-    { id: '2', name: 'Ustadzah Fatimah' },
-    { id: '3', name: 'Ustadz Rahman' }
+    { id: "1", name: "Ustadz Abdullah" },
+    { id: "2", name: "Ustadzah Fatimah" },
+    { id: "3", name: "Ustadz Rahman" },
   ];
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: ''
+        [field]: "",
       }));
     }
 
     // Auto-fill santri name when santri is selected
-    if (field === 'santriId') {
-      const selectedSantri = santriList.find(s => s.id === value);
+    if (field === "santriId") {
+      const selectedSantri = santriList.find((s) => s.id === value);
       if (selectedSantri) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          santriName: selectedSantri.name
+          santriName: selectedSantri.name,
         }));
       }
     }
 
     // Auto-fill musyrif name when musyrif is selected
-    if (field === 'musyrifId') {
-      const selectedMusyrif = musyrifList.find(m => m.id === value);
+    if (field === "musyrifId") {
+      const selectedMusyrif = musyrifList.find((m) => m.id === value);
       if (selectedMusyrif) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          musyrifName: selectedMusyrif.name
+          musyrifName: selectedMusyrif.name,
         }));
       }
     }
 
     // Calculate overall grade when individual scores change
-    if (['tajwid', 'kelancaran', 'fashahah'].includes(field)) {
+    if (["tajwid", "kelancaran", "fashahah"].includes(field)) {
       const newFormData = { ...formData, [field]: value };
       const scores = [
         parseInt(newFormData.tajwid) || 0,
         parseInt(newFormData.kelancaran) || 0,
-        parseInt(newFormData.fashahah) || 0
+        parseInt(newFormData.fashahah) || 0,
       ];
-      
-      if (scores.every(score => score > 0)) {
-        const average = Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
-        setFormData(prev => ({
+
+      if (scores.every((score) => score > 0)) {
+        const average = Math.round(
+          scores.reduce((sum, score) => sum + score, 0) / scores.length,
+        );
+        setFormData((prev) => ({
           ...prev,
           [field]: value,
-          grade: average.toString()
+          grade: average.toString(),
         }));
       }
     }
@@ -135,39 +145,48 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!formData.santriId) {
-      newErrors.santriId = 'Santri wajib dipilih';
+      newErrors.santriId = "Santri wajib dipilih";
     }
 
     if (!formData.surah) {
-      newErrors.surah = 'Surah wajib dipilih';
+      newErrors.surah = "Surah wajib dipilih";
     }
 
     if (!formData.ayahStart) {
-      newErrors.ayahStart = 'Ayat awal wajib diisi';
+      newErrors.ayahStart = "Ayat awal wajib diisi";
     }
 
     if (!formData.ayahEnd) {
-      newErrors.ayahEnd = 'Ayat akhir wajib diisi';
+      newErrors.ayahEnd = "Ayat akhir wajib diisi";
     }
 
     if (parseInt(formData.ayahStart) > parseInt(formData.ayahEnd)) {
-      newErrors.ayahEnd = 'Ayat akhir harus lebih besar dari ayat awal';
+      newErrors.ayahEnd = "Ayat akhir harus lebih besar dari ayat awal";
     }
 
     if (!formData.musyrifId) {
-      newErrors.musyrifId = 'Musyrif wajib dipilih';
+      newErrors.musyrifId = "Musyrif wajib dipilih";
     }
 
-    if (formData.tajwid && (parseInt(formData.tajwid) < 0 || parseInt(formData.tajwid) > 100)) {
-      newErrors.tajwid = 'Nilai tajwid harus antara 0-100';
+    if (
+      formData.tajwid &&
+      (parseInt(formData.tajwid) < 0 || parseInt(formData.tajwid) > 100)
+    ) {
+      newErrors.tajwid = "Nilai tajwid harus antara 0-100";
     }
 
-    if (formData.kelancaran && (parseInt(formData.kelancaran) < 0 || parseInt(formData.kelancaran) > 100)) {
-      newErrors.kelancaran = 'Nilai kelancaran harus antara 0-100';
+    if (
+      formData.kelancaran &&
+      (parseInt(formData.kelancaran) < 0 || parseInt(formData.kelancaran) > 100)
+    ) {
+      newErrors.kelancaran = "Nilai kelancaran harus antara 0-100";
     }
 
-    if (formData.fashahah && (parseInt(formData.fashahah) < 0 || parseInt(formData.fashahah) > 100)) {
-      newErrors.fashahah = 'Nilai fashahah harus antara 0-100';
+    if (
+      formData.fashahah &&
+      (parseInt(formData.fashahah) < 0 || parseInt(formData.fashahah) > 100)
+    ) {
+      newErrors.fashahah = "Nilai fashahah harus antara 0-100";
     }
 
     setErrors(newErrors);
@@ -184,50 +203,54 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
       id: editData?.id || `hafalan_${Date.now()}`,
       ayahRange: `${formData.ayahStart}-${formData.ayahEnd}`,
       createdAt: editData?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     onSave(hafalanData);
     onClose();
-    
+
     // Reset form
     setFormData({
-      santriId: '',
-      santriName: '',
-      surah: '',
-      ayahStart: '',
-      ayahEnd: '',
-      type: 'SETORAN',
-      date: new Date().toISOString().split('T')[0],
-      musyrifId: '',
-      musyrifName: '',
-      tajwid: '',
-      kelancaran: '',
-      fashahah: '',
-      grade: '',
-      status: 'PENDING',
-      notes: '',
-      duration: '',
-      corrections: '',
-      recommendations: ''
+      santriId: "",
+      santriName: "",
+      surah: "",
+      ayahStart: "",
+      ayahEnd: "",
+      type: "SETORAN",
+      date: new Date().toISOString().split("T")[0],
+      musyrifId: "",
+      musyrifName: "",
+      tajwid: "",
+      kelancaran: "",
+      fashahah: "",
+      grade: "",
+      status: "PENDING",
+      notes: "",
+      duration: "",
+      corrections: "",
+      recommendations: "",
     });
     setErrors({});
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'SETORAN': return 'bg-blue-100 text-blue-800';
-      case 'MURAJAAH': return 'bg-green-100 text-green-800';
-      case 'TASMI': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "SETORAN":
+        return "bg-blue-100 text-blue-800";
+      case "MURAJAAH":
+        return "bg-green-100 text-green-800";
+      case "TASMI":
+        return "bg-purple-100 text-purple-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getGradeColor = (grade: number) => {
-    if (grade >= 90) return 'text-green-600';
-    if (grade >= 80) return 'text-blue-600';
-    if (grade >= 70) return 'text-yellow-600';
-    return 'text-red-600';
+    if (grade >= 90) return "text-green-600";
+    if (grade >= 80) return "text-blue-600";
+    if (grade >= 70) return "text-yellow-600";
+    return "text-red-600";
   };
 
   if (!isOpen) return null;
@@ -239,7 +262,7 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>
-                {editData ? 'Edit Evaluasi Hafalan' : 'Tambah Hafalan Baru'}
+                {editData ? "Edit Evaluasi Hafalan" : "Tambah Hafalan Baru"}
               </CardTitle>
               <button
                 onClick={onClose}
@@ -264,19 +287,25 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                     </label>
                     <select
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                        errors.santriId ? 'border-red-500' : 'border-gray-300'
+                        errors.santriId ? "border-red-500" : "border-gray-300"
                       }`}
                       value={formData.santriId}
-                      onChange={(e) => handleInputChange('santriId', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("santriId", e.target.value)
+                      }
                     >
                       <option value="">Pilih Santri</option>
-                      {santriList.map(santri => (
+                      {santriList.map((santri) => (
                         <option key={santri.id} value={santri.id}>
                           {santri.name} - {santri.nis}
                         </option>
                       ))}
                     </select>
-                    {errors.santriId && <p className="text-red-500 text-sm mt-1">{errors.santriId}</p>}
+                    {errors.santriId && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.santriId}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -286,7 +315,9 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.type}
-                      onChange={(e) => handleInputChange('type', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("type", e.target.value)
+                      }
                     >
                       <option value="SETORAN">Setoran (Hafalan Baru)</option>
                       <option value="MURAJAAH">Murajaah (Mengulang)</option>
@@ -300,19 +331,25 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                     </label>
                     <select
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                        errors.surah ? 'border-red-500' : 'border-gray-300'
+                        errors.surah ? "border-red-500" : "border-gray-300"
                       }`}
                       value={formData.surah}
-                      onChange={(e) => handleInputChange('surah', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("surah", e.target.value)
+                      }
                     >
                       <option value="">Pilih Surah</option>
-                      {surahList.map(surah => (
+                      {surahList.map((surah) => (
                         <option key={surah} value={surah}>
                           {surah}
                         </option>
                       ))}
                     </select>
-                    {errors.surah && <p className="text-red-500 text-sm mt-1">{errors.surah}</p>}
+                    {errors.surah && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.surah}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -323,7 +360,9 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                       type="date"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.date}
-                      onChange={(e) => handleInputChange('date', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("date", e.target.value)
+                      }
                     />
                   </div>
 
@@ -335,13 +374,19 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                       type="number"
                       min="1"
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                        errors.ayahStart ? 'border-red-500' : 'border-gray-300'
+                        errors.ayahStart ? "border-red-500" : "border-gray-300"
                       }`}
                       value={formData.ayahStart}
-                      onChange={(e) => handleInputChange('ayahStart', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("ayahStart", e.target.value)
+                      }
                       placeholder="Nomor ayat awal"
                     />
-                    {errors.ayahStart && <p className="text-red-500 text-sm mt-1">{errors.ayahStart}</p>}
+                    {errors.ayahStart && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.ayahStart}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -352,13 +397,19 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                       type="number"
                       min="1"
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                        errors.ayahEnd ? 'border-red-500' : 'border-gray-300'
+                        errors.ayahEnd ? "border-red-500" : "border-gray-300"
                       }`}
                       value={formData.ayahEnd}
-                      onChange={(e) => handleInputChange('ayahEnd', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("ayahEnd", e.target.value)
+                      }
                       placeholder="Nomor ayat akhir"
                     />
-                    {errors.ayahEnd && <p className="text-red-500 text-sm mt-1">{errors.ayahEnd}</p>}
+                    {errors.ayahEnd && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.ayahEnd}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -367,19 +418,25 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                     </label>
                     <select
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                        errors.musyrifId ? 'border-red-500' : 'border-gray-300'
+                        errors.musyrifId ? "border-red-500" : "border-gray-300"
                       }`}
                       value={formData.musyrifId}
-                      onChange={(e) => handleInputChange('musyrifId', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("musyrifId", e.target.value)
+                      }
                     >
                       <option value="">Pilih Musyrif</option>
-                      {musyrifList.map(musyrif => (
+                      {musyrifList.map((musyrif) => (
                         <option key={musyrif.id} value={musyrif.id}>
                           {musyrif.name}
                         </option>
                       ))}
                     </select>
-                    {errors.musyrifId && <p className="text-red-500 text-sm mt-1">{errors.musyrifId}</p>}
+                    {errors.musyrifId && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.musyrifId}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -391,7 +448,9 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                       min="1"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.duration}
-                      onChange={(e) => handleInputChange('duration', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("duration", e.target.value)
+                      }
                       placeholder="Durasi dalam menit"
                     />
                   </div>
@@ -414,13 +473,19 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                       min="0"
                       max="100"
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                        errors.tajwid ? 'border-red-500' : 'border-gray-300'
+                        errors.tajwid ? "border-red-500" : "border-gray-300"
                       }`}
                       value={formData.tajwid}
-                      onChange={(e) => handleInputChange('tajwid', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("tajwid", e.target.value)
+                      }
                       placeholder="Nilai tajwid"
                     />
-                    {errors.tajwid && <p className="text-red-500 text-sm mt-1">{errors.tajwid}</p>}
+                    {errors.tajwid && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.tajwid}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -432,13 +497,19 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                       min="0"
                       max="100"
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                        errors.kelancaran ? 'border-red-500' : 'border-gray-300'
+                        errors.kelancaran ? "border-red-500" : "border-gray-300"
                       }`}
                       value={formData.kelancaran}
-                      onChange={(e) => handleInputChange('kelancaran', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("kelancaran", e.target.value)
+                      }
                       placeholder="Nilai kelancaran"
                     />
-                    {errors.kelancaran && <p className="text-red-500 text-sm mt-1">{errors.kelancaran}</p>}
+                    {errors.kelancaran && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.kelancaran}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -450,13 +521,19 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                       min="0"
                       max="100"
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                        errors.fashahah ? 'border-red-500' : 'border-gray-300'
+                        errors.fashahah ? "border-red-500" : "border-gray-300"
                       }`}
                       value={formData.fashahah}
-                      onChange={(e) => handleInputChange('fashahah', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("fashahah", e.target.value)
+                      }
                       placeholder="Nilai fashahah"
                     />
-                    {errors.fashahah && <p className="text-red-500 text-sm mt-1">{errors.fashahah}</p>}
+                    {errors.fashahah && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.fashahah}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -464,8 +541,10 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                       Nilai Rata-rata
                     </label>
                     <div className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50">
-                      <span className={`text-lg font-bold ${formData.grade ? getGradeColor(parseInt(formData.grade)) : 'text-gray-400'}`}>
-                        {formData.grade || '-'}
+                      <span
+                        className={`text-lg font-bold ${formData.grade ? getGradeColor(parseInt(formData.grade)) : "text-gray-400"}`}
+                      >
+                        {formData.grade || "-"}
                       </span>
                     </div>
                   </div>
@@ -486,7 +565,9 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.status}
-                      onChange={(e) => handleInputChange('status', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("status", e.target.value)
+                      }
                     >
                       <option value="PENDING">Menunggu Review</option>
                       <option value="APPROVED">Disetujui</option>
@@ -502,7 +583,9 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.notes}
-                      onChange={(e) => handleInputChange('notes', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("notes", e.target.value)
+                      }
                       placeholder="Catatan umum tentang hafalan santri..."
                     />
                   </div>
@@ -515,7 +598,9 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.corrections}
-                      onChange={(e) => handleInputChange('corrections', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("corrections", e.target.value)
+                      }
                       placeholder="Detail koreksi yang perlu diperbaiki..."
                     />
                   </div>
@@ -528,7 +613,9 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={formData.recommendations}
-                      onChange={(e) => handleInputChange('recommendations', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("recommendations", e.target.value)
+                      }
                       placeholder="Rekomendasi untuk pembelajaran selanjutnya..."
                     />
                   </div>
@@ -542,7 +629,7 @@ const AddHafalanModal: React.FC<AddHafalanModalProps> = ({
                 </Button>
                 <Button onClick={handleSave}>
                   <Save className="h-4 w-4 mr-2" />
-                  {editData ? 'Update' : 'Simpan'}
+                  {editData ? "Update" : "Simpan"}
                 </Button>
               </div>
             </div>

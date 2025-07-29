@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 // POST /api/settings/integrations/whatsapp - Save WhatsApp configuration
 export async function POST(request: NextRequest) {
@@ -11,25 +11,46 @@ export async function POST(request: NextRequest) {
       businessAccountId,
       webhookVerifyToken,
       appSecret,
-      apiVersion
+      apiVersion,
     } = body;
 
     // Validation
-    if (!accessToken || !phoneNumberId || !businessAccountId || !webhookVerifyToken) {
+    if (
+      !accessToken ||
+      !phoneNumberId ||
+      !businessAccountId ||
+      !webhookVerifyToken
+    ) {
       return NextResponse.json(
-        { success: false, message: 'Access Token, Phone Number ID, Business Account ID, and Webhook Verify Token are required' },
-        { status: 400 }
+        {
+          success: false,
+          message:
+            "Access Token, Phone Number ID, Business Account ID, and Webhook Verify Token are required",
+        },
+        { status: 400 },
       );
     }
 
     // Save settings to database
     const settings = [
-      { category: 'whatsapp', key: 'access_token', value: accessToken },
-      { category: 'whatsapp', key: 'phone_number_id', value: phoneNumberId },
-      { category: 'whatsapp', key: 'business_account_id', value: businessAccountId },
-      { category: 'whatsapp', key: 'webhook_verify_token', value: webhookVerifyToken },
-      { category: 'whatsapp', key: 'app_secret', value: appSecret || '' },
-      { category: 'whatsapp', key: 'api_version', value: apiVersion || 'v18.0' }
+      { category: "whatsapp", key: "access_token", value: accessToken },
+      { category: "whatsapp", key: "phone_number_id", value: phoneNumberId },
+      {
+        category: "whatsapp",
+        key: "business_account_id",
+        value: businessAccountId,
+      },
+      {
+        category: "whatsapp",
+        key: "webhook_verify_token",
+        value: webhookVerifyToken,
+      },
+      { category: "whatsapp", key: "app_secret", value: appSecret || "" },
+      {
+        category: "whatsapp",
+        key: "api_version",
+        value: apiVersion || "v18.0",
+      },
     ];
 
     // Upsert each setting
@@ -38,19 +59,19 @@ export async function POST(request: NextRequest) {
         where: {
           category_key: {
             category: setting.category,
-            key: setting.key
-          }
+            key: setting.key,
+          },
         },
         update: {
           value: setting.value,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         create: {
           category: setting.category,
           key: setting.key,
           value: setting.value,
-          description: `WhatsApp ${setting.key.replace('_', ' ')}`
-        }
+          description: `WhatsApp ${setting.key.replace("_", " ")}`,
+        },
       });
     }
 
@@ -64,17 +85,17 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'WhatsApp configuration saved successfully'
+      message: "WhatsApp configuration saved successfully",
     });
   } catch (error) {
-    console.error('Error saving WhatsApp configuration:', error);
+    console.error("Error saving WhatsApp configuration:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to save WhatsApp configuration',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to save WhatsApp configuration",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -84,40 +105,43 @@ export async function GET(request: NextRequest) {
   try {
     const settings = await prisma.systemSetting.findMany({
       where: {
-        category: 'whatsapp'
-      }
+        category: "whatsapp",
+      },
     });
 
     const config = {
-      accessToken: getSettingValue(settings, 'access_token') || '',
-      phoneNumberId: getSettingValue(settings, 'phone_number_id') || '',
-      businessAccountId: getSettingValue(settings, 'business_account_id') || '',
-      webhookVerifyToken: getSettingValue(settings, 'webhook_verify_token') || '',
-      appSecret: getSettingValue(settings, 'app_secret') || '',
-      apiVersion: getSettingValue(settings, 'api_version') || 'v18.0',
-      isConfigured: Boolean(getSettingValue(settings, 'access_token')),
-      status: Boolean(getSettingValue(settings, 'access_token')) ? 'connected' : 'disconnected'
+      accessToken: getSettingValue(settings, "access_token") || "",
+      phoneNumberId: getSettingValue(settings, "phone_number_id") || "",
+      businessAccountId: getSettingValue(settings, "business_account_id") || "",
+      webhookVerifyToken:
+        getSettingValue(settings, "webhook_verify_token") || "",
+      appSecret: getSettingValue(settings, "app_secret") || "",
+      apiVersion: getSettingValue(settings, "api_version") || "v18.0",
+      isConfigured: Boolean(getSettingValue(settings, "access_token")),
+      status: getSettingValue(settings, "access_token")
+        ? "connected"
+        : "disconnected",
     };
 
     return NextResponse.json({
       success: true,
-      config
+      config,
     });
   } catch (error) {
-    console.error('Error fetching WhatsApp configuration:', error);
+    console.error("Error fetching WhatsApp configuration:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to fetch WhatsApp configuration',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to fetch WhatsApp configuration",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 // Helper function to get setting value
 function getSettingValue(settings: any[], key: string): string | null {
-  const setting = settings.find(s => s.key === key);
+  const setting = settings.find((s) => s.key === key);
   return setting ? setting.value : null;
 }

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 interface AuthWrapperProps {
   children: React.ReactNode;
@@ -17,23 +17,25 @@ const AuthWrapper = ({ children }: AuthWrapperProps) => {
 
   useEffect(() => {
     // Check if user is authenticated and has admin role
-    if (status === 'loading') {
+    if (status === "loading") {
       return;
     }
 
-    if (status === 'unauthenticated') {
-      console.log('AuthWrapper: User is not authenticated, redirecting to login');
-      router.push('/login');
+    if (status === "unauthenticated") {
+      console.log(
+        "AuthWrapper: User is not authenticated, redirecting to login",
+      );
+      router.push("/login");
       return;
     }
 
-    if (session?.user?.role !== 'ADMIN') {
-      console.log('AuthWrapper: User is not admin, redirecting to dashboard');
-      router.push('/dashboard');
+    if (session?.user?.role !== "ADMIN") {
+      console.log("AuthWrapper: User is not admin, redirecting to dashboard");
+      router.push("/dashboard");
       return;
     }
 
-    console.log('AuthWrapper: User is authorized', session?.user);
+    console.log("AuthWrapper: User is authorized", session?.user);
     setIsAuthorized(true);
     setIsLoading(false);
   }, [session, status, router]);

@@ -1,15 +1,14 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+// Temporary implementation without database
+// import { prisma } from "@/lib/prisma";
 
 // Cart Item Types
 export const CartItemType = {
-  SPP: 'SPP',
-  DONATION: 'DONATION',
-  PRODUCT: 'PRODUCT',
-  SERVICE: 'SERVICE',
-  EVENT: 'EVENT',
-  BOOK: 'BOOK'
+  SPP: "SPP",
+  DONATION: "DONATION",
+  PRODUCT: "PRODUCT",
+  SERVICE: "SERVICE",
+  EVENT: "EVENT",
+  BOOK: "BOOK",
 } as const;
 
 interface CartItem {
@@ -34,92 +33,97 @@ interface CartSummary {
   itemCount: number;
 }
 
+// Temporary in-memory storage for cart items
+const cartStorage = new Map<string, CartItem[]>();
+
 export class CartService {
-  
   // Add item to cart
-  static async addToCart(cartId: string, item: Omit<CartItem, 'id' | 'cartId'>): Promise<CartItem> {
+  static async addToCart(
+    cartId: string,
+    item: Omit<CartItem, "id" | "cartId">,
+  ): Promise<CartItem> {
     try {
+      const cartItems = cartStorage.get(cartId) || [];
+
       // Check if item already exists in cart
-      const existingItem = await prisma.cartItem.findFirst({
-        where: {
-          cartId,
-          itemType: item.itemType,
-          itemId: item.itemId
-        }
-      });
+      const existingItemIndex = cartItems.findIndex(
+        (cartItem) =>
+          cartItem.itemType === item.itemType &&
+          cartItem.itemId === item.itemId,
+      );
 
-      if (existingItem) {
+      if (existingItemIndex !== -1) {
         // Update quantity if item exists
-        const updatedItem = await prisma.cartItem.update({
-          where: { id: existingItem.id },
-          data: {
-            quantity: existingItem.quantity + item.quantity,
-            price: item.price, // Update price in case it changed
-            updatedAt: new Date()
-          }
-        });
+        cartItems[existingItemIndex].quantity += item.quantity;
+        cartItems[existingItemIndex].price = item.price; // Update price in case it changed
 
-        return this.formatCartItem(updatedItem);
+        cartStorage.set(cartId, cartItems);
+        return cartItems[existingItemIndex];
       } else {
         // Create new cart item
-        const newItem = await prisma.cartItem.create({
-          data: {
-            cartId,
-            userId: item.userId,
-            itemType: item.itemType,
-            itemId: item.itemId,
-            name: item.name,
-            description: item.description,
-            price: item.price,
-            quantity: item.quantity,
-            metadata: item.metadata ? JSON.stringify(item.metadata) : null
-          }
-        });
+        const newItem: CartItem = {
+          id: `cart_item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          cartId,
+          userId: item.userId,
+          itemType: item.itemType,
+          itemId: item.itemId,
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          quantity: item.quantity,
+          metadata: item.metadata,
+        };
 
-        return this.formatCartItem(newItem);
+        cartItems.push(newItem);
+        cartStorage.set(cartId, cartItems);
+        return newItem;
       }
     } catch (error) {
-      console.error('Error adding item to cart:', error);
+      console.error("Error adding item to cart:", error);
       throw error;
     }
   }
 
   // Remove item from cart
-  static async removeFromCart(cartId: string, itemId: string): Promise<boolean> {
+  static async removeFromCart(
+    cartId: string,
+    itemId: string,
+  ): Promise<boolean> {
     try {
-      await prisma.cartItem.deleteMany({
-        where: {
-          cartId,
-          id: itemId
-        }
-      });
-
+      const cartItems = cartStorage.get(cartId) || [];
+      const filteredItems = cartItems.filter((item) => item.id !== itemId);
+      cartStorage.set(cartId, filteredItems);
       return true;
     } catch (error) {
-      console.error('Error removing item from cart:', error);
+      console.error("Error removing item from cart:", error);
       throw error;
     }
   }
 
   // Update item quantity
-  static async updateQuantity(cartId: string, itemId: string, quantity: number): Promise<CartItem | null> {
+  static async updateQuantity(
+    cartId: string,
+    itemId: string,
+    quantity: number,
+  ): Promise<CartItem | null> {
     try {
       if (quantity <= 0) {
         await this.removeFromCart(cartId, itemId);
         return null;
       }
 
-      const updatedItem = await prisma.cartItem.update({
-        where: { id: itemId },
-        data: {
-          quantity,
-          updatedAt: new Date()
-        }
-      });
+      const cartItems = cartStorage.get(cartId) || [];
+      const itemIndex = cartItems.findIndex((item) => item.id === itemId);
 
-      return this.formatCartItem(updatedItem);
+      if (itemIndex !== -1) {
+        cartItems[itemIndex].quantity = quantity;
+        cartStorage.set(cartId, cartItems);
+        return cartItems[itemIndex];
+      }
+
+      return null;
     } catch (error) {
-      console.error('Error updating cart item quantity:', error);
+      console.error("Error updating cart item quantity:", error);
       throw error;
     }
   }
@@ -127,14 +131,9 @@ export class CartService {
   // Get cart items
   static async getCartItems(cartId: string): Promise<CartItem[]> {
     try {
-      const items = await prisma.cartItem.findMany({
-        where: { cartId },
-        orderBy: { createdAt: 'asc' }
-      });
-
-      return items.map(item => this.formatCartItem(item));
+      return cartStorage.get(cartId) || [];
     } catch (error) {
-      console.error('Error getting cart items:', error);
+      console.error("Error getting cart items:", error);
       throw error;
     }
   }
@@ -143,8 +142,11 @@ export class CartService {
   static async getCartSummary(cartId: string): Promise<CartSummary> {
     try {
       const items = await this.getCartItems(cartId);
-      
-      const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+      const subtotal = items.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0,
+      );
       const tax = this.calculateTax(subtotal);
       const discount = await this.calculateDiscount(cartId, subtotal);
       const total = subtotal + tax - discount;
@@ -156,10 +158,10 @@ export class CartService {
         tax,
         discount,
         total,
-        itemCount
+        itemCount,
       };
     } catch (error) {
-      console.error('Error getting cart summary:', error);
+      console.error("Error getting cart summary:", error);
       throw error;
     }
   }
@@ -167,186 +169,211 @@ export class CartService {
   // Clear cart
   static async clearCart(cartId: string): Promise<boolean> {
     try {
-      await prisma.cartItem.deleteMany({
-        where: { cartId }
-      });
-
+      cartStorage.set(cartId, []);
       return true;
     } catch (error) {
-      console.error('Error clearing cart:', error);
+      console.error("Error clearing cart:", error);
       throw error;
     }
   }
 
   // Merge guest cart with user cart
-  static async mergeCart(guestCartId: string, userCartId: string): Promise<boolean> {
+  static async mergeCart(
+    guestCartId: string,
+    userCartId: string,
+  ): Promise<boolean> {
     try {
-      const guestItems = await prisma.cartItem.findMany({
-        where: { cartId: guestCartId }
-      });
+      const guestItems = cartStorage.get(guestCartId) || [];
+      const userItems = cartStorage.get(userCartId) || [];
 
       for (const guestItem of guestItems) {
         // Check if item exists in user cart
-        const existingUserItem = await prisma.cartItem.findFirst({
-          where: {
-            cartId: userCartId,
-            itemType: guestItem.itemType,
-            itemId: guestItem.itemId
-          }
-        });
+        const existingUserItemIndex = userItems.findIndex(
+          (item) =>
+            item.itemType === guestItem.itemType &&
+            item.itemId === guestItem.itemId,
+        );
 
-        if (existingUserItem) {
+        if (existingUserItemIndex !== -1) {
           // Update quantity
-          await prisma.cartItem.update({
-            where: { id: existingUserItem.id },
-            data: {
-              quantity: existingUserItem.quantity + guestItem.quantity,
-              updatedAt: new Date()
-            }
-          });
+          userItems[existingUserItemIndex].quantity += guestItem.quantity;
         } else {
           // Move item to user cart
-          await prisma.cartItem.update({
-            where: { id: guestItem.id },
-            data: {
-              cartId: userCartId,
-              updatedAt: new Date()
-            }
+          userItems.push({
+            ...guestItem,
+            cartId: userCartId,
           });
         }
       }
 
-      // Clear guest cart
-      await this.clearCart(guestCartId);
+      // Update user cart and clear guest cart
+      cartStorage.set(userCartId, userItems);
+      cartStorage.set(guestCartId, []);
 
       return true;
     } catch (error) {
-      console.error('Error merging carts:', error);
+      console.error("Error merging carts:", error);
       throw error;
     }
   }
 
-  // Add SPP payment to cart
-  static async addSPPToCart(cartId: string, studentId: string, userId?: string): Promise<CartItem> {
+  // Add SPP payment to cart (temporarily disabled - requires database)
+  static async addSPPToCart(
+    cartId: string,
+    studentId: string,
+    userId?: string,
+  ): Promise<CartItem> {
     try {
-      // Get student info
-      const student = await prisma.user.findUnique({
-        where: { id: studentId },
-        select: { id: true, name: true }
-      });
-      
-      // Get santri info for NIS
-      const santri = await prisma.santri.findFirst({
-        where: { waliId: studentId },
-        select: { nis: true }
-      });
-
-      if (!student) {
-        throw new Error('Student not found');
-      }
-
-      // Get SPP amount (you might want to get this from a settings table)
-      const sppAmount = await this.getSPPAmount(studentId);
-      const currentMonth = new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-
-      return await this.addToCart(cartId, {
+      // Temporary implementation without database
+      const mockSPPItem: CartItem = {
+        id: `spp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        cartId,
         userId,
-        itemType: CartItemType.SPP,
+        itemType: "SPP",
         itemId: studentId,
-        name: `SPP ${student.name} - ${currentMonth}`,
-        description: `Pembayaran SPP untuk ${student.name} ${santri?.nis ? `(${santri.nis})` : ''} bulan ${currentMonth}`,
-        price: sppAmount,
+        name: `SPP Payment - Student ${studentId}`,
+        description: "Monthly SPP payment",
+        price: 150000, // Default SPP amount
         quantity: 1,
         metadata: {
           studentId,
-          studentName: student.name,
-          studentNis: santri?.nis || '',
-          period: currentMonth,
-          type: 'monthly_spp'
-        }
+          month: new Date().getMonth() + 1,
+          year: new Date().getFullYear(),
+        },
+      };
+
+      const cartItems = cartStorage.get(cartId) || [];
+      cartItems.push(mockSPPItem);
+      cartStorage.set(cartId, cartItems);
+
+      return mockSPPItem;
+
+      /* Original database implementation - commented out
+      // Get student info
+      const student = await prisma.user.findUnique({
+        where: { id: studentId },
+        select: { id: true, name: true },
       });
+
+      // Get santri info for NIS
+      const santri = await prisma.santri.findFirst({
+        where: { waliId: studentId },
+        select: { nis: true },
+      });
+
+      if (!student) {
+        throw new Error("Student not found");
+      }
+      */
     } catch (error) {
-      console.error('Error adding SPP to cart:', error);
+      console.error("Error adding SPP to cart:", error);
       throw error;
     }
   }
 
   // Add donation to cart
   static async addDonationToCart(
-    cartId: string, 
-    donationType: string, 
-    amount: number, 
+    cartId: string,
+    donationType: string,
+    amount: number,
     message?: string,
-    userId?: string
+    userId?: string,
   ): Promise<CartItem> {
     try {
-      // Try to get donation category from SiteSettings
-      let donationName = 'Donasi';
-      let categoryData = null;
-      
-      try {
-        // Get categories from SiteSettings
-        const setting = await prisma.siteSetting.findUnique({
-          where: { key: 'donation_categories' }
-        });
-        
-        if (setting) {
-          const categories = JSON.parse(setting.value);
-          categoryData = categories.find((cat: any) => cat.id === donationType);
-          
-          if (categoryData) {
-            donationName = categoryData.title;
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching donation category:', err);
-      }
-      
-      // Fallback to predefined types if category not found
-      if (!categoryData) {
-        const donationTypes = {
-          general: 'Donasi Umum',
-          building: 'Donasi Pembangunan',
-          scholarship: 'Donasi Beasiswa',
-          equipment: 'Donasi Peralatan',
-          books: 'Donasi Buku'
-        };
-        
-        donationName = donationTypes[donationType as keyof typeof donationTypes] || 'Donasi';
-      }
+      // Temporary implementation without database
+      const donationCategories: Record<string, string> = {
+        pembangunan: "Donasi Pembangunan",
+        operasional: "Donasi Operasional",
+        beasiswa: "Donasi Beasiswa",
+        umum: "Donasi Umum",
+      };
 
-      return await this.addToCart(cartId, {
+      const donationName = donationCategories[donationType] || "Donasi Umum";
+
+      const mockDonationItem: CartItem = {
+        id: `donation_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        cartId,
         userId,
-        itemType: CartItemType.DONATION,
-        itemId: `donation_${donationType}_${Date.now()}`,
+        itemType: "DONATION",
+        itemId: donationType,
         name: donationName,
-        description: message || `${donationName} untuk TPQ Baitus Shuffah`,
+        description: message || `Donasi untuk ${donationName.toLowerCase()}`,
         price: amount,
         quantity: 1,
         metadata: {
           donationType,
-          categoryId: categoryData?.id || donationType,
           message,
-          isCustomAmount: true
+          isAnonymous: false,
+        },
+      };
+
+      const cartItems = cartStorage.get(cartId) || [];
+      cartItems.push(mockDonationItem);
+      cartStorage.set(cartId, cartItems);
+
+      return mockDonationItem;
+
+      /* Original database implementation - commented out
+      // Try to get donation category from DonationCategory table first
+      let donationName = "Donasi";
+      let categoryData = null;
+
+      try {
+        // First, try to get from the DonationCategory model
+        const category = await prisma.donationCategory.findFirst({
+          where: {
+            OR: [{ id: donationType }, { slug: donationType }],
+            isActive: true,
+          },
+        });
+
+        if (category) {
+          categoryData = category;
+          donationName = category.title;
+          console.log("Found donation category in DB:", category.title);
+        } else {
+          console.log("Donation category not found in DB, trying SiteSettings");
+
+          // If not found, try SiteSettings as a fallback
+          const setting = await prisma.siteSetting.findUnique({
+            where: { key: "donation_categories" },
+          });
+
+          if (setting) {
+            const categories = JSON.parse(setting.value);
+            // ... rest of database implementation
+          }
         }
-      });
+      } catch (err) {
+        console.error("Error fetching donation category:", err);
+      }
+      */
     } catch (error) {
-      console.error('Error adding donation to cart:', error);
+      console.error("Error adding donation to cart:", error);
       throw error;
     }
   }
 
-  // Get available payment items for a user
-  static async getAvailableItems(userId: string): Promise<Array<{
-    type: string;
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    category: string;
-    metadata?: Record<string, any>;
-    isCustomAmount?: boolean;
-  }>> {
+  // Helper methods
+  private static calculateTax(subtotal: number): number {
+    // No tax for now
+    return 0;
+  }
+
+  private static async calculateDiscount(
+    cartId: string,
+    subtotal: number,
+  ): Promise<number> {
+    // No discount for now
+    return 0;
+  }
+
+  // Get available payment items for a user (temporarily disabled)
+  static async getAvailableItems(userId: string): Promise<any[]> {
+    // Temporary implementation - return empty array
+    return [];
+
+    /* Original database implementation - commented out
     try {
       const items: Array<{
         type: string;
@@ -361,69 +388,99 @@ export class CartService {
 
       // Get user info
       const user = await prisma.user.findUnique({
-        where: { id: userId }
+        where: { id: userId },
       });
 
       if (!user) return items;
 
       // Get children if user is a parent
-      let students: Array<{id: string, name: string, nis?: string}> = [];
-      
-      if (user.role === 'WALI') {
+      let students: Array<{ id: string; name: string; nis?: string }> = [];
+    */
+  }
+
+  /* All database-dependent methods commented out for now
+  static async getAvailableItemsOriginal(userId: string): Promise<any[]> {
+    try {
+      if (user.role === "WALI") {
         // Get children for parents
         const santriChildren = await prisma.santri.findMany({
           where: { waliId: userId },
-          select: { 
+          select: {
             id: true,
             name: true,
-            nis: true
-          }
+            nis: true,
+          },
         });
-        
-        students = santriChildren.map(child => ({
+
+        students = santriChildren.map((child) => ({
           id: child.id,
           name: child.name,
-          nis: child.nis
+          nis: child.nis,
         }));
       } else {
         // For students, use their own info
         const santri = await prisma.santri.findFirst({
           where: { waliId: userId },
-          select: { nis: true }
+          select: { nis: true },
         });
-        
-        students = [{
-          id: user.id,
-          name: user.name,
-          nis: santri?.nis
-        }];
+
+        students = [
+          {
+            id: user.id,
+            name: user.name,
+            nis: santri?.nis,
+          },
+        ];
       }
       for (const student of students) {
         const sppAmount = await this.getSPPAmount(student.id);
-        const currentMonth = new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-        
+        const currentMonth = new Date().toLocaleDateString("id-ID", {
+          month: "long",
+          year: "numeric",
+        });
+
         items.push({
           type: CartItemType.SPP,
           id: student.id,
           name: `SPP ${student.name} - ${currentMonth}`,
           description: `Pembayaran SPP bulanan`,
           price: sppAmount,
-          category: 'SPP',
+          category: "SPP",
           metadata: {
             studentId: student.id,
             studentName: student.name,
-            period: currentMonth
-          }
+            period: currentMonth,
+          },
         });
       }
 
       // Add donation options
       const donationOptions = [
-        { type: 'general', name: 'Donasi Umum', description: 'Donasi untuk kebutuhan umum TPQ' },
-        { type: 'building', name: 'Donasi Pembangunan', description: 'Donasi untuk pembangunan fasilitas' },
-        { type: 'scholarship', name: 'Donasi Beasiswa', description: 'Donasi untuk beasiswa santri' },
-        { type: 'equipment', name: 'Donasi Peralatan', description: 'Donasi untuk peralatan belajar' },
-        { type: 'books', name: 'Donasi Buku', description: 'Donasi untuk perpustakaan' }
+        {
+          type: "general",
+          name: "Donasi Umum",
+          description: "Donasi untuk kebutuhan umum TPQ",
+        },
+        {
+          type: "building",
+          name: "Donasi Pembangunan",
+          description: "Donasi untuk pembangunan fasilitas",
+        },
+        {
+          type: "scholarship",
+          name: "Donasi Beasiswa",
+          description: "Donasi untuk beasiswa santri",
+        },
+        {
+          type: "equipment",
+          name: "Donasi Peralatan",
+          description: "Donasi untuk peralatan belajar",
+        },
+        {
+          type: "books",
+          name: "Donasi Buku",
+          description: "Donasi untuk perpustakaan",
+        },
       ];
 
       for (const donation of donationOptions) {
@@ -433,22 +490,24 @@ export class CartService {
           name: donation.name,
           description: donation.description,
           price: 0, // Custom amount
-          category: 'Donasi',
+          category: "Donasi",
           isCustomAmount: true,
           metadata: {
-            donationType: donation.type
-          }
+            donationType: donation.type,
+          },
         });
       }
 
       return items;
     } catch (error) {
-      console.error('Error getting available items:', error);
+      console.error("Error getting available items:", error);
       throw error;
     }
   }
+  */
 
-  // Helper methods
+  // Helper methods (commented out - not needed for in-memory implementation)
+  /*
   private static formatCartItem(item: any): CartItem {
     return {
       id: item.id,
@@ -460,7 +519,7 @@ export class CartService {
       description: item.description,
       price: item.price,
       quantity: item.quantity,
-      metadata: item.metadata ? JSON.parse(item.metadata) : undefined
+      metadata: item.metadata ? JSON.parse(item.metadata) : undefined,
     };
   }
 
@@ -475,11 +534,15 @@ export class CartService {
     return 0;
   }
 
-  private static async calculateDiscount(cartId: string, subtotal: number): Promise<number> {
+  private static async calculateDiscount(
+    cartId: string,
+    subtotal: number,
+  ): Promise<number> {
     // Calculate any applicable discounts
     // This could check for promo codes, student discounts, etc.
     return 0;
   }
+  */
 
   // Generate cart ID for guest users
   static generateCartId(): string {

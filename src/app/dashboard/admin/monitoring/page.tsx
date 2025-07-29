@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import SystemMonitoring from '@/components/monitoring/SystemMonitoring';
+import React from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import SystemMonitoring from "@/components/monitoring/SystemMonitoring";
 
 export default function MonitoringPage() {
   return (

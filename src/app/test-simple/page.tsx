@@ -1,6 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
+import Link from "next/link";
 
 export default function TestSimplePage() {
   return (
@@ -20,26 +21,27 @@ export default function TestSimplePage() {
             <strong>Time:</strong> {new Date().toLocaleString()}
           </p>
           <p className="text-sm text-gray-500">
-            <strong>Environment:</strong> {process.env.NODE_ENV || 'development'}
+            <strong>Environment:</strong>{" "}
+            {process.env.NODE_ENV || "development"}
           </p>
         </div>
-        
+
         <div className="mt-6">
-          <button 
-            onClick={() => alert('Button clicked!')}
+          <button
+            onClick={() => alert("Button clicked!")}
             className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors"
           >
             Test Button
           </button>
         </div>
-        
+
         <div className="mt-4">
-          <a 
+          <Link
             href="/"
             className="block text-center text-blue-500 hover:text-blue-600 underline"
           >
             ← Back to Homepage
-          </a>
+          </Link>
         </div>
       </div>
     </div>

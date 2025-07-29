@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { useAuth } from '@/components/providers/AuthProvider';
-import AddMusyrifModal from '@/components/modals/AddMusyrifModal';
-import MusyrifDetailModal from '@/components/modals/MusyrifDetailModal';
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/components/providers/AuthProvider";
+import AddMusyrifModal from "@/components/modals/AddMusyrifModal";
+import MusyrifDetailModal from "@/components/modals/MusyrifDetailModal";
 import {
   Search,
-  Filter,
   Download,
   Plus,
   Eye,
@@ -21,23 +21,159 @@ import {
   Users,
   BookOpen,
   GraduationCap,
-  Briefcase,
-  FileText,
   Phone,
   Mail,
-  Calendar
-} from 'lucide-react';
+} from "lucide-react";
+
+// Helper function to validate image URL
+const isValidImageUrl = (url: string): boolean => {
+  if (!url || typeof url !== 'string') return false;
+
+  // Check for valid HTTP/HTTPS URLs
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return true;
+  }
+
+  // Check for valid data URLs
+  if (url.startsWith('data:image/')) {
+    try {
+      // Basic validation for data URL format
+      const parts = url.split(',');
+      if (parts.length !== 2) return false;
+
+      const header = parts[0];
+      const data = parts[1];
+
+      // Check header format
+      if (!header.includes('data:image/') || !header.includes('base64')) return false;
+
+      // Check if base64 data is valid (basic check)
+      if (!data || data.length === 0) return false;
+
+      // Try to validate base64 format
+      const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
+      return base64Regex.test(data);
+    } catch (error) {
+      console.error('Invalid data URL:', error);
+      return false;
+    }
+  }
+
+  return false;
+};
+
+interface EducationItem {
+  id: string;
+  institution: string;
+  degree: string;
+  year: string;
+  description?: string | null;
+}
+
+interface ExperienceItem {
+  id: string;
+  position: string;
+  organization: string;
+  startDate: string;
+  endDate?: string | null;
+  description?: string | null;
+}
+
+interface CertificateItem {
+  id: string;
+  name: string;
+  issuer: string;
+  issueDate: string;
+  description?: string | null;
+  documentUrl?: string | null;
+}
+
+interface Musyrif {
+  id: string;
+  userId: string;
+  name: string;
+  gender: string;
+  birthDate: string | null;
+  birthPlace?: string | null;
+  address?: string | null;
+  phone: string;
+  email: string;
+  education: EducationItem[];
+  experience: ExperienceItem[];
+  certificates: CertificateItem[];
+  specialization?: string | null;
+  joinDate: string | null;
+  status: string;
+  photo?: string | null;
+  halaqahId?: string | null;
+  halaqah?: {
+    id: string;
+    name: string;
+    level: string;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Halaqah {
+  id: string;
+  name: string;
+  level: string;
+  description: string;
+  capacity: number;
+  status: string;
+  musyrifId: string;
+  musyrif: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+  } | null;
+  santriCount: number;
+  schedules: {
+    id: string;
+    day: string;
+    time: string;
+    location: string;
+  }[];
+}
+
+// API response interface that includes _count
+interface HalaqahApiResponse {
+  id: string;
+  name: string;
+  level: string;
+  description: string;
+  capacity: number;
+  status: string;
+  musyrifId: string;
+  musyrif: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+  } | null;
+  _count?: {
+    santri: number;
+  };
+  schedules: {
+    id: string;
+    day: string;
+    time: string;
+    location: string;
+  }[];
+}
 
 const MusyrifPage = () => {
   const { user, loading: authLoading } = useAuth();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [editingMusyrif, setEditingMusyrif] = useState<any>(null);
-  const [selectedMusyrif, setSelectedMusyrif] = useState<any>(null);
-  const [musyrifList, setMusyrifList] = useState<any[]>([]);
-  const [halaqahList, setHalaqahList] = useState<any[]>([]);
+  const [editingMusyrif, setEditingMusyrif] = useState<Musyrif | null>(null);
+  const [selectedMusyrif, setSelectedMusyrif] = useState<Musyrif | null>(null);
+  const [musyrifList, setMusyrifList] = useState<Musyrif[]>([]);
+  const [halaqahList, setHalaqahList] = useState<Halaqah[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -45,12 +181,12 @@ const MusyrifPage = () => {
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
-        router.push('/login');
+        router.push("/login");
         return;
       }
 
-      if (user.role !== 'ADMIN') {
-        router.push('/login');
+      if (user.role !== "ADMIN") {
+        router.push("/login");
         return;
       }
     }
@@ -58,7 +194,7 @@ const MusyrifPage = () => {
 
   // Load musyrif and halaqah data
   useEffect(() => {
-    if (user && user.role === 'ADMIN') {
+    if (user && user.role === "ADMIN") {
       loadMusyrifData();
       loadHalaqahData();
     }
@@ -67,40 +203,50 @@ const MusyrifPage = () => {
   const loadMusyrifData = async () => {
     try {
       setLoading(true);
-      
-      console.log('Fetching musyrif data from API...');
-      const response = await fetch('/api/musyrif', {
-        credentials: 'include',
+
+      console.log("Fetching musyrif data from API...");
+      const response = await fetch("/api/musyrif", {
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        cache: 'no-store' // Disable caching
+        cache: "no-store", // Disable caching
       });
-      
-      console.log('API response status:', response.status);
+
+      console.log("API response status:", response.status);
       const data = await response.json();
-      console.log('API response data:', data);
-      
+      console.log("API response data:", data);
+
       if (data.success) {
         // Process the data to ensure it has the expected format
-        const processedData = data.musyrif.map((m: any) => {
-          console.log('Processing musyrif data:', m.id, m.name);
-          
+        const processedData = data.musyrif.map((m: Musyrif) => {
+          console.log("Processing musyrif data:", m.id, m.name);
+
           // Ensure education, experience, and certificates are arrays
           const education = Array.isArray(m.education) ? m.education : [];
           const experience = Array.isArray(m.experience) ? m.experience : [];
-          const certificates = Array.isArray(m.certificates) ? m.certificates : [];
-          
-          console.log('Education:', education);
-          console.log('Experience:', experience);
-          console.log('Certificates:', certificates);
-          
+          const certificates = Array.isArray(m.certificates)
+            ? m.certificates
+            : [];
+
+          console.log("Education:", education);
+          console.log("Experience:", experience);
+          console.log("Certificates:", certificates);
+
           // Ensure dates are properly formatted
-          const birthDate = m.birthDate ? new Date(m.birthDate).toISOString() : null;
-          const joinDate = m.joinDate ? new Date(m.joinDate).toISOString() : null;
-          const createdAt = m.createdAt ? new Date(m.createdAt).toISOString() : null;
-          const updatedAt = m.updatedAt ? new Date(m.updatedAt).toISOString() : null;
-          
+          const birthDate = m.birthDate
+            ? new Date(m.birthDate).toISOString()
+            : null;
+          const joinDate = m.joinDate
+            ? new Date(m.joinDate).toISOString()
+            : null;
+          const createdAt = m.createdAt
+            ? new Date(m.createdAt).toISOString()
+            : null;
+          const updatedAt = m.updatedAt
+            ? new Date(m.updatedAt).toISOString()
+            : null;
+
           return {
             ...m,
             education,
@@ -109,22 +255,22 @@ const MusyrifPage = () => {
             birthDate,
             joinDate,
             createdAt,
-            updatedAt
+            updatedAt,
           };
         });
-        
+
         setMusyrifList(processedData);
-        console.log('Loaded musyrif data:', processedData);
+        console.log("Loaded musyrif data:", processedData);
       } else {
-        console.error('Failed to load musyrif data:', data.message);
+        console.error("Failed to load musyrif data:", data.message);
         // Fallback to mock data if API fails
-        console.log('Using mock data as fallback');
+        console.log("Using mock data as fallback");
         setMusyrifList(getMockMusyrifData());
       }
     } catch (error) {
-      console.error('Error loading musyrif data:', error);
+      console.error("Error loading musyrif data:", error);
       // Fallback to mock data if API fails
-      console.log('Using mock data as fallback due to error');
+      console.log("Using mock data as fallback due to error");
       setMusyrifList(getMockMusyrifData());
     } finally {
       setLoading(false);
@@ -133,22 +279,22 @@ const MusyrifPage = () => {
 
   const loadHalaqahData = async () => {
     try {
-      console.log('Fetching halaqah data from API...');
-      const response = await fetch('/api/halaqah', {
-        credentials: 'include',
+      console.log("Fetching halaqah data from API...");
+      const response = await fetch("/api/halaqah", {
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        cache: 'no-store' // Disable caching
+        cache: "no-store", // Disable caching
       });
-      
-      console.log('API response status:', response.status);
+
+      console.log("API response status:", response.status);
       const data = await response.json();
-      console.log('API response data:', data);
-      
+      console.log("API response data:", data);
+
       if (data.success) {
         // Process the data to ensure it has the expected format
-        const processedData = data.halaqah.map((h: any) => ({
+        const processedData = data.halaqah.map((h: HalaqahApiResponse) => ({
           id: h.id,
           name: h.name,
           level: h.level,
@@ -156,36 +302,140 @@ const MusyrifPage = () => {
           capacity: h.capacity,
           status: h.status,
           musyrifId: h.musyrifId,
-          musyrif: h.musyrif ? {
-            id: h.musyrif.id,
-            name: h.musyrif.name,
-            email: h.musyrif.email,
-            phone: h.musyrif.phone
-          } : null,
+          musyrif: h.musyrif
+            ? {
+                id: h.musyrif.id,
+                name: h.musyrif.name,
+                email: h.musyrif.email,
+                phone: h.musyrif.phone,
+              }
+            : null,
           santriCount: h._count?.santri || 0,
-          schedules: h.schedules || []
+          schedules: h.schedules || [],
         }));
-        
+
         setHalaqahList(processedData);
-        console.log('Loaded halaqah data:', processedData);
+        console.log("Loaded halaqah data:", processedData);
       } else {
-        console.error('Failed to load halaqah data:', data.message);
+        console.error("Failed to load halaqah data:", data.message);
         // Fallback to mock data if API fails
-        console.log('Using mock data as fallback');
+        console.log("Using mock data as fallback");
         setHalaqahList([
-          { id: 'cmbvv5cd200146c3r9cwtdy30', name: 'Halaqah Al-Fatihah', level: 'Pemula', description: 'Halaqah untuk santri pemula yang baru belajar membaca Al-Quran', capacity: 15, status: 'ACTIVE', musyrifId: 'cmbvv5c5e00046c3r824vi1bl', musyrif: { id: 'cmbvv5c5e00046c3r824vi1bl', name: 'Ustadz Abdullah', email: 'ustadz.abdullah@rumahtahfidz.com', phone: '081234567891' }, santriCount: 1, schedules: [] },
-          { id: 'cmbvv5cd200136c3rl0j1nvbb', name: 'Halaqah Al-Baqarah', level: 'Menengah', description: 'Halaqah untuk santri menengah yang sudah lancar membaca Al-Quran', capacity: 20, status: 'ACTIVE', musyrifId: 'cmbvv5c5p00066c3rfbrxeqrn', musyrif: { id: 'cmbvv5c5p00066c3rfbrxeqrn', name: 'Ustadz Ahmad', email: 'ustadz.ahmad@rumahtahfidz.com', phone: '081234567892' }, santriCount: 1, schedules: [] },
-          { id: 'cmbvv5cd200126c3r1x0pu4dr', name: 'Halaqah Tahfidz 5 Juz', level: 'Tahfidz 5 Juz', description: 'Halaqah khusus untuk santri yang ingin menghafal 5 juz pertama', capacity: 12, status: 'ACTIVE', musyrifId: 'cmbvv5cct000y6c3r52d2ye2s', musyrif: { id: 'cmbvv5cct000y6c3r52d2ye2s', name: 'Ustadz Rahman', email: 'ustadz.rahman@rumahtahfidz.com', phone: '081234567893' }, santriCount: 1, schedules: [] }
+          {
+            id: "cmbvv5cd200146c3r9cwtdy30",
+            name: "Halaqah Al-Fatihah",
+            level: "Pemula",
+            description:
+              "Halaqah untuk santri pemula yang baru belajar membaca Al-Quran",
+            capacity: 15,
+            status: "ACTIVE",
+            musyrifId: "cmbvv5c5e00046c3r824vi1bl",
+            musyrif: {
+              id: "cmbvv5c5e00046c3r824vi1bl",
+              name: "Ustadz Abdullah",
+              email: "ustadz.abdullah@rumahtahfidz.com",
+              phone: "081234567891",
+            },
+            santriCount: 1,
+            schedules: [],
+          },
+          {
+            id: "cmbvv5cd200136c3rl0j1nvbb",
+            name: "Halaqah Al-Baqarah",
+            level: "Menengah",
+            description:
+              "Halaqah untuk santri menengah yang sudah lancar membaca Al-Quran",
+            capacity: 20,
+            status: "ACTIVE",
+            musyrifId: "cmbvv5c5p00066c3rfbrxeqrn",
+            musyrif: {
+              id: "cmbvv5c5p00066c3rfbrxeqrn",
+              name: "Ustadz Ahmad",
+              email: "ustadz.ahmad@rumahtahfidz.com",
+              phone: "081234567892",
+            },
+            santriCount: 1,
+            schedules: [],
+          },
+          {
+            id: "cmbvv5cd200126c3r1x0pu4dr",
+            name: "Halaqah Tahfidz 5 Juz",
+            level: "Tahfidz 5 Juz",
+            description:
+              "Halaqah khusus untuk santri yang ingin menghafal 5 juz pertama",
+            capacity: 12,
+            status: "ACTIVE",
+            musyrifId: "cmbvv5cct000y6c3r52d2ye2s",
+            musyrif: {
+              id: "cmbvv5cct000y6c3r52d2ye2s",
+              name: "Ustadz Rahman",
+              email: "ustadz.rahman@rumahtahfidz.com",
+              phone: "081234567893",
+            },
+            santriCount: 1,
+            schedules: [],
+          },
         ]);
       }
     } catch (error) {
-      console.error('Error loading halaqah data:', error);
+      console.error("Error loading halaqah data:", error);
       // Fallback to mock data if API fails
-      console.log('Using mock data as fallback due to error');
+      console.log("Using mock data as fallback due to error");
       setHalaqahList([
-        { id: 'cmbvv5cd200146c3r9cwtdy30', name: 'Halaqah Al-Fatihah', level: 'Pemula', description: 'Halaqah untuk santri pemula yang baru belajar membaca Al-Quran', capacity: 15, status: 'ACTIVE', musyrifId: 'cmbvv5c5e00046c3r824vi1bl', musyrif: { id: 'cmbvv5c5e00046c3r824vi1bl', name: 'Ustadz Abdullah', email: 'ustadz.abdullah@rumahtahfidz.com', phone: '081234567891' }, santriCount: 1, schedules: [] },
-        { id: 'cmbvv5cd200136c3rl0j1nvbb', name: 'Halaqah Al-Baqarah', level: 'Menengah', description: 'Halaqah untuk santri menengah yang sudah lancar membaca Al-Quran', capacity: 20, status: 'ACTIVE', musyrifId: 'cmbvv5c5p00066c3rfbrxeqrn', musyrif: { id: 'cmbvv5c5p00066c3rfbrxeqrn', name: 'Ustadz Ahmad', email: 'ustadz.ahmad@rumahtahfidz.com', phone: '081234567892' }, santriCount: 1, schedules: [] },
-        { id: 'cmbvv5cd200126c3r1x0pu4dr', name: 'Halaqah Tahfidz 5 Juz', level: 'Tahfidz 5 Juz', description: 'Halaqah khusus untuk santri yang ingin menghafal 5 juz pertama', capacity: 12, status: 'ACTIVE', musyrifId: 'cmbvv5cct000y6c3r52d2ye2s', musyrif: { id: 'cmbvv5cct000y6c3r52d2ye2s', name: 'Ustadz Rahman', email: 'ustadz.rahman@rumahtahfidz.com', phone: '081234567893' }, santriCount: 1, schedules: [] }
+        {
+          id: "cmbvv5cd200146c3r9cwtdy30",
+          name: "Halaqah Al-Fatihah",
+          level: "Pemula",
+          description:
+            "Halaqah untuk santri pemula yang baru belajar membaca Al-Quran",
+          capacity: 15,
+          status: "ACTIVE",
+          musyrifId: "cmbvv5c5e00046c3r824vi1bl",
+          musyrif: {
+            id: "cmbvv5c5e00046c3r824vi1bl",
+            name: "Ustadz Abdullah",
+            email: "ustadz.abdullah@rumahtahfidz.com",
+            phone: "081234567891",
+          },
+          santriCount: 1,
+          schedules: [],
+        },
+        {
+          id: "cmbvv5cd200136c3rl0j1nvbb",
+          name: "Halaqah Al-Baqarah",
+          level: "Menengah",
+          description:
+            "Halaqah untuk santri menengah yang sudah lancar membaca Al-Quran",
+          capacity: 20,
+          status: "ACTIVE",
+          musyrifId: "cmbvv5c5p00066c3rfbrxeqrn",
+          musyrif: {
+            id: "cmbvv5c5p00066c3rfbrxeqrn",
+            name: "Ustadz Ahmad",
+            email: "ustadz.ahmad@rumahtahfidz.com",
+            phone: "081234567892",
+          },
+          santriCount: 1,
+          schedules: [],
+        },
+        {
+          id: "cmbvv5cd200126c3r1x0pu4dr",
+          name: "Halaqah Tahfidz 5 Juz",
+          level: "Tahfidz 5 Juz",
+          description:
+            "Halaqah khusus untuk santri yang ingin menghafal 5 juz pertama",
+          capacity: 12,
+          status: "ACTIVE",
+          musyrifId: "cmbvv5cct000y6c3r52d2ye2s",
+          musyrif: {
+            id: "cmbvv5cct000y6c3r52d2ye2s",
+            name: "Ustadz Rahman",
+            email: "ustadz.rahman@rumahtahfidz.com",
+            phone: "081234567893",
+          },
+          santriCount: 1,
+          schedules: [],
+        },
       ]);
     }
   };
@@ -193,195 +443,196 @@ const MusyrifPage = () => {
   const getMockMusyrifData = () => {
     return [
       {
-        id: '1',
-        userId: 'user1',
-        name: 'Ustadz Abdullah',
-        gender: 'MALE',
-        birthDate: '1985-05-15',
-        birthPlace: 'Jakarta',
-        address: 'Jl. Masjid No. 123, Jakarta Selatan',
-        phone: '081234567891',
-        email: 'ustadz.abdullah@rumahtahfidz.com',
+        id: "1",
+        userId: "user1",
+        name: "Ustadz Abdullah",
+        gender: "MALE",
+        birthDate: "1985-05-15",
+        birthPlace: "Jakarta",
+        address: "Jl. Masjid No. 123, Jakarta Selatan",
+        phone: "081234567891",
+        email: "ustadz.abdullah@rumahtahfidz.com",
         education: [
           {
-            id: 'edu1',
-            institution: 'Universitas Al-Azhar Indonesia',
-            degree: 'S1 Pendidikan Agama Islam',
-            year: '2007',
-            description: 'Lulus dengan predikat cumlaude'
+            id: "edu1",
+            institution: "Universitas Al-Azhar Indonesia",
+            degree: "S1 Pendidikan Agama Islam",
+            year: "2007",
+            description: "Lulus dengan predikat cumlaude",
           },
           {
-            id: 'edu2',
-            institution: 'Pondok Pesantren Modern Darussalam Gontor',
-            degree: 'Pendidikan Pesantren',
-            year: '2003',
-            description: 'Fokus pada tahfidz Al-Quran'
-          }
+            id: "edu2",
+            institution: "Pondok Pesantren Modern Darussalam Gontor",
+            degree: "Pendidikan Pesantren",
+            year: "2003",
+            description: "Fokus pada tahfidz Al-Quran",
+          },
         ],
         experience: [
           {
-            id: 'exp1',
-            position: 'Guru Tahfidz',
-            organization: 'Pesantren Tahfidz Al-Hikmah',
-            startDate: '2008-01-01',
-            endDate: '2015-12-31',
-            description: 'Mengajar tahfidz untuk santri tingkat menengah'
+            id: "exp1",
+            position: "Guru Tahfidz",
+            organization: "Pesantren Tahfidz Al-Hikmah",
+            startDate: "2008-01-01",
+            endDate: "2015-12-31",
+            description: "Mengajar tahfidz untuk santri tingkat menengah",
           },
           {
-            id: 'exp2',
-            position: 'Imam Masjid',
-            organization: 'Masjid Jami Al-Hidayah',
-            startDate: '2016-01-01',
+            id: "exp2",
+            position: "Imam Masjid",
+            organization: "Masjid Jami Al-Hidayah",
+            startDate: "2016-01-01",
             endDate: null,
-            description: 'Menjadi imam dan mengajar kajian rutin'
-          }
+            description: "Menjadi imam dan mengajar kajian rutin",
+          },
         ],
         certificates: [
           {
-            id: 'cert1',
-            name: 'Sertifikat Tahfidz 30 Juz',
-            issuer: 'Lembaga Tahfidz Indonesia',
-            issueDate: '2005-06-10',
-            description: 'Sertifikasi hafalan Al-Quran 30 juz',
-            documentUrl: '/documents/cert1.pdf'
+            id: "cert1",
+            name: "Sertifikat Tahfidz 30 Juz",
+            issuer: "Lembaga Tahfidz Indonesia",
+            issueDate: "2005-06-10",
+            description: "Sertifikasi hafalan Al-Quran 30 juz",
+            documentUrl: "/documents/cert1.pdf",
           },
           {
-            id: 'cert2',
-            name: 'Sertifikat Pendidik Profesional',
-            issuer: 'Kementerian Pendidikan',
-            issueDate: '2010-08-15',
-            description: 'Sertifikasi kompetensi pendidik',
-            documentUrl: '/documents/cert2.pdf'
-          }
+            id: "cert2",
+            name: "Sertifikat Pendidik Profesional",
+            issuer: "Kementerian Pendidikan",
+            issueDate: "2010-08-15",
+            description: "Sertifikasi kompetensi pendidik",
+            documentUrl: "/documents/cert2.pdf",
+          },
         ],
-        specialization: 'Tahfidz Al-Quran',
-        joinDate: '2020-01-15',
-        status: 'ACTIVE',
-        photo: '/images/musyrif/abdullah.jpg',
-        halaqahId: '1',
+        specialization: "Tahfidz Al-Quran",
+        joinDate: "2020-01-15",
+        status: "ACTIVE",
+        photo: "/images/musyrif/abdullah.jpg",
+        halaqahId: "1",
         halaqah: {
-          id: '1',
-          name: 'Halaqah Al-Fatihah',
-          level: 'Pemula'
+          id: "1",
+          name: "Halaqah Al-Fatihah",
+          level: "Pemula",
         },
-        createdAt: '2020-01-15T08:00:00Z',
-        updatedAt: '2023-05-20T10:30:00Z'
+        createdAt: "2020-01-15T08:00:00Z",
+        updatedAt: "2023-05-20T10:30:00Z",
       },
       {
-        id: '2',
-        userId: 'user2',
-        name: 'Ustadz Ahmad',
-        gender: 'MALE',
-        birthDate: '1987-06-18',
-        birthPlace: 'Surabaya',
-        address: 'Jl. Pesantren No. 45, Surabaya',
-        phone: '081234567892',
-        email: 'ustadz.ahmad@rumahtahfidz.com',
+        id: "2",
+        userId: "user2",
+        name: "Ustadz Ahmad",
+        gender: "MALE",
+        birthDate: "1987-06-18",
+        birthPlace: "Surabaya",
+        address: "Jl. Pesantren No. 45, Surabaya",
+        phone: "081234567892",
+        email: "ustadz.ahmad@rumahtahfidz.com",
         education: [
           {
-            id: 'edu3',
-            institution: 'Universitas Islam Negeri Sunan Ampel',
-            degree: 'S1 Ilmu Al-Quran dan Tafsir',
-            year: '2010',
-            description: 'Fokus pada metodologi pengajaran Al-Quran'
-          }
+            id: "edu3",
+            institution: "Universitas Islam Negeri Sunan Ampel",
+            degree: "S1 Ilmu Al-Quran dan Tafsir",
+            year: "2010",
+            description: "Fokus pada metodologi pengajaran Al-Quran",
+          },
         ],
         experience: [
           {
-            id: 'exp3',
-            position: 'Guru Tahsin',
-            organization: 'TPQ Nurul Iman',
-            startDate: '2010-08-01',
-            endDate: '2018-12-31',
-            description: 'Mengajar tahsin untuk anak-anak dan remaja'
-          }
+            id: "exp3",
+            position: "Guru Tahsin",
+            organization: "TPQ Nurul Iman",
+            startDate: "2010-08-01",
+            endDate: "2018-12-31",
+            description: "Mengajar tahsin untuk anak-anak dan remaja",
+          },
         ],
         certificates: [
           {
-            id: 'cert3',
-            name: 'Sertifikat Metode Tilawati',
-            issuer: 'Pesantren Tilawati Pusat',
-            issueDate: '2011-03-22',
-            description: 'Sertifikasi pengajaran metode tilawati',
-            documentUrl: '/documents/cert3.pdf'
-          }
+            id: "cert3",
+            name: "Sertifikat Metode Tilawati",
+            issuer: "Pesantren Tilawati Pusat",
+            issueDate: "2011-03-22",
+            description: "Sertifikasi pengajaran metode tilawati",
+            documentUrl: "/documents/cert3.pdf",
+          },
         ],
-        specialization: 'Tahsin dan Tajwid',
-        joinDate: '2020-02-10',
-        status: 'ACTIVE',
-        photo: '/images/musyrif/ahmad.jpg',
-        halaqahId: '2',
+        specialization: "Tahsin dan Tajwid",
+        joinDate: "2020-02-10",
+        status: "ACTIVE",
+        photo: "/images/musyrif/ahmad.jpg",
+        halaqahId: "2",
         halaqah: {
-          id: '2',
-          name: 'Halaqah Al-Baqarah',
-          level: 'Menengah'
+          id: "2",
+          name: "Halaqah Al-Baqarah",
+          level: "Menengah",
         },
-        createdAt: '2020-02-10T08:00:00Z',
-        updatedAt: '2023-06-15T09:45:00Z'
+        createdAt: "2020-02-10T08:00:00Z",
+        updatedAt: "2023-06-15T09:45:00Z",
       },
       {
-        id: '3',
-        userId: 'user3',
-        name: 'Ustadz Rahman',
-        gender: 'MALE',
-        birthDate: '1988-11-05',
-        birthPlace: 'Surabaya',
-        address: 'Jl. Kyai No. 78, Surabaya',
-        phone: '081234567893',
-        email: 'ustadz.rahman@rumahtahfidz.com',
+        id: "3",
+        userId: "user3",
+        name: "Ustadz Rahman",
+        gender: "MALE",
+        birthDate: "1988-11-05",
+        birthPlace: "Surabaya",
+        address: "Jl. Kyai No. 78, Surabaya",
+        phone: "081234567893",
+        email: "ustadz.rahman@rumahtahfidz.com",
         education: [
           {
-            id: 'edu4',
-            institution: 'Universitas Islam Negeri Sunan Ampel',
-            degree: 'S2 Studi Islam',
-            year: '2015',
-            description: 'Tesis tentang metodologi pengajaran Al-Quran kontemporer'
+            id: "edu4",
+            institution: "Universitas Islam Negeri Sunan Ampel",
+            degree: "S2 Studi Islam",
+            year: "2015",
+            description:
+              "Tesis tentang metodologi pengajaran Al-Quran kontemporer",
           },
           {
-            id: 'edu5',
-            institution: 'Pondok Pesantren Tebuireng',
-            degree: 'Pendidikan Pesantren',
-            year: '2006',
-            description: 'Fokus pada ilmu hadits'
-          }
+            id: "edu5",
+            institution: "Pondok Pesantren Tebuireng",
+            degree: "Pendidikan Pesantren",
+            year: "2006",
+            description: "Fokus pada ilmu hadits",
+          },
         ],
         experience: [
           {
-            id: 'exp4',
-            position: 'Dosen',
-            organization: 'STIQ Islamic Centre',
-            startDate: '2015-09-01',
-            endDate: '2020-08-31',
-            description: 'Mengajar mata kuliah Ulumul Quran'
-          }
+            id: "exp4",
+            position: "Dosen",
+            organization: "STIQ Islamic Centre",
+            startDate: "2015-09-01",
+            endDate: "2020-08-31",
+            description: "Mengajar mata kuliah Ulumul Quran",
+          },
         ],
         certificates: [
           {
-            id: 'cert4',
-            name: 'Sertifikat Sanad Qiraah Ashim',
-            issuer: 'Lembaga Qiraah Indonesia',
-            issueDate: '2010-11-30',
-            description: 'Sertifikasi sanad qiraah riwayat Hafs',
-            documentUrl: '/documents/cert4.pdf'
-          }
+            id: "cert4",
+            name: "Sertifikat Sanad Qiraah Ashim",
+            issuer: "Lembaga Qiraah Indonesia",
+            issueDate: "2010-11-30",
+            description: "Sertifikasi sanad qiraah riwayat Hafs",
+            documentUrl: "/documents/cert4.pdf",
+          },
         ],
-        specialization: 'Qiraah dan Tafsir',
-        joinDate: '2021-01-05',
-        status: 'ACTIVE',
-        photo: '/images/musyrif/rahman.jpg',
-        halaqahId: '3',
+        specialization: "Qiraah dan Tafsir",
+        joinDate: "2021-01-05",
+        status: "ACTIVE",
+        photo: "/images/musyrif/rahman.jpg",
+        halaqahId: "3",
         halaqah: {
-          id: '3',
-          name: 'Halaqah Tahfidz 5 Juz',
-          level: 'Tahfidz 5 Juz'
+          id: "3",
+          name: "Halaqah Tahfidz 5 Juz",
+          level: "Tahfidz 5 Juz",
         },
-        createdAt: '2021-01-05T08:00:00Z',
-        updatedAt: '2023-07-10T11:20:00Z'
-      }
+        createdAt: "2021-01-05T08:00:00Z",
+        updatedAt: "2023-07-10T11:20:00Z",
+      },
     ];
   };
 
-  const handleCreateMusyrif = async (musyrifData: any) => {
+  const handleCreateMusyrif = async (musyrifData: Musyrif) => {
     try {
       // Prepare data for API
       const apiData = {
@@ -389,69 +640,87 @@ const MusyrifPage = () => {
         // Convert arrays to JSON strings for API
         education: musyrifData.education || [],
         experience: musyrifData.experience || [],
-        certificates: musyrifData.certificates || []
+        certificates: musyrifData.certificates || [],
       };
-      
-      const response = await fetch('/api/musyrif', {
-        method: 'POST',
+
+      const response = await fetch("/api/musyrif", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(apiData),
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         // Process the returned data to ensure it has the expected format
         const processedMusyrif = {
           ...data.musyrif,
-          education: Array.isArray(data.musyrif.education) ? data.musyrif.education : [],
-          experience: Array.isArray(data.musyrif.experience) ? data.musyrif.experience : [],
-          certificates: Array.isArray(data.musyrif.certificates) ? data.musyrif.certificates : [],
+          education: Array.isArray(data.musyrif.education)
+            ? data.musyrif.education
+            : [],
+          experience: Array.isArray(data.musyrif.experience)
+            ? data.musyrif.experience
+            : [],
+          certificates: Array.isArray(data.musyrif.certificates)
+            ? data.musyrif.certificates
+            : [],
           // Ensure dates are properly formatted
-          birthDate: data.musyrif.birthDate ? new Date(data.musyrif.birthDate).toISOString() : null,
-          joinDate: data.musyrif.joinDate ? new Date(data.musyrif.joinDate).toISOString() : null,
-          createdAt: data.musyrif.createdAt ? new Date(data.musyrif.createdAt).toISOString() : null,
-          updatedAt: data.musyrif.updatedAt ? new Date(data.musyrif.updatedAt).toISOString() : null
+          birthDate: data.musyrif.birthDate
+            ? new Date(data.musyrif.birthDate).toISOString()
+            : null,
+          joinDate: data.musyrif.joinDate
+            ? new Date(data.musyrif.joinDate).toISOString()
+            : null,
+          createdAt: data.musyrif.createdAt
+            ? new Date(data.musyrif.createdAt).toISOString()
+            : null,
+          updatedAt: data.musyrif.updatedAt
+            ? new Date(data.musyrif.updatedAt).toISOString()
+            : null,
         };
-        
-        setMusyrifList(prev => [...prev, processedMusyrif]);
-        alert('Musyrif berhasil ditambahkan!');
+
+        setMusyrifList((prev) => [...prev, processedMusyrif]);
+        alert("Musyrif berhasil ditambahkan!");
       } else {
         // If API fails, add to local state for demo
-        const selectedHalaqah = halaqahList.find(h => h.id === musyrifData.halaqahId);
+        const selectedHalaqah = halaqahList.find(
+          (h) => h.id === musyrifData.halaqahId,
+        );
         const newMusyrif = {
           ...musyrifData,
           id: `musyrif_${Date.now()}`,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          halaqah: selectedHalaqah || null
+          halaqah: selectedHalaqah || null,
         };
-        setMusyrifList(prev => [...prev, newMusyrif]);
-        alert('Musyrif berhasil ditambahkan! (Mode demo)');
+        setMusyrifList((prev) => [...prev, newMusyrif]);
+        alert("Musyrif berhasil ditambahkan! (Mode demo)");
       }
-      
+
       setShowAddModal(false);
     } catch (error) {
-      console.error('Error creating musyrif:', error);
-      
+      console.error("Error creating musyrif:", error);
+
       // Fallback for demo
-      const selectedHalaqah = halaqahList.find(h => h.id === musyrifData.halaqahId);
+      const selectedHalaqah = halaqahList.find(
+        (h) => h.id === musyrifData.halaqahId,
+      );
       const newMusyrif = {
         ...musyrifData,
         id: `musyrif_${Date.now()}`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        halaqah: selectedHalaqah || null
+        halaqah: selectedHalaqah || null,
       };
-      setMusyrifList(prev => [...prev, newMusyrif]);
-      alert('Musyrif berhasil ditambahkan! (Mode demo)');
+      setMusyrifList((prev) => [...prev, newMusyrif]);
+      alert("Musyrif berhasil ditambahkan! (Mode demo)");
       setShowAddModal(false);
     }
   };
 
-  const handleUpdateMusyrif = async (musyrifData: any) => {
+  const handleUpdateMusyrif = async (musyrifData: Musyrif) => {
     try {
       // Prepare data for API
       const apiData = {
@@ -459,116 +728,148 @@ const MusyrifPage = () => {
         // Convert arrays to JSON strings for API
         education: musyrifData.education || [],
         experience: musyrifData.experience || [],
-        certificates: musyrifData.certificates || []
+        certificates: musyrifData.certificates || [],
       };
-      
+
       const response = await fetch(`/api/musyrif/${musyrifData.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(apiData),
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         // Process the returned data to ensure it has the expected format
         const processedMusyrif = {
           ...data.musyrif,
-          education: Array.isArray(data.musyrif.education) ? data.musyrif.education : [],
-          experience: Array.isArray(data.musyrif.experience) ? data.musyrif.experience : [],
-          certificates: Array.isArray(data.musyrif.certificates) ? data.musyrif.certificates : [],
+          education: Array.isArray(data.musyrif.education)
+            ? data.musyrif.education
+            : [],
+          experience: Array.isArray(data.musyrif.experience)
+            ? data.musyrif.experience
+            : [],
+          certificates: Array.isArray(data.musyrif.certificates)
+            ? data.musyrif.certificates
+            : [],
           // Ensure dates are properly formatted
-          birthDate: data.musyrif.birthDate ? new Date(data.musyrif.birthDate).toISOString() : null,
-          joinDate: data.musyrif.joinDate ? new Date(data.musyrif.joinDate).toISOString() : null,
-          createdAt: data.musyrif.createdAt ? new Date(data.musyrif.createdAt).toISOString() : null,
-          updatedAt: data.musyrif.updatedAt ? new Date(data.musyrif.updatedAt).toISOString() : null
+          birthDate: data.musyrif.birthDate
+            ? new Date(data.musyrif.birthDate).toISOString()
+            : null,
+          joinDate: data.musyrif.joinDate
+            ? new Date(data.musyrif.joinDate).toISOString()
+            : null,
+          createdAt: data.musyrif.createdAt
+            ? new Date(data.musyrif.createdAt).toISOString()
+            : null,
+          updatedAt: data.musyrif.updatedAt
+            ? new Date(data.musyrif.updatedAt).toISOString()
+            : null,
         };
-        
-        setMusyrifList(prev => prev.map(m => m.id === musyrifData.id ? processedMusyrif : m));
-        alert('Data musyrif berhasil diperbarui!');
+
+        setMusyrifList((prev) =>
+          prev.map((m) => (m.id === musyrifData.id ? processedMusyrif : m)),
+        );
+        alert("Data musyrif berhasil diperbarui!");
       } else {
         // If API fails, update local state for demo
-        const selectedHalaqah = halaqahList.find(h => h.id === musyrifData.halaqahId);
-        setMusyrifList(prev => prev.map(m => 
-          m.id === editingMusyrif?.id ? { 
-            ...musyrifData, 
-            updatedAt: new Date().toISOString(),
-            halaqah: selectedHalaqah || null
-          } : m
-        ));
-        alert('Data musyrif berhasil diperbarui! (Mode demo)');
+        const selectedHalaqah = halaqahList.find(
+          (h) => h.id === musyrifData.halaqahId,
+        );
+        setMusyrifList((prev) =>
+          prev.map((m) =>
+            m.id === editingMusyrif?.id
+              ? {
+                  ...musyrifData,
+                  updatedAt: new Date().toISOString(),
+                  halaqah: selectedHalaqah || null,
+                }
+              : m,
+          ),
+        );
+        alert("Data musyrif berhasil diperbarui! (Mode demo)");
       }
-      
+
       setEditingMusyrif(null);
       setShowAddModal(false);
     } catch (error) {
-      console.error('Error updating musyrif:', error);
-      
+      console.error("Error updating musyrif:", error);
+
       // Fallback for demo
-      const selectedHalaqah = halaqahList.find(h => h.id === musyrifData.halaqahId);
-      setMusyrifList(prev => prev.map(m => 
-        m.id === editingMusyrif?.id ? { 
-          ...musyrifData, 
-          updatedAt: new Date().toISOString(),
-          halaqah: selectedHalaqah || null
-        } : m
-      ));
-      alert('Data musyrif berhasil diperbarui! (Mode demo)');
+      const selectedHalaqah = halaqahList.find(
+        (h) => h.id === musyrifData.halaqahId,
+      );
+      setMusyrifList((prev) =>
+        prev.map((m) =>
+          m.id === editingMusyrif?.id
+            ? {
+                ...musyrifData,
+                updatedAt: new Date().toISOString(),
+                halaqah: selectedHalaqah || null,
+              }
+            : m,
+        ),
+      );
+      alert("Data musyrif berhasil diperbarui! (Mode demo)");
       setEditingMusyrif(null);
       setShowAddModal(false);
     }
   };
 
   const handleDeleteMusyrif = async (musyrifId: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus data musyrif ini?')) return;
+    if (!confirm("Apakah Anda yakin ingin menghapus data musyrif ini?")) return;
 
     try {
       const response = await fetch(`/api/musyrif/${musyrifId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
-        setMusyrifList(prev => prev.filter(m => m.id !== musyrifId));
-        alert('Musyrif berhasil dihapus!');
+        setMusyrifList((prev) => prev.filter((m) => m.id !== musyrifId));
+        alert("Musyrif berhasil dihapus!");
       } else {
         // If API fails, remove from local state for demo
-        setMusyrifList(prev => prev.filter(m => m.id !== musyrifId));
-        alert('Musyrif berhasil dihapus! (Mode demo)');
+        setMusyrifList((prev) => prev.filter((m) => m.id !== musyrifId));
+        alert("Musyrif berhasil dihapus! (Mode demo)");
       }
-      
+
       setShowDetailModal(false);
     } catch (error) {
-      console.error('Error deleting musyrif:', error);
-      
+      console.error("Error deleting musyrif:", error);
+
       // Fallback for demo
-      setMusyrifList(prev => prev.filter(m => m.id !== musyrifId));
-      alert('Musyrif berhasil dihapus! (Mode demo)');
+      setMusyrifList((prev) => prev.filter((m) => m.id !== musyrifId));
+      alert("Musyrif berhasil dihapus! (Mode demo)");
       setShowDetailModal(false);
     }
   };
 
-  const handleViewDetail = (musyrif: any) => {
+  const handleViewDetail = (musyrif: Musyrif) => {
     setSelectedMusyrif(musyrif);
     setShowDetailModal(true);
   };
 
-  const handleEditMusyrif = (musyrif: any) => {
+  const handleEditMusyrif = (musyrif: Musyrif) => {
     setEditingMusyrif(musyrif);
     setShowDetailModal(false);
     setShowAddModal(true);
   };
 
   // Filter musyrif data
-  const filteredMusyrif = musyrifList.filter(musyrif => {
-    const matchesSearch = musyrif.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         musyrif.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         musyrif.specialization?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         musyrif.halaqah?.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'ALL' || musyrif.status === statusFilter;
+  const filteredMusyrif = musyrifList.filter((musyrif) => {
+    const matchesSearch =
+      musyrif.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      musyrif.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      musyrif.specialization
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      musyrif.halaqah?.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === "ALL" || musyrif.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -586,7 +887,7 @@ const MusyrifPage = () => {
   }
 
   // If user is not admin, don't render anything (redirect will happen)
-  if (user.role !== 'ADMIN') {
+  if (user.role !== "ADMIN") {
     return null;
   }
 
@@ -616,10 +917,12 @@ const MusyrifPage = () => {
               Kelola data musyrif dan pembimbing halaqah
             </p>
           </div>
-          <Button onClick={() => {
-            setEditingMusyrif(null);
-            setShowAddModal(true);
-          }}>
+          <Button
+            onClick={() => {
+              setEditingMusyrif(null);
+              setShowAddModal(true);
+            }}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Tambah Musyrif
           </Button>
@@ -672,12 +975,18 @@ const MusyrifPage = () => {
             {filteredMusyrif.length === 0 ? (
               <div className="text-center py-8">
                 <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Belum ada data musyrif</h3>
-                <p className="text-gray-600 mb-6">Tambahkan musyrif baru untuk mulai mengelola data musyrif.</p>
-                <Button onClick={() => {
-                  setEditingMusyrif(null);
-                  setShowAddModal(true);
-                }}>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Belum ada data musyrif
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Tambahkan musyrif baru untuk mulai mengelola data musyrif.
+                </p>
+                <Button
+                  onClick={() => {
+                    setEditingMusyrif(null);
+                    setShowAddModal(true);
+                  }}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Tambah Musyrif
                 </Button>
@@ -700,29 +1009,43 @@ const MusyrifPage = () => {
                       <tr key={musyrif.id} className="hover:bg-gray-50">
                         <td className="py-4 px-4">
                           <div className="flex items-center space-x-3">
-                            <div className="flex-shrink-0 h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center overflow-hidden">
-                              {musyrif.photo ? (
-                                <img src={musyrif.photo} alt={musyrif.name} className="h-full w-full object-cover" />
+                            <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                              {musyrif.photo && isValidImageUrl(musyrif.photo) ? (
+                                <Image
+                                  src={musyrif.photo}
+                                  alt={musyrif.name}
+                                  fill={true}
+                                  style={{ objectFit: "cover" }}
+                                  onError={() => {
+                                    console.error(`Failed to load image for ${musyrif.name}`);
+                                  }}
+                                />
                               ) : (
-                                <User className="h-5 w-5 text-teal-600" />
+                                <User className="h-5 w-5 text-gray-600" />
                               )}
                             </div>
                             <div>
-                              <div className="font-medium text-gray-900">{musyrif.name}</div>
-                              <div className="text-gray-500 text-xs">{musyrif.email}</div>
+                              <div className="font-medium text-gray-900">
+                                {musyrif.name}
+                              </div>
+                              <div className="text-gray-500 text-xs">
+                                {musyrif.email}
+                              </div>
                             </div>
                           </div>
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center">
-                            <BookOpen className="h-4 w-4 text-teal-600 mr-2" />
-                            <span>{musyrif.halaqah?.name || 'Belum ada halaqah'}</span>
+                            <BookOpen className="h-4 w-4 text-gray-600 mr-2" />
+                            <span>
+                              {musyrif.halaqah?.name || "Belum ada halaqah"}
+                            </span>
                           </div>
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center">
-                            <GraduationCap className="h-4 w-4 text-teal-600 mr-2" />
-                            <span>{musyrif.specialization || 'Umum'}</span>
+                            <GraduationCap className="h-4 w-4 text-gray-600 mr-2" />
+                            <span>{musyrif.specialization || "Umum"}</span>
                           </div>
                         </td>
                         <td className="py-4 px-4">
@@ -738,15 +1061,24 @@ const MusyrifPage = () => {
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            musyrif.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                            musyrif.status === 'INACTIVE' ? 'bg-red-100 text-red-800' :
-                            musyrif.status === 'ON_LEAVE' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {musyrif.status === 'ACTIVE' ? 'Aktif' :
-                             musyrif.status === 'INACTIVE' ? 'Tidak Aktif' :
-                             musyrif.status === 'ON_LEAVE' ? 'Cuti' : musyrif.status}
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              musyrif.status === "ACTIVE"
+                                ? "bg-green-100 text-green-800"
+                                : musyrif.status === "INACTIVE"
+                                  ? "bg-red-100 text-red-800"
+                                  : musyrif.status === "ON_LEAVE"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {musyrif.status === "ACTIVE"
+                              ? "Aktif"
+                              : musyrif.status === "INACTIVE"
+                                ? "Tidak Aktif"
+                                : musyrif.status === "ON_LEAVE"
+                                  ? "Cuti"
+                                  : musyrif.status}
                           </span>
                         </td>
                         <td className="py-4 px-4">

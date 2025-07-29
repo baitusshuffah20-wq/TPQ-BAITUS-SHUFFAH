@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Database, 
-  Users, 
-  GraduationCap, 
-  BookOpen, 
-  Calendar, 
+import React, { useState, useEffect } from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Database,
+  Users,
+  GraduationCap,
+  BookOpen,
+  Calendar,
   CreditCard,
   CheckCircle,
   XCircle,
   RefreshCw,
   Eye,
-  AlertTriangle
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  AlertTriangle,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface AuditData {
   success: boolean;
@@ -50,21 +50,21 @@ export default function AuditPage() {
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await fetch('/api/audit/simple');
+
+      const response = await fetch("/api/audit/simple");
       const data = await response.json();
-      
+
       if (data.success) {
         setAuditData(data);
-        toast.success('Audit data loaded successfully');
+        toast.success("Audit data loaded successfully");
       } else {
-        setError(data.details || 'Failed to load audit data');
-        toast.error('Failed to load audit data');
+        setError(data.details || "Failed to load audit data");
+        toast.error("Failed to load audit data");
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
       setError(errorMessage);
-      toast.error('Failed to load audit data');
+      toast.error("Failed to load audit data");
     } finally {
       setLoading(false);
     }
@@ -84,17 +84,17 @@ export default function AuditPage() {
 
   const getCountIcon = (type: string) => {
     switch (type) {
-      case 'users':
+      case "users":
         return <Users className="h-8 w-8 text-blue-500" />;
-      case 'santri':
+      case "santri":
         return <GraduationCap className="h-8 w-8 text-green-500" />;
-      case 'halaqah':
+      case "halaqah":
         return <BookOpen className="h-8 w-8 text-purple-500" />;
-      case 'hafalan':
+      case "hafalan":
         return <BookOpen className="h-8 w-8 text-orange-500" />;
-      case 'attendance':
+      case "attendance":
         return <Calendar className="h-8 w-8 text-teal-500" />;
-      case 'payments':
+      case "payments":
         return <CreditCard className="h-8 w-8 text-pink-500" />;
       default:
         return <Database className="h-8 w-8 text-gray-500" />;
@@ -123,7 +123,9 @@ export default function AuditPage() {
             <Database className="h-8 w-8 text-blue-600" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900">System Audit</h1>
-              <p className="text-gray-600">Database connectivity and data verification</p>
+              <p className="text-gray-600">
+                Database connectivity and data verification
+              </p>
             </div>
           </div>
           <Button
@@ -132,7 +134,7 @@ export default function AuditPage() {
             variant="outline"
             className="flex items-center gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
         </div>
@@ -144,7 +146,9 @@ export default function AuditPage() {
               <div className="flex items-center gap-3">
                 <AlertTriangle className="h-6 w-6 text-red-500" />
                 <div>
-                  <h3 className="font-medium text-red-900">Database Connection Error</h3>
+                  <h3 className="font-medium text-red-900">
+                    Database Connection Error
+                  </h3>
                   <p className="text-red-700 mt-1">{error}</p>
                   <div className="mt-3">
                     <p className="text-sm text-red-600">
@@ -179,17 +183,23 @@ export default function AuditPage() {
                   <div>
                     <p className="font-medium">Connection</p>
                     <p className="text-sm text-gray-600">
-                      {auditData.database.connected ? 'Connected' : 'Disconnected'}
+                      {auditData.database.connected
+                        ? "Connected"
+                        : "Disconnected"}
                     </p>
                   </div>
                 </div>
                 <div>
                   <p className="font-medium">Database Type</p>
-                  <p className="text-sm text-gray-600">{auditData.database.type}</p>
+                  <p className="text-sm text-gray-600">
+                    {auditData.database.type}
+                  </p>
                 </div>
                 <div>
                   <p className="font-medium">Location</p>
-                  <p className="text-sm text-gray-600">{auditData.database.location}</p>
+                  <p className="text-sm text-gray-600">
+                    {auditData.database.location}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -205,11 +215,16 @@ export default function AuditPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-600 capitalize">
-                        {key === 'santri' ? 'Students' : key}
+                        {key === "santri" ? "Students" : key}
                       </p>
-                      <p className="text-2xl font-bold text-gray-900">{count}</p>
-                      <Badge variant={count > 0 ? 'success' : 'secondary'} className="mt-1">
-                        {count > 0 ? 'Has Data' : 'No Data'}
+                      <p className="text-2xl font-bold text-gray-900">
+                        {count}
+                      </p>
+                      <Badge
+                        variant={count > 0 ? "success" : "secondary"}
+                        className="mt-1"
+                      >
+                        {count > 0 ? "Has Data" : "No Data"}
                       </Badge>
                     </div>
                     {getCountIcon(key)}
@@ -236,19 +251,27 @@ export default function AuditPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-gray-600">ID:</span>
-                      <span className="font-medium">{auditData.samples.user.id}</span>
+                      <span className="font-medium">
+                        {auditData.samples.user.id}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Email:</span>
-                      <span className="font-medium">{auditData.samples.user.email}</span>
+                      <span className="font-medium">
+                        {auditData.samples.user.email}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Name:</span>
-                      <span className="font-medium">{auditData.samples.user.name}</span>
+                      <span className="font-medium">
+                        {auditData.samples.user.name}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Role:</span>
-                      <Badge variant="outline">{auditData.samples.user.role}</Badge>
+                      <Badge variant="outline">
+                        {auditData.samples.user.role}
+                      </Badge>
                     </div>
                   </div>
                 </CardContent>
@@ -268,19 +291,27 @@ export default function AuditPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-gray-600">ID:</span>
-                      <span className="font-medium">{auditData.samples.santri.id}</span>
+                      <span className="font-medium">
+                        {auditData.samples.santri.id}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">NIS:</span>
-                      <span className="font-medium">{auditData.samples.santri.nis}</span>
+                      <span className="font-medium">
+                        {auditData.samples.santri.nis}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Name:</span>
-                      <span className="font-medium">{auditData.samples.santri.name}</span>
+                      <span className="font-medium">
+                        {auditData.samples.santri.name}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Status:</span>
-                      <Badge variant="outline">{auditData.samples.santri.status}</Badge>
+                      <Badge variant="outline">
+                        {auditData.samples.santri.status}
+                      </Badge>
                     </div>
                   </div>
                 </CardContent>
@@ -307,25 +338,40 @@ export default function AuditPage() {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Tables with Data:</span>
                       <span className="font-medium">
-                        {Object.values(auditData.counts).filter(count => count > 0).length}
+                        {
+                          Object.values(auditData.counts).filter(
+                            (count) => count > 0,
+                          ).length
+                        }
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Total Records:</span>
                       <span className="font-medium">
-                        {Object.values(auditData.counts).reduce((sum, count) => sum + count, 0)}
+                        {Object.values(auditData.counts).reduce(
+                          (sum, count) => sum + count,
+                          0,
+                        )}
                       </span>
                     </div>
                   </div>
                 </div>
-                
+
                 <div>
                   <h4 className="font-medium mb-3">System Status</h4>
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Database:</span>
-                      <Badge variant={auditData.database.connected ? 'success' : 'destructive'}>
-                        {auditData.database.connected ? 'Connected' : 'Disconnected'}
+                      <Badge
+                        variant={
+                          auditData.database.connected
+                            ? "success"
+                            : "destructive"
+                        }
+                      >
+                        {auditData.database.connected
+                          ? "Connected"
+                          : "Disconnected"}
                       </Badge>
                     </div>
                     <div className="flex justify-between">
@@ -334,7 +380,9 @@ export default function AuditPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Last Check:</span>
-                      <span className="font-medium">{new Date().toLocaleString('id-ID')}</span>
+                      <span className="font-medium">
+                        {new Date().toLocaleString("id-ID")}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -351,7 +399,7 @@ export default function AuditPage() {
           <CardContent>
             <div className="flex flex-wrap gap-3">
               <Button
-                onClick={() => window.open('/dashboard/admin/santri', '_blank')}
+                onClick={() => window.open("/dashboard/admin/santri", "_blank")}
                 variant="outline"
                 className="flex items-center gap-2"
               >
@@ -359,7 +407,7 @@ export default function AuditPage() {
                 View Students
               </Button>
               <Button
-                onClick={() => window.open('/dashboard/admin/users', '_blank')}
+                onClick={() => window.open("/dashboard/admin/users", "_blank")}
                 variant="outline"
                 className="flex items-center gap-2"
               >
@@ -367,7 +415,9 @@ export default function AuditPage() {
                 View Users
               </Button>
               <Button
-                onClick={() => window.open('/dashboard/admin/hafalan', '_blank')}
+                onClick={() =>
+                  window.open("/dashboard/admin/hafalan", "_blank")
+                }
                 variant="outline"
                 className="flex items-center gap-2"
               >
@@ -375,7 +425,9 @@ export default function AuditPage() {
                 View Hafalan
               </Button>
               <Button
-                onClick={() => window.open('/dashboard/admin/monitoring', '_blank')}
+                onClick={() =>
+                  window.open("/dashboard/admin/monitoring", "_blank")
+                }
                 variant="outline"
                 className="flex items-center gap-2"
               >

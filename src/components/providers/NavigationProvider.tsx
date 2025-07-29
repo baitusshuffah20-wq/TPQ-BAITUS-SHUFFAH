@@ -1,20 +1,22 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { PageLoading } from '@/components/ui/LoadingSpinner';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { PageLoading } from "@/components/ui/LoadingSpinner";
 
 interface NavigationContextType {
   isNavigating: boolean;
   setIsNavigating: (loading: boolean) => void;
 }
 
-const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
+const NavigationContext = createContext<NavigationContextType | undefined>(
+  undefined,
+);
 
 export function useNavigation() {
   const context = useContext(NavigationContext);
   if (!context) {
-    throw new Error('useNavigation must be used within NavigationProvider');
+    throw new Error("useNavigation must be used within NavigationProvider");
   }
   return context;
 }
@@ -23,7 +25,9 @@ interface NavigationProviderProps {
   children: React.ReactNode;
 }
 
-export default function NavigationProvider({ children }: NavigationProviderProps) {
+export default function NavigationProvider({
+  children,
+}: NavigationProviderProps) {
   const [isNavigating, setIsNavigating] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -64,18 +68,23 @@ interface NavigationLinkProps {
   onClick?: () => void;
 }
 
-export function NavigationLink({ href, children, className, onClick }: NavigationLinkProps) {
+export function NavigationLink({
+  href,
+  children,
+  className,
+  onClick,
+}: NavigationLinkProps) {
   const { setIsNavigating } = useNavigation();
   const router = useRouter();
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsNavigating(true);
-    
+
     if (onClick) {
       onClick();
     }
-    
+
     // Small delay to show loading state
     setTimeout(() => {
       router.push(href);

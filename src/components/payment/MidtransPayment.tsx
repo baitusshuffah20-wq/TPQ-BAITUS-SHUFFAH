@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useEffect } from 'react';
-import Script from 'next/script';
+import React, { useEffect } from "react";
+import Script from "next/script";
 
 interface MidtransPaymentProps {
   token: string;
@@ -22,27 +22,27 @@ const MidtransPayment: React.FC<MidtransPaymentProps> = ({
   onSuccess,
   onPending,
   onError,
-  onClose
+  onClose,
 }) => {
   useEffect(() => {
     if (window.snap && token) {
       window.snap.pay(token, {
         onSuccess: (result: any) => {
-          console.log('Payment success:', result);
+          console.log("Payment success:", result);
           onSuccess?.(result);
         },
         onPending: (result: any) => {
-          console.log('Payment pending:', result);
+          console.log("Payment pending:", result);
           onPending?.(result);
         },
         onError: (result: any) => {
-          console.log('Payment error:', result);
+          console.log("Payment error:", result);
           onError?.(result);
         },
         onClose: () => {
-          console.log('Payment popup closed');
+          console.log("Payment popup closed");
           onClose?.();
-        }
+        },
       });
     }
   }, [token, onSuccess, onPending, onError, onClose]);
@@ -50,7 +50,7 @@ const MidtransPayment: React.FC<MidtransPaymentProps> = ({
   return (
     <>
       <Script
-        src={`https://app.${process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true' ? '' : 'sandbox.'}midtrans.com/snap/snap.js`}
+        src={`https://app.${process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === "true" ? "" : "sandbox."}midtrans.com/snap/snap.js`}
         data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
         strategy="lazyOnload"
       />

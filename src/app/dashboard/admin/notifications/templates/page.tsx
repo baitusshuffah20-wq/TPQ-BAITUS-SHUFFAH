@@ -1,13 +1,13 @@
-'use client';
+﻿"use client";
 
-import React, { useState, useEffect } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  FileText, 
+import React, { useState, useEffect } from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  FileText,
   Plus,
   Edit,
   Trash2,
@@ -20,9 +20,9 @@ import {
   MessageSquare,
   Mail,
   Smartphone,
-  Bell
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  Bell,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface NotificationTemplate {
   id: string;
@@ -45,12 +45,13 @@ export default function NotificationTemplatesPage() {
   const [templates, setTemplates] = useState<NotificationTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    search: '',
-    type: '',
-    isActive: ''
+    search: "",
+    type: "",
+    isActive: "",
   });
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<NotificationTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<NotificationTemplate | null>(null);
 
   useEffect(() => {
     loadTemplates();
@@ -60,19 +61,19 @@ export default function NotificationTemplatesPage() {
     try {
       setLoading(true);
       const params = new URLSearchParams();
-      if (filters.type) params.append('type', filters.type);
-      if (filters.isActive) params.append('isActive', filters.isActive);
+      if (filters.type) params.append("type", filters.type);
+      if (filters.isActive) params.append("isActive", filters.isActive);
 
       const response = await fetch(`/api/notifications/templates?${params}`);
       if (response.ok) {
         const data = await response.json();
         setTemplates(data.templates || []);
       } else {
-        toast.error('Gagal memuat template notifikasi');
+        toast.error("Gagal memuat template notifikasi");
       }
     } catch (error) {
-      console.error('Error loading templates:', error);
-      toast.error('Gagal memuat template notifikasi');
+      console.error("Error loading templates:", error);
+      toast.error("Gagal memuat template notifikasi");
     } finally {
       setLoading(false);
     }
@@ -80,89 +81,123 @@ export default function NotificationTemplatesPage() {
 
   const setupDefaultTemplates = async () => {
     try {
-      const response = await fetch('/api/notifications/setup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ createdBy: 'admin-user' })
+      const response = await fetch("/api/notifications/setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ createdBy: "admin-user" }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        toast.success(`Berhasil membuat ${data.results.created} template default`);
+        toast.success(
+          `Berhasil membuat ${data.results.created} template default`,
+        );
         loadTemplates();
       } else {
-        toast.error('Gagal membuat template default');
+        toast.error("Gagal membuat template default");
       }
     } catch (error) {
-      console.error('Error setting up templates:', error);
-      toast.error('Gagal membuat template default');
+      console.error("Error setting up templates:", error);
+      toast.error("Gagal membuat template default");
     }
   };
 
-  const toggleTemplateStatus = async (templateId: string, isActive: boolean) => {
+  const toggleTemplateStatus = async (
+    templateId: string,
+    isActive: boolean,
+  ) => {
     try {
-      const response = await fetch('/api/notifications/templates', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/notifications/templates", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: templateId,
-          isActive: !isActive
-        })
+          isActive: !isActive,
+        }),
       });
 
       if (response.ok) {
-        toast.success(`Template ${!isActive ? 'diaktifkan' : 'dinonaktifkan'}`);
+        toast.success(`Template ${!isActive ? "diaktifkan" : "dinonaktifkan"}`);
         loadTemplates();
       } else {
-        toast.error('Gagal mengubah status template');
+        toast.error("Gagal mengubah status template");
       }
     } catch (error) {
-      console.error('Error toggling template status:', error);
-      toast.error('Gagal mengubah status template');
+      console.error("Error toggling template status:", error);
+      toast.error("Gagal mengubah status template");
     }
   };
 
   const deleteTemplate = async (templateId: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus template ini?')) {
+    if (!confirm("Apakah Anda yakin ingin menghapus template ini?")) {
       return;
     }
 
     try {
-      const response = await fetch(`/api/notifications/templates?id=${templateId}`, {
-        method: 'DELETE'
-      });
+      const response = await fetch(
+        `/api/notifications/templates?id=${templateId}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       if (response.ok) {
-        toast.success('Template berhasil dihapus');
+        toast.success("Template berhasil dihapus");
         loadTemplates();
       } else {
-        toast.error('Gagal menghapus template');
+        toast.error("Gagal menghapus template");
       }
     } catch (error) {
-      console.error('Error deleting template:', error);
-      toast.error('Gagal menghapus template');
+      console.error("Error deleting template:", error);
+      toast.error("Gagal menghapus template");
     }
   };
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleFilterChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   const getChannelIcons = (channels: string) => {
-    const channelList = channels.split(',');
+    const channelList = channels.split(",");
     return (
       <div className="flex gap-1">
         {channelList.map((channel, index) => {
           switch (channel.trim()) {
-            case 'IN_APP':
-              return <Bell key={index} className="h-4 w-4 text-blue-600" title="In-App" />;
-            case 'EMAIL':
-              return <Mail key={index} className="h-4 w-4 text-green-600" title="Email" />;
-            case 'WHATSAPP':
-              return <MessageSquare key={index} className="h-4 w-4 text-green-500" title="WhatsApp" />;
-            case 'SMS':
-              return <Smartphone key={index} className="h-4 w-4 text-purple-600" title="SMS" />;
+            case "IN_APP":
+              return (
+                <Bell
+                  key={index}
+                  className="h-4 w-4 text-blue-600"
+                  title="In-App"
+                />
+              );
+            case "EMAIL":
+              return (
+                <Mail
+                  key={index}
+                  className="h-4 w-4 text-green-600"
+                  title="Email"
+                />
+              );
+            case "WHATSAPP":
+              return (
+                <MessageSquare
+                  key={index}
+                  className="h-4 w-4 text-green-500"
+                  title="WhatsApp"
+                />
+              );
+            case "SMS":
+              return (
+                <Smartphone
+                  key={index}
+                  className="h-4 w-4 text-purple-600"
+                  title="SMS"
+                />
+              );
             default:
               return null;
           }
@@ -173,35 +208,36 @@ export default function NotificationTemplatesPage() {
 
   const getTypeLabel = (type: string) => {
     const typeLabels: Record<string, string> = {
-      'PAYMENT_REMINDER': 'Pengingat Pembayaran',
-      'PAYMENT_CONFIRMATION': 'Konfirmasi Pembayaran',
-      'SPP_OVERDUE': 'SPP Terlambat',
-      'ATTENDANCE_ALERT': 'Alert Absensi',
-      'HAFALAN_PROGRESS': 'Progress Hafalan',
-      'SYSTEM_ANNOUNCEMENT': 'Pengumuman Sistem',
-      'ACCOUNT_UPDATE': 'Update Akun',
-      'REPORT_READY': 'Laporan Siap',
-      'MAINTENANCE_NOTICE': 'Pemberitahuan Maintenance',
-      'EMERGENCY_ALERT': 'Peringatan Darurat'
+      PAYMENT_REMINDER: "Pengingat Pembayaran",
+      PAYMENT_CONFIRMATION: "Konfirmasi Pembayaran",
+      SPP_OVERDUE: "SPP Terlambat",
+      ATTENDANCE_ALERT: "Alert Absensi",
+      HAFALAN_PROGRESS: "Progress Hafalan",
+      SYSTEM_ANNOUNCEMENT: "Pengumuman Sistem",
+      ACCOUNT_UPDATE: "Update Akun",
+      REPORT_READY: "Laporan Siap",
+      MAINTENANCE_NOTICE: "Pemberitahuan Maintenance",
+      EMERGENCY_ALERT: "Peringatan Darurat",
     };
     return typeLabels[type] || type;
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
-  const filteredTemplates = templates.filter(template => {
-    const matchesSearch = !filters.search || 
+  const filteredTemplates = templates.filter((template) => {
+    const matchesSearch =
+      !filters.search ||
       template.name.toLowerCase().includes(filters.search.toLowerCase()) ||
       template.title.toLowerCase().includes(filters.search.toLowerCase());
-    
+
     return matchesSearch;
   });
 
@@ -210,7 +246,9 @@ export default function NotificationTemplatesPage() {
       <DashboardLayout>
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">Template Notifikasi</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Template Notifikasi
+            </h1>
           </div>
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -226,7 +264,9 @@ export default function NotificationTemplatesPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Template Notifikasi</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Template Notifikasi
+          </h1>
           <div className="flex gap-3">
             <Button
               onClick={setupDefaultTemplates}
@@ -304,7 +344,7 @@ export default function NotificationTemplatesPage() {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Tipe Template
@@ -317,7 +357,9 @@ export default function NotificationTemplatesPage() {
                 >
                   <option value="">Semua Tipe</option>
                   <option value="PAYMENT_REMINDER">Pengingat Pembayaran</option>
-                  <option value="PAYMENT_CONFIRMATION">Konfirmasi Pembayaran</option>
+                  <option value="PAYMENT_CONFIRMATION">
+                    Konfirmasi Pembayaran
+                  </option>
                   <option value="SPP_OVERDUE">SPP Terlambat</option>
                   <option value="ATTENDANCE_ALERT">Alert Absensi</option>
                   <option value="HAFALAN_PROGRESS">Progress Hafalan</option>
@@ -353,7 +395,9 @@ export default function NotificationTemplatesPage() {
             {filteredTemplates.length === 0 ? (
               <div className="text-center py-8">
                 <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-4">Belum ada template notifikasi</p>
+                <p className="text-gray-600 mb-4">
+                  Belum ada template notifikasi
+                </p>
                 <Button
                   onClick={setupDefaultTemplates}
                   className="bg-blue-600 hover:bg-blue-700"
@@ -371,20 +415,38 @@ export default function NotificationTemplatesPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-gray-900">{template.name}</h3>
-                          <Badge variant={template.isActive ? "success" : "secondary"}>
-                            {template.isActive ? 'Aktif' : 'Nonaktif'}
+                          <h3 className="font-semibold text-gray-900">
+                            {template.name}
+                          </h3>
+                          <Badge
+                            variant={
+                              template.isActive ? "success" : "secondary"
+                            }
+                          >
+                            {template.isActive ? "Aktif" : "Nonaktif"}
                           </Badge>
-                          <Badge variant="outline">{getTypeLabel(template.type)}</Badge>
+                          <Badge variant="outline">
+                            {getTypeLabel(template.type)}
+                          </Badge>
                           {getChannelIcons(template.channels)}
                         </div>
-                        <h4 className="font-medium text-gray-800 mb-1">{template.title}</h4>
-                        <p className="text-gray-600 text-sm mb-2 line-clamp-2">{template.message}</p>
+                        <h4 className="font-medium text-gray-800 mb-1">
+                          {template.title}
+                        </h4>
+                        <p className="text-gray-600 text-sm mb-2 line-clamp-2">
+                          {template.message}
+                        </p>
                         <div className="flex items-center gap-4 text-xs text-gray-500">
                           <span>Dibuat: {formatDate(template.createdAt)}</span>
                           <span>Oleh: {template.creator.name}</span>
                           {template.variables && (
-                            <span>Variables: {JSON.parse(template.variables) ? Object.keys(JSON.parse(template.variables)).length : 0}</span>
+                            <span>
+                              Variables:{" "}
+                              {JSON.parse(template.variables)
+                                ? Object.keys(JSON.parse(template.variables))
+                                    .length
+                                : 0}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -407,13 +469,15 @@ export default function NotificationTemplatesPage() {
                           Edit
                         </Button>
                         <Button
-                          onClick={() => toggleTemplateStatus(template.id, template.isActive)}
+                          onClick={() =>
+                            toggleTemplateStatus(template.id, template.isActive)
+                          }
                           size="sm"
                           variant="outline"
                           className="flex items-center gap-1"
                         >
                           <Settings className="h-3 w-3" />
-                          {template.isActive ? 'Nonaktifkan' : 'Aktifkan'}
+                          {template.isActive ? "Nonaktifkan" : "Aktifkan"}
                         </Button>
                         <Button
                           onClick={() => deleteTemplate(template.id)}
@@ -447,45 +511,69 @@ export default function NotificationTemplatesPage() {
                   Tutup
                 </Button>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nama Template</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nama Template
+                  </label>
                   <p className="text-gray-900">{selectedTemplate.name}</p>
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Judul</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Judul
+                  </label>
                   <p className="text-gray-900">{selectedTemplate.title}</p>
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Pesan</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Pesan
+                  </label>
                   <div className="bg-gray-50 p-3 rounded-md">
-                    <pre className="whitespace-pre-wrap text-sm text-gray-900">{selectedTemplate.message}</pre>
+                    <pre className="whitespace-pre-wrap text-sm text-gray-900">
+                      {selectedTemplate.message}
+                    </pre>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tipe</label>
-                    <p className="text-gray-900">{getTypeLabel(selectedTemplate.type)}</p>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tipe
+                    </label>
+                    <p className="text-gray-900">
+                      {getTypeLabel(selectedTemplate.type)}
+                    </p>
                   </div>
-                  
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Channel</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Channel
+                    </label>
                     <div className="flex items-center gap-2">
                       {getChannelIcons(selectedTemplate.channels)}
-                      <span className="text-sm text-gray-600">{selectedTemplate.channels}</span>
+                      <span className="text-sm text-gray-600">
+                        {selectedTemplate.channels}
+                      </span>
                     </div>
                   </div>
                 </div>
-                
+
                 {selectedTemplate.variables && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Variables</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Variables
+                    </label>
                     <div className="bg-gray-50 p-3 rounded-md">
-                      <pre className="text-sm text-gray-900">{JSON.stringify(JSON.parse(selectedTemplate.variables), null, 2)}</pre>
+                      <pre className="text-sm text-gray-900">
+                        {JSON.stringify(
+                          JSON.parse(selectedTemplate.variables),
+                          null,
+                          2,
+                        )}
+                      </pre>
                     </div>
                   </div>
                 )}

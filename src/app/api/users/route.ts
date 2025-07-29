@@ -1,29 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 // GET /api/users - Get all users
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const role = searchParams.get('role');
-    const status = searchParams.get('status');
-    const search = searchParams.get('search');
+    const role = searchParams.get("role");
+    const status = searchParams.get("status");
+    const search = searchParams.get("search");
 
     const where: any = {};
 
-    if (role && role !== 'ALL') {
+    if (role && role !== "ALL") {
       where.role = role;
     }
 
-    if (status && status !== 'ALL') {
-      where.isActive = status === 'ACTIVE';
+    if (status && status !== "ALL") {
+      where.isActive = status === "ACTIVE";
     }
 
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } }
+        { name: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
       ];
     }
 
@@ -35,26 +35,26 @@ export async function GET(request: NextRequest) {
         name: true,
         phone: true,
         role: true,
+        avatar: true,
         isActive: true,
         createdAt: true,
-        updatedAt: true
+        updatedAt: true,
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: "desc",
+      },
     });
 
     return NextResponse.json({
       success: true,
       users,
-      total: users.length
+      total: users.length,
     });
-
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error("Error fetching users:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengambil data users' },
-      { status: 500 }
+      { success: false, message: "Gagal mengambil data users" },
+      { status: 500 },
     );
   }
 }
@@ -68,20 +68,20 @@ export async function POST(request: NextRequest) {
     // Validation
     if (!email || !name || !phone || !role || !password) {
       return NextResponse.json(
-        { success: false, message: 'Semua field wajib diisi' },
-        { status: 400 }
+        { success: false, message: "Semua field wajib diisi" },
+        { status: 400 },
       );
     }
 
     // Check if email already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
 
     if (existingUser) {
       return NextResponse.json(
-        { success: false, message: 'Email sudah digunakan' },
-        { status: 400 }
+        { success: false, message: "Email sudah digunakan" },
+        { status: 400 },
       );
     }
 
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
         phone,
         role,
         password: hashedPassword,
-        isActive
+        isActive,
       },
       select: {
         id: true,
@@ -106,21 +106,20 @@ export async function POST(request: NextRequest) {
         role: true,
         isActive: true,
         createdAt: true,
-        updatedAt: true
-      }
+        updatedAt: true,
+      },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'User berhasil dibuat',
-      user
+      message: "User berhasil dibuat",
+      user,
     });
-
   } catch (error) {
-    console.error('Error creating user:', error);
+    console.error("Error creating user:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal membuat user' },
-      { status: 500 }
+      { success: false, message: "Gagal membuat user" },
+      { status: 500 },
     );
   }
 }

@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  User, 
-  Mail, 
-  Phone, 
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  User,
+  Mail,
+  Phone,
   Calendar,
   MapPin,
   Users,
   Save,
   X,
   Upload,
-  Image as ImageIcon
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  Image as ImageIcon,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface SantriFormData {
   id?: string;
@@ -25,12 +25,12 @@ interface SantriFormData {
   name: string;
   birthDate: string;
   birthPlace: string;
-  gender: 'MALE' | 'FEMALE';
+  gender: "MALE" | "FEMALE";
   address: string;
   phone?: string;
   email?: string;
   photo?: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'GRADUATED' | 'DROPPED_OUT';
+  status: "ACTIVE" | "INACTIVE" | "GRADUATED" | "DROPPED_OUT";
   waliId: string;
   halaqahId?: string;
   enrollmentDate: string;
@@ -56,23 +56,29 @@ interface Halaqah {
   level: string;
 }
 
-export default function SantriForm({ santri, onSubmit, onCancel, isLoading = false }: SantriFormProps) {
+export default function SantriForm({
+  santri,
+  onSubmit,
+  onCancel,
+  isLoading = false,
+}: SantriFormProps) {
   const [formData, setFormData] = useState<SantriFormData>({
-    nis: santri?.nis || '',
-    name: santri?.name || '',
-    birthDate: santri?.birthDate || '',
-    birthPlace: santri?.birthPlace || '',
-    gender: santri?.gender || 'MALE',
-    address: santri?.address || '',
-    phone: santri?.phone || '',
-    email: santri?.email || '',
-    photo: santri?.photo || '',
-    status: santri?.status || 'ACTIVE',
-    waliId: santri?.waliId || '',
-    halaqahId: santri?.halaqahId || '',
-    enrollmentDate: santri?.enrollmentDate || new Date().toISOString().split('T')[0],
-    graduationDate: santri?.graduationDate || '',
-    ...santri
+    nis: santri?.nis || "",
+    name: santri?.name || "",
+    birthDate: santri?.birthDate || "",
+    birthPlace: santri?.birthPlace || "",
+    gender: santri?.gender || "MALE",
+    address: santri?.address || "",
+    phone: santri?.phone || "",
+    email: santri?.email || "",
+    photo: santri?.photo || "",
+    status: santri?.status || "ACTIVE",
+    waliId: santri?.waliId || "",
+    halaqahId: santri?.halaqahId || "",
+    enrollmentDate:
+      santri?.enrollmentDate || new Date().toISOString().split("T")[0],
+    graduationDate: santri?.graduationDate || "",
+    ...santri,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -89,23 +95,23 @@ export default function SantriForm({ santri, onSubmit, onCancel, isLoading = fal
   const loadSelectData = async () => {
     try {
       setLoadingData(true);
-      
+
       // Load Wali list
-      const waliResponse = await fetch('/api/users?role=WALI');
+      const waliResponse = await fetch("/api/users?role=WALI");
       if (waliResponse.ok) {
         const waliData = await waliResponse.json();
         setWaliList(waliData.users || []);
       }
 
       // Load Halaqah list
-      const halaqahResponse = await fetch('/api/halaqah');
+      const halaqahResponse = await fetch("/api/halaqah");
       if (halaqahResponse.ok) {
         const halaqahData = await halaqahResponse.json();
         setHalaqahList(halaqahData.halaqah || []);
       }
     } catch (error) {
-      console.error('Error loading select data:', error);
-      toast.error('Gagal memuat data dropdown');
+      console.error("Error loading select data:", error);
+      toast.error("Gagal memuat data dropdown");
     } finally {
       setLoadingData(false);
     }
@@ -116,51 +122,51 @@ export default function SantriForm({ santri, onSubmit, onCancel, isLoading = fal
 
     // NIS validation
     if (!formData.nis) {
-      newErrors.nis = 'NIS wajib diisi';
+      newErrors.nis = "NIS wajib diisi";
     } else if (formData.nis.length < 3) {
-      newErrors.nis = 'NIS minimal 3 karakter';
+      newErrors.nis = "NIS minimal 3 karakter";
     }
 
     // Name validation
     if (!formData.name) {
-      newErrors.name = 'Nama wajib diisi';
+      newErrors.name = "Nama wajib diisi";
     } else if (formData.name.length < 2) {
-      newErrors.name = 'Nama minimal 2 karakter';
+      newErrors.name = "Nama minimal 2 karakter";
     }
 
     // Birth date validation
     if (!formData.birthDate) {
-      newErrors.birthDate = 'Tanggal lahir wajib diisi';
+      newErrors.birthDate = "Tanggal lahir wajib diisi";
     }
 
     // Birth place validation
     if (!formData.birthPlace) {
-      newErrors.birthPlace = 'Tempat lahir wajib diisi';
+      newErrors.birthPlace = "Tempat lahir wajib diisi";
     }
 
     // Address validation
     if (!formData.address) {
-      newErrors.address = 'Alamat wajib diisi';
+      newErrors.address = "Alamat wajib diisi";
     }
 
     // Wali validation
     if (!formData.waliId) {
-      newErrors.waliId = 'Wali wajib dipilih';
+      newErrors.waliId = "Wali wajib dipilih";
     }
 
     // Email validation (optional)
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Format email tidak valid';
+      newErrors.email = "Format email tidak valid";
     }
 
     // Phone validation (optional)
     if (formData.phone && !/^[0-9+\-\s()]+$/.test(formData.phone)) {
-      newErrors.phone = 'Format nomor telepon tidak valid';
+      newErrors.phone = "Format nomor telepon tidak valid";
     }
 
     // Enrollment date validation
     if (!formData.enrollmentDate) {
-      newErrors.enrollmentDate = 'Tanggal masuk wajib diisi';
+      newErrors.enrollmentDate = "Tanggal masuk wajib diisi";
     }
 
     setErrors(newErrors);
@@ -169,49 +175,63 @@ export default function SantriForm({ santri, onSubmit, onCancel, isLoading = fal
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
-      toast.error('Mohon perbaiki kesalahan pada form');
+      toast.error("Mohon perbaiki kesalahan pada form");
       return;
     }
 
     try {
       await onSubmit(formData);
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
 
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
-      case 'ACTIVE': return 'success';
-      case 'INACTIVE': return 'secondary';
-      case 'GRADUATED': return 'warning';
-      case 'DROPPED_OUT': return 'destructive';
-      default: return 'secondary';
+      case "ACTIVE":
+        return "success";
+      case "INACTIVE":
+        return "secondary";
+      case "GRADUATED":
+        return "warning";
+      case "DROPPED_OUT":
+        return "destructive";
+      default:
+        return "secondary";
     }
   };
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'ACTIVE': return 'Aktif';
-      case 'INACTIVE': return 'Tidak Aktif';
-      case 'GRADUATED': return 'Lulus';
-      case 'DROPPED_OUT': return 'Keluar';
-      default: return status;
+      case "ACTIVE":
+        return "Aktif";
+      case "INACTIVE":
+        return "Tidak Aktif";
+      case "GRADUATED":
+        return "Lulus";
+      case "DROPPED_OUT":
+        return "Keluar";
+      default:
+        return status;
     }
   };
 
@@ -233,14 +253,16 @@ export default function SantriForm({ santri, onSubmit, onCancel, isLoading = fal
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <User className="h-6 w-6 text-teal-600" />
-          {isEdit ? 'Edit Santri' : 'Tambah Santri Baru'}
+          {isEdit ? "Edit Santri" : "Tambah Santri Baru"}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Basic Information */}
           <div className="border-b pb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Informasi Dasar</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Informasi Dasar
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -252,7 +274,7 @@ export default function SantriForm({ santri, onSubmit, onCancel, isLoading = fal
                   value={formData.nis}
                   onChange={handleChange}
                   placeholder="Contoh: 2024001"
-                  className={errors.nis ? 'border-red-500' : ''}
+                  className={errors.nis ? "border-red-500" : ""}
                   disabled={isLoading}
                 />
                 {errors.nis && (
@@ -270,7 +292,7 @@ export default function SantriForm({ santri, onSubmit, onCancel, isLoading = fal
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="Nama lengkap santri"
-                  className={errors.name ? 'border-red-500' : ''}
+                  className={errors.name ? "border-red-500" : ""}
                   disabled={isLoading}
                 />
                 {errors.name && (
@@ -287,11 +309,13 @@ export default function SantriForm({ santri, onSubmit, onCancel, isLoading = fal
                   name="birthDate"
                   value={formData.birthDate}
                   onChange={handleChange}
-                  className={errors.birthDate ? 'border-red-500' : ''}
+                  className={errors.birthDate ? "border-red-500" : ""}
                   disabled={isLoading}
                 />
                 {errors.birthDate && (
-                  <p className="text-red-500 text-xs mt-1">{errors.birthDate}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.birthDate}
+                  </p>
                 )}
               </div>
 
@@ -305,11 +329,13 @@ export default function SantriForm({ santri, onSubmit, onCancel, isLoading = fal
                   value={formData.birthPlace}
                   onChange={handleChange}
                   placeholder="Kota tempat lahir"
-                  className={errors.birthPlace ? 'border-red-500' : ''}
+                  className={errors.birthPlace ? "border-red-500" : ""}
                   disabled={isLoading}
                 />
                 {errors.birthPlace && (
-                  <p className="text-red-500 text-xs mt-1">{errors.birthPlace}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.birthPlace}
+                  </p>
                 )}
               </div>
 
@@ -362,7 +388,7 @@ export default function SantriForm({ santri, onSubmit, onCancel, isLoading = fal
                 value={formData.address}
                 onChange={handleChange}
                 rows={3}
-                className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.address ? 'border-red-500' : ''}`}
+                className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.address ? "border-red-500" : ""}`}
                 placeholder="Alamat lengkap santri"
                 disabled={isLoading}
               />
@@ -374,7 +400,9 @@ export default function SantriForm({ santri, onSubmit, onCancel, isLoading = fal
 
           {/* Contact Information */}
           <div className="border-b pb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Informasi Kontak</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Informasi Kontak
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -386,7 +414,7 @@ export default function SantriForm({ santri, onSubmit, onCancel, isLoading = fal
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="08xxxxxxxxxx"
-                  className={errors.phone ? 'border-red-500' : ''}
+                  className={errors.phone ? "border-red-500" : ""}
                   disabled={isLoading}
                 />
                 {errors.phone && (
@@ -404,7 +432,7 @@ export default function SantriForm({ santri, onSubmit, onCancel, isLoading = fal
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="email@example.com"
-                  className={errors.email ? 'border-red-500' : ''}
+                  className={errors.email ? "border-red-500" : ""}
                   disabled={isLoading}
                 />
                 {errors.email && (
@@ -416,7 +444,9 @@ export default function SantriForm({ santri, onSubmit, onCancel, isLoading = fal
 
           {/* Academic Information */}
           <div className="border-b pb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Informasi Akademik</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Informasi Akademik
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -426,7 +456,7 @@ export default function SantriForm({ santri, onSubmit, onCancel, isLoading = fal
                   name="waliId"
                   value={formData.waliId}
                   onChange={handleChange}
-                  className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.waliId ? 'border-red-500' : ''}`}
+                  className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.waliId ? "border-red-500" : ""}`}
                   disabled={isLoading}
                 >
                   <option value="">Pilih Wali Santri</option>
@@ -470,15 +500,18 @@ export default function SantriForm({ santri, onSubmit, onCancel, isLoading = fal
                   name="enrollmentDate"
                   value={formData.enrollmentDate}
                   onChange={handleChange}
-                  className={errors.enrollmentDate ? 'border-red-500' : ''}
+                  className={errors.enrollmentDate ? "border-red-500" : ""}
                   disabled={isLoading}
                 />
                 {errors.enrollmentDate && (
-                  <p className="text-red-500 text-xs mt-1">{errors.enrollmentDate}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.enrollmentDate}
+                  </p>
                 )}
               </div>
 
-              {(formData.status === 'GRADUATED' || formData.status === 'DROPPED_OUT') && (
+              {(formData.status === "GRADUATED" ||
+                formData.status === "DROPPED_OUT") && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Tanggal Keluar/Lulus
@@ -517,7 +550,7 @@ export default function SantriForm({ santri, onSubmit, onCancel, isLoading = fal
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              {isLoading ? 'Menyimpan...' : (isEdit ? 'Update' : 'Simpan')}
+              {isLoading ? "Menyimpan..." : isEdit ? "Update" : "Simpan"}
             </Button>
           </div>
         </form>

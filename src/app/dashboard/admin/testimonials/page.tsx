@@ -1,13 +1,13 @@
-'use client';
+﻿"use client";
 
-import React, { useState, useEffect } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { 
-  MessageSquare, 
-  Search, 
+import React, { useState, useEffect } from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  MessageSquare,
+  Search,
   Filter,
   Download,
   Plus,
@@ -19,8 +19,8 @@ import {
   CheckCircle,
   XCircle,
   ThumbsUp,
-  ThumbsDown
-} from 'lucide-react';
+  ThumbsDown,
+} from "lucide-react";
 
 interface Testimonial {
   id: string;
@@ -37,60 +37,64 @@ const TestimonialsPage = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [currentTestimonial, setCurrentTestimonial] = useState<Testimonial | null>(null);
+  const [currentTestimonial, setCurrentTestimonial] =
+    useState<Testimonial | null>(null);
 
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/testimonials');
+        const response = await fetch("/api/testimonials");
         const data = await response.json();
-        
+
         if (data.success) {
           setTestimonials(data.testimonials);
         } else {
-          throw new Error('Failed to fetch testimonials');
+          throw new Error("Failed to fetch testimonials");
         }
       } catch (err) {
-        console.error('Error fetching testimonials:', err);
-        setError('Failed to load testimonials');
-        
+        console.error("Error fetching testimonials:", err);
+        setError("Failed to load testimonials");
+
         // Fallback data
         setTestimonials([
           {
-            id: '1',
-            authorName: 'Ahmad Fauzi',
-            authorRole: 'SANTRI',
-            content: 'Alhamdulillah, berkat bimbingan ustadz-ustadz yang sabar dan metode pembelajaran yang efektif, saya berhasil menyelesaikan hafalan 30 juz dalam waktu 2,5 tahun. Pengalaman yang sangat berharga dan mengubah hidup saya.',
+            id: "1",
+            authorName: "Ahmad Fauzi",
+            authorRole: "SANTRI",
+            content:
+              "Alhamdulillah, berkat bimbingan ustadz-ustadz yang sabar dan metode pembelajaran yang efektif, saya berhasil menyelesaikan hafalan 30 juz dalam waktu 2,5 tahun. Pengalaman yang sangat berharga dan mengubah hidup saya.",
             rating: 5,
             isApproved: true,
             isFeatured: true,
-            createdAt: '2024-01-15T10:00:00Z'
+            createdAt: "2024-01-15T10:00:00Z",
           },
           {
-            id: '2',
-            authorName: 'Siti Aisyah',
-            authorRole: 'WALI',
-            content: 'Anak saya sangat senang belajar di sini. Selain hafalan Al-Quran, akhlaknya juga semakin baik. Para ustadz sangat perhatian dan komunikatif dengan orang tua. Sistem pembelajaran yang modern namun tetap menjaga nilai-nilai tradisional.',
+            id: "2",
+            authorName: "Siti Aisyah",
+            authorRole: "WALI",
+            content:
+              "Anak saya sangat senang belajar di sini. Selain hafalan Al-Quran, akhlaknya juga semakin baik. Para ustadz sangat perhatian dan komunikatif dengan orang tua. Sistem pembelajaran yang modern namun tetap menjaga nilai-nilai tradisional.",
             rating: 5,
             isApproved: true,
             isFeatured: false,
-            createdAt: '2024-01-10T14:30:00Z'
+            createdAt: "2024-01-10T14:30:00Z",
           },
           {
-            id: '3',
-            authorName: 'Muhammad Rizki',
-            authorRole: 'SANTRI',
-            content: 'Metode pembelajaran di sini sangat menyenangkan. Tidak membosankan dan mudah dipahami. Saya yang awalnya tidak bisa membaca Al-Quran dengan baik, sekarang sudah bisa dan sedang dalam proses menghafal.',
+            id: "3",
+            authorName: "Muhammad Rizki",
+            authorRole: "SANTRI",
+            content:
+              "Metode pembelajaran di sini sangat menyenangkan. Tidak membosankan dan mudah dipahami. Saya yang awalnya tidak bisa membaca Al-Quran dengan baik, sekarang sudah bisa dan sedang dalam proses menghafal.",
             rating: 4,
             isApproved: false,
             isFeatured: false,
-            createdAt: '2024-01-05T09:15:00Z'
-          }
+            createdAt: "2024-01-05T09:15:00Z",
+          },
         ]);
       } finally {
         setLoading(false);
@@ -110,20 +114,20 @@ const TestimonialsPage = () => {
   };
 
   const handleDeleteTestimonial = async (id: string) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus testimoni ini?')) {
+    if (window.confirm("Apakah Anda yakin ingin menghapus testimoni ini?")) {
       try {
         const response = await fetch(`/api/testimonials/${id}`, {
-          method: 'DELETE'
+          method: "DELETE",
         });
-        
+
         if (response.ok) {
-          setTestimonials(testimonials.filter(item => item.id !== id));
+          setTestimonials(testimonials.filter((item) => item.id !== id));
         } else {
-          throw new Error('Failed to delete testimonial');
+          throw new Error("Failed to delete testimonial");
         }
       } catch (err) {
-        console.error('Error deleting testimonial:', err);
-        alert('Gagal menghapus testimoni. Silakan coba lagi.');
+        console.error("Error deleting testimonial:", err);
+        alert("Gagal menghapus testimoni. Silakan coba lagi.");
       }
     }
   };
@@ -131,54 +135,72 @@ const TestimonialsPage = () => {
   const handleApproveTestimonial = async (id: string, approve: boolean) => {
     try {
       const response = await fetch(`/api/testimonials/${id}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ isApproved: approve })
+        body: JSON.stringify({ isApproved: approve }),
       });
-      
+
       if (response.ok) {
-        setTestimonials(testimonials.map(item => 
-          item.id === id ? { ...item, isApproved: approve } : item
-        ));
+        setTestimonials(
+          testimonials.map((item) =>
+            item.id === id ? { ...item, isApproved: approve } : item,
+          ),
+        );
       } else {
-        throw new Error(`Failed to ${approve ? 'approve' : 'reject'} testimonial`);
+        throw new Error(
+          `Failed to ${approve ? "approve" : "reject"} testimonial`,
+        );
       }
     } catch (err) {
-      console.error(`Error ${approve ? 'approving' : 'rejecting'} testimonial:`, err);
-      alert(`Gagal ${approve ? 'menyetujui' : 'menolak'} testimoni. Silakan coba lagi.`);
+      console.error(
+        `Error ${approve ? "approving" : "rejecting"} testimonial:`,
+        err,
+      );
+      alert(
+        `Gagal ${approve ? "menyetujui" : "menolak"} testimoni. Silakan coba lagi.`,
+      );
     }
   };
 
   const handleFeatureTestimonial = async (id: string, feature: boolean) => {
     try {
       const response = await fetch(`/api/testimonials/${id}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ isFeatured: feature })
+        body: JSON.stringify({ isFeatured: feature }),
       });
-      
+
       if (response.ok) {
-        setTestimonials(testimonials.map(item => 
-          item.id === id ? { ...item, isFeatured: feature } : item
-        ));
+        setTestimonials(
+          testimonials.map((item) =>
+            item.id === id ? { ...item, isFeatured: feature } : item,
+          ),
+        );
       } else {
-        throw new Error(`Failed to ${feature ? 'feature' : 'unfeature'} testimonial`);
+        throw new Error(
+          `Failed to ${feature ? "feature" : "unfeature"} testimonial`,
+        );
       }
     } catch (err) {
-      console.error(`Error ${feature ? 'featuring' : 'unfeaturing'} testimonial:`, err);
-      alert(`Gagal ${feature ? 'menampilkan' : 'menyembunyikan'} testimoni. Silakan coba lagi.`);
+      console.error(
+        `Error ${feature ? "featuring" : "unfeaturing"} testimonial:`,
+        err,
+      );
+      alert(
+        `Gagal ${feature ? "menampilkan" : "menyembunyikan"} testimoni. Silakan coba lagi.`,
+      );
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -187,7 +209,7 @@ const TestimonialsPage = () => {
       <Star
         key={index}
         className={`h-4 w-4 ${
-          index < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+          index < rating ? "text-yellow-400 fill-current" : "text-gray-300"
         }`}
       />
     ));
@@ -195,24 +217,26 @@ const TestimonialsPage = () => {
 
   const formatRole = (role: string) => {
     switch (role) {
-      case 'SANTRI':
-        return 'Santri';
-      case 'WALI':
-        return 'Wali Santri';
-      case 'ALUMNI':
-        return 'Alumni';
+      case "SANTRI":
+        return "Santri";
+      case "WALI":
+        return "Wali Santri";
+      case "ALUMNI":
+        return "Alumni";
       default:
         return role;
     }
   };
 
-  const filteredTestimonials = testimonials.filter(item => {
-    const matchesSearch = item.authorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.content.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'ALL' || 
-                         (statusFilter === 'APPROVED' && item.isApproved) ||
-                         (statusFilter === 'PENDING' && !item.isApproved) ||
-                         (statusFilter === 'FEATURED' && item.isFeatured);
+  const filteredTestimonials = testimonials.filter((item) => {
+    const matchesSearch =
+      item.authorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.content.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === "ALL" ||
+      (statusFilter === "APPROVED" && item.isApproved) ||
+      (statusFilter === "PENDING" && !item.isApproved) ||
+      (statusFilter === "FEATURED" && item.isFeatured);
     return matchesSearch && matchesStatus;
   });
 
@@ -285,25 +309,36 @@ const TestimonialsPage = () => {
               </div>
             ) : filteredTestimonials.length === 0 ? (
               <div className="text-center py-10">
-                <p className="text-gray-600">Tidak ada testimoni yang ditemukan.</p>
+                <p className="text-gray-600">
+                  Tidak ada testimoni yang ditemukan.
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredTestimonials.map((item) => (
-                  <Card key={item.id} className={`overflow-hidden hover:shadow-lg transition-shadow ${
-                    item.isFeatured ? 'ring-2 ring-teal-500' : ''
-                  }`}>
+                  <Card
+                    key={item.id}
+                    className={`overflow-hidden hover:shadow-lg transition-shadow ${
+                      item.isFeatured ? "ring-2 ring-teal-500" : ""
+                    }`}
+                  >
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex items-center">
-                          <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center mr-3">
-                            <span className="font-bold text-teal-600">
-                              {item.authorName.charAt(0)}
-                            </span>
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3 overflow-hidden relative">
+                            <div className="w-full h-full bg-teal-100 rounded-full flex items-center justify-center">
+                              <span className="font-bold text-teal-600">
+                                {item.authorName.charAt(0)}
+                              </span>
+                            </div>
                           </div>
                           <div>
-                            <div className="font-semibold text-gray-900">{item.authorName}</div>
-                            <div className="text-sm text-gray-600">{formatRole(item.authorRole)}</div>
+                            <div className="font-semibold text-gray-900">
+                              {item.authorName}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {formatRole(item.authorRole)}
+                            </div>
                           </div>
                         </div>
                         <div className="flex">
@@ -326,7 +361,11 @@ const TestimonialsPage = () => {
                       </div>
 
                       <p className="text-gray-700 text-sm leading-relaxed mb-4">
-                        "{item.content.length > 150 ? `${item.content.substring(0, 150)}...` : item.content}"
+                        "
+                        {item.content.length > 150
+                          ? `${item.content.substring(0, 150)}...`
+                          : item.content}
+                        "
                       </p>
 
                       <div className="flex justify-between items-center">
@@ -336,7 +375,9 @@ const TestimonialsPage = () => {
                         <div className="flex space-x-2">
                           {!item.isApproved ? (
                             <button
-                              onClick={() => handleApproveTestimonial(item.id, true)}
+                              onClick={() =>
+                                handleApproveTestimonial(item.id, true)
+                              }
                               className="text-green-600 hover:text-green-900"
                               title="Approve"
                             >
@@ -344,7 +385,9 @@ const TestimonialsPage = () => {
                             </button>
                           ) : (
                             <button
-                              onClick={() => handleApproveTestimonial(item.id, false)}
+                              onClick={() =>
+                                handleApproveTestimonial(item.id, false)
+                              }
                               className="text-yellow-600 hover:text-yellow-900"
                               title="Unapprove"
                             >
@@ -352,11 +395,18 @@ const TestimonialsPage = () => {
                             </button>
                           )}
                           <button
-                            onClick={() => handleFeatureTestimonial(item.id, !item.isFeatured)}
-                            className={`${item.isFeatured ? 'text-teal-600 hover:text-teal-900' : 'text-gray-600 hover:text-gray-900'}`}
+                            onClick={() =>
+                              handleFeatureTestimonial(
+                                item.id,
+                                !item.isFeatured,
+                              )
+                            }
+                            className={`${item.isFeatured ? "text-teal-600 hover:text-teal-900" : "text-gray-600 hover:text-gray-900"}`}
                             title={item.isFeatured ? "Unfeature" : "Feature"}
                           >
-                            <Star className={`w-4 h-4 ${item.isFeatured ? 'fill-current' : ''}`} />
+                            <Star
+                              className={`w-4 h-4 ${item.isFeatured ? "fill-current" : ""}`}
+                            />
                           </button>
                           <button
                             onClick={() => handleEditTestimonial(item)}

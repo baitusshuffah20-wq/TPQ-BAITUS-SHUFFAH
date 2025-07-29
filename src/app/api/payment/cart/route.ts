@@ -1,43 +1,53 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PaymentGatewayService } from '@/lib/payment-gateway';
-import { CartService } from '@/lib/cart-service';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { PaymentGatewayService } from "@/lib/payment-gateway-service";
+import { CartService } from "@/lib/cart-service";
+import { prisma } from "@/lib/prisma";
 
 // POST /api/payment/cart - Create payment from cart
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (jsonError) {
+      console.error("Error parsing request body as JSON:", jsonError);
+      return NextResponse.json(
+        { success: false, message: "Invalid JSON in request body" },
+        { status: 400 },
+      );
+    }
+
     const {
       cartId,
-      gateway = 'MIDTRANS',
+      gateway = "MIDTRANS",
       paymentMethod,
       customerInfo,
       billingInfo,
-      redirectUrl
+      redirectUrl,
     } = body;
 
     // Validation
     if (!cartId || !customerInfo) {
       return NextResponse.json(
-        { success: false, message: 'Cart ID and customer info are required' },
-        { status: 400 }
+        { success: false, message: "Cart ID and customer info are required" },
+        { status: 400 },
       );
     }
 
     // Get cart summary
     const cartSummary = await CartService.getCartSummary(cartId);
-    
+
     if (cartSummary.items.length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Cart is empty' },
-        { status: 400 }
+        { success: false, message: "Cart is empty" },
+        { status: 400 },
       );
     }
 
     if (cartSummary.total <= 0) {
       return NextResponse.json(
-        { success: false, message: 'Invalid cart total' },
-        { status: 400 }
+        { success: false, message: "Invalid cart total" },
+        { status: 400 },
       );
     }
 
@@ -48,30 +58,30 @@ export async function POST(request: NextRequest) {
     const paymentRequest = {
       orderId,
       amount: cartSummary.total,
-      currency: 'IDR',
-      items: cartSummary.items.map(item => ({
+      currency: "IDR",
+      items: cartSummary.items.map((item) => ({
         id: item.itemId,
         name: item.name,
         price: item.price,
         quantity: item.quantity,
         category: item.itemType.toLowerCase(),
-        description: item.description
+        description: item.description,
       })),
       customer: {
-        id: customerInfo.id || 'guest',
+        id: customerInfo.id || "guest",
         name: customerInfo.name,
         email: customerInfo.email,
-        phone: customerInfo.phone
+        phone: customerInfo.phone,
       },
       billing: billingInfo,
       metadata: {
         cartId,
         paymentMethod,
         itemCount: cartSummary.itemCount,
-        originalItems: cartSummary.items
+        originalItems: cartSummary.items,
       },
       redirectUrl,
-      expiry: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+      expiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
     };
 
     // Create payment with selected gateway
@@ -79,27 +89,29 @@ export async function POST(request: NextRequest) {
     let paymentResponse;
 
     switch (gateway.toUpperCase()) {
-      case 'MIDTRANS':
-        paymentResponse = await paymentGatewayService.createMidtransPayment(paymentRequest);
+      case "MIDTRANS":
+        paymentResponse =
+          await paymentGatewayService.createMidtransPayment(paymentRequest);
         break;
-      case 'XENDIT':
-        paymentResponse = await paymentGatewayService.createXenditPayment(paymentRequest);
+      case "XENDIT":
+        paymentResponse =
+          await paymentGatewayService.createXenditPayment(paymentRequest);
         break;
       default:
         return NextResponse.json(
-          { success: false, message: 'Unsupported payment gateway' },
-          { status: 400 }
+          { success: false, message: "Unsupported payment gateway" },
+          { status: 400 },
         );
     }
 
     if (!paymentResponse.success) {
       return NextResponse.json(
-        { 
-          success: false, 
-          message: 'Payment creation failed',
-          error: paymentResponse.error
+        {
+          success: false,
+          message: "Payment creation failed",
+          error: paymentResponse.error,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -116,16 +128,16 @@ export async function POST(request: NextRequest) {
         tax: cartSummary.tax,
         discount: cartSummary.discount,
         total: cartSummary.total,
-        status: 'PENDING',
+        status: "PENDING",
         paymentId: paymentResponse.paymentId,
         paymentGateway: gateway,
-        paymentMethod: paymentMethod || 'unknown',
+        paymentMethod: paymentMethod || "unknown",
         metadata: JSON.stringify({
           cartId,
           billingInfo,
-          originalCartSummary: cartSummary
-        })
-      }
+          originalCartSummary: cartSummary,
+        }),
+      },
     });
 
     // Clear cart after successful payment creation
@@ -133,7 +145,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Payment created successfully',
+      message: "Payment created successfully",
       data: {
         orderId,
         paymentId: paymentResponse.paymentId,
@@ -145,18 +157,18 @@ export async function POST(request: NextRequest) {
         status: paymentResponse.status,
         expiryTime: paymentResponse.expiryTime,
         instructions: paymentResponse.instructions,
-        gateway
-      }
+        gateway,
+      },
     });
   } catch (error) {
-    console.error('Error creating payment from cart:', error);
+    console.error("Error creating payment from cart:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to create payment',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to create payment",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

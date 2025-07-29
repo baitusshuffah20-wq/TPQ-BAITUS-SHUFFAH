@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import QRCode from 'qrcode';
-import { Download, RefreshCw, Copy, Check } from 'lucide-react';
-import Button from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import React, { useEffect, useRef, useState } from "react";
+import QRCode from "qrcode";
+import { Download, RefreshCw, Copy, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface QRCodeGeneratorProps {
   data: string;
@@ -18,15 +18,15 @@ interface QRCodeGeneratorProps {
 
 const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
   data,
-  title = 'QR Code',
+  title = "QR Code",
   description,
   size = 256,
-  className = '',
+  className = "",
   showControls = true,
-  onGenerate
+  onGenerate,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -34,28 +34,28 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
     if (!canvasRef.current || !data) return;
 
     setIsGenerating(true);
-    
+
     try {
       const canvas = canvasRef.current;
       await QRCode.toCanvas(canvas, data, {
         width: size,
         margin: 2,
         color: {
-          dark: '#0f766e', // Teal color
-          light: '#ffffff'
+          dark: "#0f766e", // Teal color
+          light: "#ffffff",
         },
-        errorCorrectionLevel: 'M'
+        errorCorrectionLevel: "M",
       });
 
       // Convert canvas to data URL
-      const dataUrl = canvas.toDataURL('image/png');
+      const dataUrl = canvas.toDataURL("image/png");
       setQrDataUrl(dataUrl);
-      
+
       if (onGenerate) {
         onGenerate(dataUrl);
       }
     } catch (error) {
-      console.error('Error generating QR code:', error);
+      console.error("Error generating QR code:", error);
     } finally {
       setIsGenerating(false);
     }
@@ -68,7 +68,7 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
   const downloadQR = () => {
     if (!qrDataUrl) return;
 
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.download = `qr-code-${Date.now()}.png`;
     link.href = qrDataUrl;
     link.click();
@@ -80,7 +80,7 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+      console.error("Failed to copy to clipboard:", error);
     }
   };
 
@@ -90,17 +90,17 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
     try {
       const response = await fetch(qrDataUrl);
       const blob = await response.blob();
-      
+
       await navigator.clipboard.write([
         new ClipboardItem({
-          [blob.type]: blob
-        })
+          [blob.type]: blob,
+        }),
       ]);
-      
+
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy image to clipboard:', error);
+      console.error("Failed to copy image to clipboard:", error);
     }
   };
 
@@ -116,16 +116,16 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
               onClick={generateQR}
               disabled={isGenerating}
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${isGenerating ? "animate-spin" : ""}`}
+              />
               Refresh
             </Button>
           )}
         </CardTitle>
-        {description && (
-          <p className="text-sm text-gray-600">{description}</p>
-        )}
+        {description && <p className="text-sm text-gray-600">{description}</p>}
       </CardHeader>
-      
+
       <CardContent className="text-center">
         {/* QR Code Canvas */}
         <div className="flex justify-center mb-4">
@@ -133,7 +133,7 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
             <canvas
               ref={canvasRef}
               className="max-w-full h-auto"
-              style={{ imageRendering: 'pixelated' }}
+              style={{ imageRendering: "pixelated" }}
             />
           </div>
         </div>
@@ -156,7 +156,7 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
               <Download className="h-4 w-4 mr-2" />
               Download PNG
             </Button>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -170,7 +170,7 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
               )}
               Copy Data
             </Button>
-            
+
             <Button
               variant="outline"
               size="sm"

@@ -1,20 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 // GET /api/spp/settings - Get all SPP settings
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const isActive = searchParams.get('isActive');
-    const level = searchParams.get('level');
+    const isActive = searchParams.get("isActive");
+    const level = searchParams.get("level");
 
     const where: any = {};
 
-    if (isActive && isActive !== 'ALL') {
-      where.isActive = isActive === 'true';
+    if (isActive && isActive !== "ALL") {
+      where.isActive = isActive === "true";
     }
 
-    if (level && level !== 'ALL') {
+    if (level && level !== "ALL") {
       where.level = level;
     }
 
@@ -23,26 +23,25 @@ export async function GET(request: NextRequest) {
       include: {
         _count: {
           select: {
-            sppRecords: true
-          }
-        }
+            sppRecords: true,
+          },
+        },
       },
       orderBy: {
-        name: 'asc'
-      }
+        name: "asc",
+      },
     });
 
     return NextResponse.json({
       success: true,
       sppSettings,
-      total: sppSettings.length
+      total: sppSettings.length,
     });
-
   } catch (error) {
-    console.error('Error fetching SPP settings:', error);
+    console.error("Error fetching SPP settings:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengambil data pengaturan SPP' },
-      { status: 500 }
+      { success: false, message: "Gagal mengambil data pengaturan SPP" },
+      { status: 500 },
     );
   }
 }
@@ -51,38 +50,32 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { 
-      name, 
-      amount, 
-      description, 
-      isActive = true, 
-      level 
-    } = body;
+    const { name, amount, description, isActive = true, level } = body;
 
     // Validation
     if (!name || !amount) {
       return NextResponse.json(
-        { success: false, message: 'Nama dan jumlah SPP wajib diisi' },
-        { status: 400 }
+        { success: false, message: "Nama dan jumlah SPP wajib diisi" },
+        { status: 400 },
       );
     }
 
     if (amount <= 0) {
       return NextResponse.json(
-        { success: false, message: 'Jumlah SPP harus lebih dari 0' },
-        { status: 400 }
+        { success: false, message: "Jumlah SPP harus lebih dari 0" },
+        { status: 400 },
       );
     }
 
     // Check if SPP setting name already exists
     const existingSetting = await prisma.sPPSetting.findFirst({
-      where: { name }
+      where: { name },
     });
 
     if (existingSetting) {
       return NextResponse.json(
-        { success: false, message: 'Nama pengaturan SPP sudah digunakan' },
-        { status: 400 }
+        { success: false, message: "Nama pengaturan SPP sudah digunakan" },
+        { status: 400 },
       );
     }
 
@@ -93,28 +86,27 @@ export async function POST(request: NextRequest) {
         amount: parseFloat(amount.toString()),
         description: description || null,
         isActive,
-        level: level || null
+        level: level || null,
       },
       include: {
         _count: {
           select: {
-            sppRecords: true
-          }
-        }
-      }
+            sppRecords: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Pengaturan SPP berhasil dibuat',
-      sppSetting
+      message: "Pengaturan SPP berhasil dibuat",
+      sppSetting,
     });
-
   } catch (error) {
-    console.error('Error creating SPP setting:', error);
+    console.error("Error creating SPP setting:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal membuat pengaturan SPP' },
-      { status: 500 }
+      { success: false, message: "Gagal membuat pengaturan SPP" },
+      { status: 500 },
     );
   }
 }

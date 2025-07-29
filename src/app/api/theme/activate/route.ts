@@ -1,27 +1,37 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { createAuditLog } from '@/lib/audit-log';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { createAuditLog } from "@/lib/audit-log";
 
 // POST handler - Activate a theme
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-      return NextResponse.json({ 
-        success: false,
-        error: 'Unauthorized' 
-      }, { status: 401 });
+    if (
+      !session ||
+      !session.user ||
+      !["ADMIN", "SUPER_ADMIN"].includes(session.user.role)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        { status: 401 },
+      );
     }
 
     const { id } = await request.json();
-    
+
     if (!id) {
-      return NextResponse.json({
-        success: false,
-        error: 'Theme ID is required',
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Theme ID is required",
+        },
+        { status: 400 },
+      );
     }
 
     // Check if theme exists
@@ -30,10 +40,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (!theme) {
-      return NextResponse.json({
-        success: false,
-        error: 'Theme not found',
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Theme not found",
+        },
+        { status: 404 },
+      );
     }
 
     // Deactivate all themes
@@ -50,8 +63,8 @@ export async function POST(request: NextRequest) {
 
     // Create audit log
     await createAuditLog({
-      action: 'ACTIVATE',
-      entity: 'THEME',
+      action: "ACTIVATE",
+      entity: "THEME",
       entityId: id,
       userId: session.user.id,
       newData: JSON.stringify(activatedTheme),
@@ -60,17 +73,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       theme: activatedTheme,
-      message: 'Theme activated successfully',
+      message: "Theme activated successfully",
     });
   } catch (error) {
-    console.error('Error activating theme:', error);
+    console.error("Error activating theme:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to activate theme',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: "Failed to activate theme",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

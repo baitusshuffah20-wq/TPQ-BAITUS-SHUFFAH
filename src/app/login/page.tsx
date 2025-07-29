@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import NextAuthLoginPage from './next-auth-page';
+import NextAuthLoginPage from "./next-auth-page";
 
 const LoginPage = () => {
   return <NextAuthLoginPage />;

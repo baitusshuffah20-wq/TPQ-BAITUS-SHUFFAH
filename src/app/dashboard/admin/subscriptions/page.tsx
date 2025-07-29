@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { Badge } from '@/components/ui/badge';
-import { 
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
   CreditCard,
   Users,
   Calendar,
@@ -20,9 +20,9 @@ import {
   RefreshCw,
   AlertTriangle,
   CheckCircle,
-  Clock
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  Clock,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface Subscription {
   id: string;
@@ -46,15 +46,15 @@ export default function SubscriptionsPage() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    status: '',
-    search: '',
-    billingCycle: ''
+    status: "",
+    search: "",
+    billingCycle: "",
   });
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
     total: 0,
-    totalPages: 0
+    totalPages: 0,
   });
 
   useEffect(() => {
@@ -66,39 +66,46 @@ export default function SubscriptionsPage() {
       setLoading(true);
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
-        limit: pagination.limit.toString()
+        limit: pagination.limit.toString(),
       });
 
-      if (filters.status) queryParams.append('status', filters.status);
-      if (filters.search) queryParams.append('search', filters.search);
-      if (filters.billingCycle) queryParams.append('billingCycle', filters.billingCycle);
+      if (filters.status) queryParams.append("status", filters.status);
+      if (filters.search) queryParams.append("search", filters.search);
+      if (filters.billingCycle)
+        queryParams.append("billingCycle", filters.billingCycle);
 
-      const response = await fetch(`/api/subscriptions?${queryParams.toString()}`);
+      const response = await fetch(
+        `/api/subscriptions?${queryParams.toString()}`,
+      );
       if (response.ok) {
         const data = await response.json();
         setSubscriptions(data.data.subscriptions);
-        setPagination(prev => ({
+        setPagination((prev) => ({
           ...prev,
           total: data.data.pagination.total,
-          totalPages: data.data.pagination.totalPages
+          totalPages: data.data.pagination.totalPages,
         }));
       } else {
-        toast.error('Gagal memuat data subscription');
+        toast.error("Gagal memuat data subscription");
       }
     } catch (error) {
-      console.error('Error loading subscriptions:', error);
-      toast.error('Gagal memuat data subscription');
+      console.error("Error loading subscriptions:", error);
+      toast.error("Gagal memuat data subscription");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubscriptionAction = async (subscriptionId: string, action: string, reason?: string) => {
+  const handleSubscriptionAction = async (
+    subscriptionId: string,
+    action: string,
+    reason?: string,
+  ) => {
     try {
       const response = await fetch(`/api/subscriptions/${subscriptionId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, reason })
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, reason }),
       });
 
       if (response.ok) {
@@ -115,31 +122,44 @@ export default function SubscriptionsPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
     });
   };
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      ACTIVE: { variant: 'success' as const, icon: CheckCircle, label: 'Active' },
-      TRIAL: { variant: 'warning' as const, icon: Clock, label: 'Trial' },
-      PAUSED: { variant: 'warning' as const, icon: Pause, label: 'Paused' },
-      CANCELLED: { variant: 'destructive' as const, icon: X, label: 'Cancelled' },
-      EXPIRED: { variant: 'destructive' as const, icon: AlertTriangle, label: 'Expired' }
+      ACTIVE: {
+        variant: "success" as const,
+        icon: CheckCircle,
+        label: "Active",
+      },
+      TRIAL: { variant: "warning" as const, icon: Clock, label: "Trial" },
+      PAUSED: { variant: "warning" as const, icon: Pause, label: "Paused" },
+      CANCELLED: {
+        variant: "destructive" as const,
+        icon: X,
+        label: "Cancelled",
+      },
+      EXPIRED: {
+        variant: "destructive" as const,
+        icon: AlertTriangle,
+        label: "Expired",
+      },
     };
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.ACTIVE;
+    const config =
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.ACTIVE;
     const Icon = config.icon;
 
     return (
@@ -152,15 +172,18 @@ export default function SubscriptionsPage() {
 
   const getBillingCycleBadge = (cycle: string) => {
     const cycleConfig = {
-      MONTHLY: { label: 'Bulanan', color: 'bg-blue-100 text-blue-800' },
-      QUARTERLY: { label: 'Triwulan', color: 'bg-green-100 text-green-800' },
-      YEARLY: { label: 'Tahunan', color: 'bg-purple-100 text-purple-800' }
+      MONTHLY: { label: "Bulanan", color: "bg-blue-100 text-blue-800" },
+      QUARTERLY: { label: "Triwulan", color: "bg-green-100 text-green-800" },
+      YEARLY: { label: "Tahunan", color: "bg-purple-100 text-purple-800" },
     };
 
-    const config = cycleConfig[cycle as keyof typeof cycleConfig] || cycleConfig.MONTHLY;
+    const config =
+      cycleConfig[cycle as keyof typeof cycleConfig] || cycleConfig.MONTHLY;
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}
+      >
         {config.label}
       </span>
     );
@@ -169,12 +192,12 @@ export default function SubscriptionsPage() {
   // Calculate overview stats
   const overviewStats = {
     total: subscriptions.length,
-    active: subscriptions.filter(s => s.status === 'ACTIVE').length,
-    trial: subscriptions.filter(s => s.status === 'TRIAL').length,
-    paused: subscriptions.filter(s => s.status === 'PAUSED').length,
+    active: subscriptions.filter((s) => s.status === "ACTIVE").length,
+    trial: subscriptions.filter((s) => s.status === "TRIAL").length,
+    paused: subscriptions.filter((s) => s.status === "PAUSED").length,
     totalRevenue: subscriptions
-      .filter(s => s.status === 'ACTIVE')
-      .reduce((sum, s) => sum + s.amount, 0)
+      .filter((s) => s.status === "ACTIVE")
+      .reduce((sum, s) => sum + s.amount, 0),
   };
 
   return (
@@ -182,8 +205,12 @@ export default function SubscriptionsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Subscription Management</h1>
-          <p className="text-gray-600">Kelola subscription SPP bulanan santri</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Subscription Management
+          </h1>
+          <p className="text-gray-600">
+            Kelola subscription SPP bulanan santri
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <Button
@@ -193,7 +220,7 @@ export default function SubscriptionsPage() {
             disabled={loading}
             className="flex items-center gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
           <Button className="flex items-center gap-2">
@@ -213,7 +240,9 @@ export default function SubscriptionsPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Total</p>
-                <p className="text-xl font-bold text-gray-900">{overviewStats.total}</p>
+                <p className="text-xl font-bold text-gray-900">
+                  {overviewStats.total}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -227,7 +256,9 @@ export default function SubscriptionsPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Active</p>
-                <p className="text-xl font-bold text-gray-900">{overviewStats.active}</p>
+                <p className="text-xl font-bold text-gray-900">
+                  {overviewStats.active}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -241,7 +272,9 @@ export default function SubscriptionsPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Trial</p>
-                <p className="text-xl font-bold text-gray-900">{overviewStats.trial}</p>
+                <p className="text-xl font-bold text-gray-900">
+                  {overviewStats.trial}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -255,7 +288,9 @@ export default function SubscriptionsPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Paused</p>
-                <p className="text-xl font-bold text-gray-900">{overviewStats.paused}</p>
+                <p className="text-xl font-bold text-gray-900">
+                  {overviewStats.paused}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -289,15 +324,19 @@ export default function SubscriptionsPage() {
                   type="text"
                   placeholder="Cari nama santri..."
                   value={filters.search}
-                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                  onChange={(e) =>
+                    setFilters((prev) => ({ ...prev, search: e.target.value }))
+                  }
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
-            
+
             <select
               value={filters.status}
-              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, status: e.target.value }))
+              }
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Semua Status</option>
@@ -307,10 +346,15 @@ export default function SubscriptionsPage() {
               <option value="CANCELLED">Cancelled</option>
               <option value="EXPIRED">Expired</option>
             </select>
-            
+
             <select
               value={filters.billingCycle}
-              onChange={(e) => setFilters(prev => ({ ...prev, billingCycle: e.target.value }))}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  billingCycle: e.target.value,
+                }))
+              }
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Semua Siklus</option>
@@ -334,7 +378,10 @@ export default function SubscriptionsPage() {
           {loading ? (
             <div className="space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
+                <div
+                  key={i}
+                  className="flex items-center gap-4 p-4 border rounded-lg"
+                >
                   <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
                   <div className="flex-1 space-y-2">
                     <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
@@ -351,42 +398,55 @@ export default function SubscriptionsPage() {
             <div className="text-center py-12">
               <CreditCard className="h-12 w-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-600 mb-2">Tidak ada subscription</p>
-              <p className="text-sm text-gray-500">Subscription akan muncul di sini setelah dibuat</p>
+              <p className="text-sm text-gray-500">
+                Subscription akan muncul di sini setelah dibuat
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
               {subscriptions.map((subscription) => (
-                <div key={subscription.id} className="flex items-center gap-4 p-4 border rounded-lg hover:shadow-sm transition-shadow">
+                <div
+                  key={subscription.id}
+                  className="flex items-center gap-4 p-4 border rounded-lg hover:shadow-sm transition-shadow"
+                >
                   {/* Student Info */}
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h4 className="font-medium text-gray-900">{subscription.student.name}</h4>
+                      <h4 className="font-medium text-gray-900">
+                        {subscription.student.name}
+                      </h4>
                       {getStatusBadge(subscription.status)}
                       {getBillingCycleBadge(subscription.billingCycle)}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-600">
                       <span>Plan: {subscription.planType}</span>
-                      <span>•</span>
+                      <span>�</span>
                       <span>{formatCurrency(subscription.amount)}</span>
-                      <span>•</span>
-                      <span>Next: {formatDate(subscription.nextBillingDate)}</span>
+                      <span>�</span>
+                      <span>
+                        Next: {formatDate(subscription.nextBillingDate)}
+                      </span>
                     </div>
                   </div>
 
                   {/* Actions */}
                   <div className="flex items-center gap-2">
                     <Button
-                      onClick={() => {/* View details */}}
+                      onClick={() => {
+                        /* View details */
+                      }}
                       variant="outline"
                       size="sm"
                       className="h-8 w-8 p-0"
                     >
                       <Eye className="h-3 w-3" />
                     </Button>
-                    
-                    {subscription.status === 'ACTIVE' && (
+
+                    {subscription.status === "ACTIVE" && (
                       <Button
-                        onClick={() => handleSubscriptionAction(subscription.id, 'pause')}
+                        onClick={() =>
+                          handleSubscriptionAction(subscription.id, "pause")
+                        }
                         variant="outline"
                         size="sm"
                         className="h-8 w-8 p-0"
@@ -394,10 +454,12 @@ export default function SubscriptionsPage() {
                         <Pause className="h-3 w-3" />
                       </Button>
                     )}
-                    
-                    {subscription.status === 'PAUSED' && (
+
+                    {subscription.status === "PAUSED" && (
                       <Button
-                        onClick={() => handleSubscriptionAction(subscription.id, 'resume')}
+                        onClick={() =>
+                          handleSubscriptionAction(subscription.id, "resume")
+                        }
                         variant="outline"
                         size="sm"
                         className="h-8 w-8 p-0"
@@ -405,9 +467,11 @@ export default function SubscriptionsPage() {
                         <Play className="h-3 w-3" />
                       </Button>
                     )}
-                    
+
                     <Button
-                      onClick={() => handleSubscriptionAction(subscription.id, 'cancel')}
+                      onClick={() =>
+                        handleSubscriptionAction(subscription.id, "cancel")
+                      }
                       variant="outline"
                       size="sm"
                       className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
@@ -426,11 +490,15 @@ export default function SubscriptionsPage() {
       {pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-600">
-            Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} subscriptions
+            Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
+            {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+            {pagination.total} subscriptions
           </p>
           <div className="flex items-center gap-2">
             <Button
-              onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+              onClick={() =>
+                setPagination((prev) => ({ ...prev, page: prev.page - 1 }))
+              }
               disabled={pagination.page === 1}
               variant="outline"
               size="sm"
@@ -441,7 +509,9 @@ export default function SubscriptionsPage() {
               Page {pagination.page} of {pagination.totalPages}
             </span>
             <Button
-              onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+              onClick={() =>
+                setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
+              }
               disabled={pagination.page === pagination.totalPages}
               variant="outline"
               size="sm"

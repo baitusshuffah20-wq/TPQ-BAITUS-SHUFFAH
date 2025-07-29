@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { createAuditLog } from '@/lib/audit-log';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { createAuditLog } from "@/lib/audit-log";
+import { z } from "zod";
 
 // Schema for theme validation
 const themeSchema = z.object({
@@ -32,7 +32,7 @@ const themeSchema = z.object({
   layout: z.object({
     borderRadius: z.string(),
     containerWidth: z.string(),
-    sidebarStyle: z.enum(['default', 'compact', 'expanded']),
+    sidebarStyle: z.enum(["default", "compact", "expanded"]),
   }),
   logo: z.object({
     main: z.string(),
@@ -46,7 +46,7 @@ const themeSchema = z.object({
 // GET handler - Get a specific theme
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const id = params.id;
@@ -56,10 +56,13 @@ export async function GET(
     });
 
     if (!theme) {
-      return NextResponse.json({ 
-        success: false,
-        error: 'Theme not found' 
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Theme not found",
+        },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json({
@@ -67,14 +70,14 @@ export async function GET(
       theme,
     });
   } catch (error) {
-    console.error('Error fetching theme:', error);
+    console.error("Error fetching theme:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch theme',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: "Failed to fetch theme",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -82,15 +85,22 @@ export async function GET(
 // PUT handler - Update a theme
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-      return NextResponse.json({ 
-        success: false,
-        error: 'Unauthorized' 
-      }, { status: 401 });
+    if (
+      !session ||
+      !session.user ||
+      !["ADMIN", "SUPER_ADMIN"].includes(session.user.role)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        { status: 401 },
+      );
     }
 
     const id = params.id;
@@ -102,10 +112,10 @@ export async function PUT(
       return NextResponse.json(
         {
           success: false,
-          error: 'Validation failed',
+          error: "Validation failed",
           details: validationResult.error.format(),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -115,18 +125,21 @@ export async function PUT(
     });
 
     if (!existingTheme) {
-      return NextResponse.json({ 
-        success: false,
-        error: 'Theme not found' 
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Theme not found",
+        },
+        { status: 404 },
+      );
     }
 
     // If this is set as active, deactivate all other themes
     if (data.isActive) {
       await prisma.theme.updateMany({
-        where: { 
+        where: {
           isActive: true,
-          id: { not: id }
+          id: { not: id },
         },
         data: { isActive: false },
       });
@@ -149,8 +162,8 @@ export async function PUT(
 
     // Create audit log
     await createAuditLog({
-      action: 'UPDATE',
-      entity: 'THEME',
+      action: "UPDATE",
+      entity: "THEME",
       entityId: id,
       userId: session.user.id,
       oldData: JSON.stringify(existingTheme),
@@ -162,14 +175,14 @@ export async function PUT(
       theme: updatedTheme,
     });
   } catch (error) {
-    console.error('Error updating theme:', error);
+    console.error("Error updating theme:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to update theme',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: "Failed to update theme",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -177,15 +190,22 @@ export async function PUT(
 // DELETE handler - Delete a theme
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-      return NextResponse.json({ 
-        success: false,
-        error: 'Unauthorized' 
-      }, { status: 401 });
+    if (
+      !session ||
+      !session.user ||
+      !["ADMIN", "SUPER_ADMIN"].includes(session.user.role)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        { status: 401 },
+      );
     }
 
     const id = params.id;
@@ -196,18 +216,25 @@ export async function DELETE(
     });
 
     if (!theme) {
-      return NextResponse.json({ 
-        success: false,
-        error: 'Theme not found' 
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Theme not found",
+        },
+        { status: 404 },
+      );
     }
 
     // Don't allow deleting the active theme
     if (theme.isActive) {
-      return NextResponse.json({
-        success: false,
-        error: 'Cannot delete the active theme. Please activate another theme first.',
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Cannot delete the active theme. Please activate another theme first.",
+        },
+        { status: 400 },
+      );
     }
 
     // Delete theme from database
@@ -217,8 +244,8 @@ export async function DELETE(
 
     // Create audit log
     await createAuditLog({
-      action: 'DELETE',
-      entity: 'THEME',
+      action: "DELETE",
+      entity: "THEME",
       entityId: id,
       userId: session.user.id,
       oldData: JSON.stringify(theme),
@@ -226,17 +253,17 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: 'Theme deleted successfully',
+      message: "Theme deleted successfully",
     });
   } catch (error) {
-    console.error('Error deleting theme:', error);
+    console.error("Error deleting theme:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to delete theme',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: "Failed to delete theme",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { SubscriptionService } from '@/lib/subscription-service';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { SubscriptionService } from "@/lib/subscription-service";
+import { prisma } from "@/lib/prisma";
 
 // GET /api/subscriptions - Get subscriptions
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const studentId = searchParams.get('studentId');
-    const status = searchParams.get('status');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const studentId = searchParams.get("studentId");
+    const status = searchParams.get("status");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
 
     const skip = (page - 1) * limit;
 
@@ -23,19 +23,19 @@ export async function GET(request: NextRequest) {
         where: whereClause,
         include: {
           student: {
-            select: { id: true, name: true, email: true, phone: true }
+            select: { id: true, name: true, email: true, phone: true },
           },
           billings: {
-            where: { status: 'PENDING' },
-            orderBy: { dueDate: 'asc' },
-            take: 1
-          }
+            where: { status: "PENDING" },
+            orderBy: { dueDate: "asc" },
+            take: 1,
+          },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         skip,
-        take: limit
+        take: limit,
       }),
-      prisma.subscription.count({ where: whereClause })
+      prisma.subscription.count({ where: whereClause }),
     ]);
 
     return NextResponse.json({
@@ -46,19 +46,19 @@ export async function GET(request: NextRequest) {
           page,
           limit,
           total,
-          totalPages: Math.ceil(total / limit)
-        }
-      }
+          totalPages: Math.ceil(total / limit),
+        },
+      },
     });
   } catch (error) {
-    console.error('Error getting subscriptions:', error);
+    console.error("Error getting subscriptions:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to get subscriptions',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to get subscriptions",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -79,27 +79,31 @@ export async function POST(request: NextRequest) {
       trialDays,
       autoRenewal,
       metadata,
-      createdBy
+      createdBy,
     } = body;
 
     // Validation
     if (!studentId || !planType || !amount || !billingCycle) {
       return NextResponse.json(
-        { success: false, message: 'Student ID, plan type, amount, and billing cycle are required' },
-        { status: 400 }
+        {
+          success: false,
+          message:
+            "Student ID, plan type, amount, and billing cycle are required",
+        },
+        { status: 400 },
       );
     }
 
     // Check if student exists
     const student = await prisma.user.findUnique({
       where: { id: studentId },
-      select: { id: true, name: true, role: true }
+      select: { id: true, name: true, role: true },
     });
 
     if (!student) {
       return NextResponse.json(
-        { success: false, message: 'Student not found' },
-        { status: 404 }
+        { success: false, message: "Student not found" },
+        { status: 404 },
       );
     }
 
@@ -108,14 +112,17 @@ export async function POST(request: NextRequest) {
       where: {
         studentId,
         planType,
-        status: { in: ['ACTIVE', 'TRIAL'] }
-      }
+        status: { in: ["ACTIVE", "TRIAL"] },
+      },
     });
 
     if (existingSubscription) {
       return NextResponse.json(
-        { success: false, message: 'Student already has an active subscription for this plan' },
-        { status: 400 }
+        {
+          success: false,
+          message: "Student already has an active subscription for this plan",
+        },
+        { status: 400 },
       );
     }
 
@@ -132,23 +139,23 @@ export async function POST(request: NextRequest) {
       trialDays,
       autoRenewal,
       metadata,
-      createdBy
+      createdBy,
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Subscription created successfully',
-      data: subscription
+      message: "Subscription created successfully",
+      data: subscription,
     });
   } catch (error) {
-    console.error('Error creating subscription:', error);
+    console.error("Error creating subscription:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to create subscription',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to create subscription",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,20 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 // GET /api/spp/records - Get SPP records
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
-    const month = searchParams.get('month');
-    const year = searchParams.get('year');
-    const santriId = searchParams.get('santriId');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const status = searchParams.get("status");
+    const month = searchParams.get("month");
+    const year = searchParams.get("year");
+    const santriId = searchParams.get("santriId");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
 
     const where: any = {};
 
-    if (status && status !== 'ALL') {
+    if (status && status !== "ALL") {
       where.status = status;
     }
 
@@ -45,42 +45,42 @@ export async function GET(request: NextRequest) {
                 select: {
                   id: true,
                   name: true,
-                  level: true
-                }
-              }
-            }
+                  level: true,
+                },
+              },
+            },
           },
           sppSetting: {
             select: {
               id: true,
               name: true,
               amount: true,
-              level: true
-            }
+              level: true,
+            },
           },
           transaction: {
             select: {
               id: true,
               amount: true,
-              transactionDate: true,
+              date: true,
               account: {
                 select: {
                   name: true,
-                  type: true
-                }
-              }
-            }
-          }
+                  accountType: true,
+                },
+              },
+            },
+          },
         },
         orderBy: [
-          { year: 'desc' },
-          { month: 'desc' },
-          { santri: { name: 'asc' } }
+          { year: "desc" },
+          { month: "desc" },
+          { santri: { name: "asc" } },
         ],
         skip,
-        take: limit
+        take: limit,
       }),
-      prisma.sPPRecord.count({ where })
+      prisma.sPPRecord.count({ where }),
     ]);
 
     // Calculate summary
@@ -90,18 +90,18 @@ export async function GET(request: NextRequest) {
         amount: true,
         paidAmount: true,
         discount: true,
-        fine: true
+        fine: true,
       },
       _count: {
-        _all: true
-      }
+        _all: true,
+      },
     });
 
     const statusCounts = await Promise.all([
-      prisma.sPPRecord.count({ where: { ...where, status: 'PENDING' } }),
-      prisma.sPPRecord.count({ where: { ...where, status: 'PAID' } }),
-      prisma.sPPRecord.count({ where: { ...where, status: 'OVERDUE' } }),
-      prisma.sPPRecord.count({ where: { ...where, status: 'PARTIAL' } })
+      prisma.sPPRecord.count({ where: { ...where, status: "PENDING" } }),
+      prisma.sPPRecord.count({ where: { ...where, status: "PAID" } }),
+      prisma.sPPRecord.count({ where: { ...where, status: "OVERDUE" } }),
+      prisma.sPPRecord.count({ where: { ...where, status: "PARTIAL" } }),
     ]);
 
     return NextResponse.json({
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
+        totalPages: Math.ceil(total / limit),
       },
       summary: {
         totalAmount: summary._sum.amount || 0,
@@ -123,16 +123,15 @@ export async function GET(request: NextRequest) {
           pending: statusCounts[0],
           paid: statusCounts[1],
           overdue: statusCounts[2],
-          partial: statusCounts[3]
-        }
-      }
+          partial: statusCounts[3],
+        },
+      },
     });
-
   } catch (error) {
-    console.error('Error fetching SPP records:', error);
+    console.error("Error fetching SPP records:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengambil data SPP' },
-      { status: 500 }
+      { success: false, message: "Gagal mengambil data SPP" },
+      { status: 500 },
     );
   }
 }
@@ -141,7 +140,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { 
+    const {
       type, // 'single' or 'bulk'
       santriId,
       sppSettingId,
@@ -152,26 +151,29 @@ export async function POST(request: NextRequest) {
       notes,
       // For bulk generation
       santriIds,
-      months
+      months,
     } = body;
 
-    if (type === 'bulk') {
+    if (type === "bulk") {
       // Bulk generation for multiple santri and months
       if (!santriIds || !months || !sppSettingId) {
         return NextResponse.json(
-          { success: false, message: 'Data untuk bulk generation tidak lengkap' },
-          { status: 400 }
+          {
+            success: false,
+            message: "Data untuk bulk generation tidak lengkap",
+          },
+          { status: 400 },
         );
       }
 
       const sppSetting = await prisma.sPPSetting.findUnique({
-        where: { id: sppSettingId }
+        where: { id: sppSettingId },
       });
 
       if (!sppSetting) {
         return NextResponse.json(
-          { success: false, message: 'Pengaturan SPP tidak ditemukan' },
-          { status: 400 }
+          { success: false, message: "Pengaturan SPP tidak ditemukan" },
+          { status: 400 },
         );
       }
 
@@ -184,9 +186,9 @@ export async function POST(request: NextRequest) {
               santriId_month_year: {
                 santriId,
                 month: monthData.month,
-                year: monthData.year
-              }
-            }
+                year: monthData.year,
+              },
+            },
           });
 
           if (!existingRecord) {
@@ -197,7 +199,7 @@ export async function POST(request: NextRequest) {
               year: monthData.year,
               amount: sppSetting.amount,
               dueDate: new Date(monthData.dueDate),
-              status: 'PENDING'
+              status: "PENDING",
             });
           }
         }
@@ -205,28 +207,37 @@ export async function POST(request: NextRequest) {
 
       if (records.length === 0) {
         return NextResponse.json(
-          { success: false, message: 'Semua SPP untuk periode tersebut sudah ada' },
-          { status: 400 }
+          {
+            success: false,
+            message: "Semua SPP untuk periode tersebut sudah ada",
+          },
+          { status: 400 },
         );
       }
 
       const createdRecords = await prisma.sPPRecord.createMany({
         data: records,
-        skipDuplicates: true
+        skipDuplicates: true,
       });
 
       return NextResponse.json({
         success: true,
         message: `${createdRecords.count} SPP berhasil dibuat`,
-        count: createdRecords.count
+        count: createdRecords.count,
       });
-
     } else {
       // Single SPP record creation
-      if (!santriId || !sppSettingId || !month || !year || !amount || !dueDate) {
+      if (
+        !santriId ||
+        !sppSettingId ||
+        !month ||
+        !year ||
+        !amount ||
+        !dueDate
+      ) {
         return NextResponse.json(
-          { success: false, message: 'Data SPP tidak lengkap' },
-          { status: 400 }
+          { success: false, message: "Data SPP tidak lengkap" },
+          { status: 400 },
         );
       }
 
@@ -236,15 +247,18 @@ export async function POST(request: NextRequest) {
           santriId_month_year: {
             santriId,
             month: parseInt(month),
-            year: parseInt(year)
-          }
-        }
+            year: parseInt(year),
+          },
+        },
       });
 
       if (existingRecord) {
         return NextResponse.json(
-          { success: false, message: 'SPP untuk bulan dan tahun tersebut sudah ada' },
-          { status: 400 }
+          {
+            success: false,
+            message: "SPP untuk bulan dan tahun tersebut sudah ada",
+          },
+          { status: 400 },
         );
       }
 
@@ -256,38 +270,37 @@ export async function POST(request: NextRequest) {
           year: parseInt(year),
           amount: parseFloat(amount.toString()),
           dueDate: new Date(dueDate),
-          notes: notes || null
+          notes: notes || null,
         },
         include: {
           santri: {
             select: {
               id: true,
               nis: true,
-              name: true
-            }
+              name: true,
+            },
           },
           sppSetting: {
             select: {
               id: true,
               name: true,
-              level: true
-            }
-          }
-        }
+              level: true,
+            },
+          },
+        },
       });
 
       return NextResponse.json({
         success: true,
-        message: 'SPP berhasil dibuat',
-        sppRecord
+        message: "SPP berhasil dibuat",
+        sppRecord,
       });
     }
-
   } catch (error) {
-    console.error('Error creating SPP record:', error);
+    console.error("Error creating SPP record:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal membuat SPP' },
-      { status: 500 }
+      { success: false, message: "Gagal membuat SPP" },
+      { status: 500 },
     );
   }
 }

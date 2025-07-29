@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import PublicLayout from '@/components/layout/PublicLayout';
+import React from "react";
+import Link from "next/link";
+import PublicLayout from "@/components/layout/PublicLayout";
 import {
   BookOpen,
   Users,
@@ -15,10 +15,10 @@ import {
   Target,
   Star,
   Clock,
-  GraduationCap
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+  GraduationCap,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function AboutPage() {
   const achievements = [
@@ -26,53 +26,55 @@ export default function AboutPage() {
       icon: <Users className="h-8 w-8 text-teal-600" />,
       number: "200+",
       label: "Santri Aktif",
-      description: "Santri yang aktif belajar Al-Quran"
+      description: "Santri yang aktif belajar Al-Quran",
     },
     {
       icon: <GraduationCap className="h-8 w-8 text-green-600" />,
       number: "50+",
       label: "Santri Lulus",
-      description: "Santri yang telah menyelesaikan program"
+      description: "Santri yang telah menyelesaikan program",
     },
     {
       icon: <Award className="h-8 w-8 text-yellow-600" />,
       number: "15+",
       label: "Prestasi",
-      description: "Prestasi dalam lomba tahfidz"
+      description: "Prestasi dalam lomba tahfidz",
     },
     {
       icon: <Clock className="h-8 w-8 text-blue-600" />,
       number: "5+",
       label: "Tahun",
-      description: "Pengalaman mendidik generasi Qurani"
-    }
+      description: "Pengalaman mendidik generasi Qurani",
+    },
   ];
 
   const programs = [
     {
       title: "Tahfidz Al-Quran",
-      description: "Program menghafal Al-Quran dengan metode yang mudah dan menyenangkan",
-      features: ["Metode Talaqqi", "Bimbingan Intensif", "Evaluasi Berkala"]
+      description:
+        "Program menghafal Al-Quran dengan metode yang mudah dan menyenangkan",
+      features: ["Metode Talaqqi", "Bimbingan Intensif", "Evaluasi Berkala"],
     },
     {
-      title: "Tahsin Al-Quran", 
-      description: "Program perbaikan bacaan Al-Quran sesuai kaidah tajwid yang benar",
-      features: ["Makhorijul Huruf", "Ahkamul Huruf", "Praktik Langsung"]
+      title: "Tahsin Al-Quran",
+      description:
+        "Program perbaikan bacaan Al-Quran sesuai kaidah tajwid yang benar",
+      features: ["Makhorijul Huruf", "Ahkamul Huruf", "Praktik Langsung"],
     },
     {
       title: "Pendidikan Akhlak",
       description: "Pembentukan karakter islami dan akhlakul karimah",
-      features: ["Adab Islami", "Akhlak Mulia", "Keteladanan"]
-    }
+      features: ["Adab Islami", "Akhlak Mulia", "Keteladanan"],
+    },
   ];
 
   const facilities = [
     "Ruang Kelas Ber-AC",
-    "Perpustakaan Islami", 
+    "Perpustakaan Islami",
     "Musholla",
     "Kantin Sehat",
     "Area Bermain",
-    "Parkir Luas"
+    "Parkir Luas",
   ];
 
   return (
@@ -120,18 +122,21 @@ export default function AboutPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-gray-600 leading-relaxed">
-                  TPQ Baitus Shuffah didirikan dengan semangat untuk menciptakan generasi-generasi 
-                  pilar peradaban dunia yang qur'ani, bertaqwa dan berakhlakul karimah. Berlokasi 
-                  di Jl. Untung Suropati Labuhan Ratu, Kec. Labuhan Ratu Kota Bandar Lampung.
+                  TPQ Baitus Shuffah didirikan dengan semangat untuk menciptakan
+                  generasi-generasi pilar peradaban dunia yang qur'ani, bertaqwa
+                  dan berakhlakul karimah. Berlokasi di Jl. Untung Suropati
+                  Labuhan Ratu, Kec. Labuhan Ratu Kota Bandar Lampung.
                 </p>
                 <p className="text-gray-600 leading-relaxed">
-                  Dengan bertambahnya jumlah santri dan dukungan masyarakat, kami terus berkomitmen 
-                  untuk memberikan pendidikan Al-Quran terbaik dengan fasilitas yang memadai dan 
-                  metode pembelajaran yang efektif.
+                  Dengan bertambahnya jumlah santri dan dukungan masyarakat,
+                  kami terus berkomitmen untuk memberikan pendidikan Al-Quran
+                  terbaik dengan fasilitas yang memadai dan metode pembelajaran
+                  yang efektif.
                 </p>
                 <div className="bg-teal-50 p-4 rounded-lg">
                   <p className="text-teal-800 font-medium">
-                    "Menciptakan generasi Qur'ani yang bertaqwa dan berakhlakul karimah"
+                    "Menciptakan generasi Qur'ani yang bertaqwa dan berakhlakul
+                    karimah"
                   </p>
                 </div>
               </CardContent>
@@ -148,8 +153,9 @@ export default function AboutPage() {
                 <div>
                   <h4 className="font-semibold text-green-600 mb-2">VISI</h4>
                   <p className="text-gray-600">
-                    Menjadi lembaga pendidikan Al-Quran terdepan dalam mencetak generasi 
-                    Qur'ani yang bertaqwa, berakhlakul karimah, dan berprestasi.
+                    Menjadi lembaga pendidikan Al-Quran terdepan dalam mencetak
+                    generasi Qur'ani yang bertaqwa, berakhlakul karimah, dan
+                    berprestasi.
                   </p>
                 </div>
                 <div>
@@ -180,14 +186,20 @@ export default function AboutPage() {
           {/* Achievements */}
           <div className="mb-16">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Pencapaian Kami</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Pencapaian Kami
+              </h2>
               <p className="text-gray-600 max-w-2xl mx-auto">
-                Alhamdulillah, dengan dukungan Allah SWT dan masyarakat, kami telah mencapai berbagai prestasi
+                Alhamdulillah, dengan dukungan Allah SWT dan masyarakat, kami
+                telah mencapai berbagai prestasi
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {achievements.map((achievement, index) => (
-                <Card key={index} className="text-center hover:shadow-lg transition-shadow">
+                <Card
+                  key={index}
+                  className="text-center hover:shadow-lg transition-shadow"
+                >
                   <CardContent className="p-6">
                     <div className="flex justify-center mb-4">
                       {achievement.icon}
@@ -210,9 +222,12 @@ export default function AboutPage() {
           {/* Programs */}
           <div className="mb-16">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Program Unggulan</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Program Unggulan
+              </h2>
               <p className="text-gray-600 max-w-2xl mx-auto">
-                Program-program berkualitas yang dirancang untuk mengoptimalkan pembelajaran Al-Quran
+                Program-program berkualitas yang dirancang untuk mengoptimalkan
+                pembelajaran Al-Quran
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -224,14 +239,14 @@ export default function AboutPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-600 mb-4">
-                      {program.description}
-                    </p>
+                    <p className="text-gray-600 mb-4">{program.description}</p>
                     <div className="space-y-2">
                       {program.features.map((feature, idx) => (
                         <div key={idx} className="flex items-center gap-2">
                           <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
-                          <span className="text-sm text-gray-600">{feature}</span>
+                          <span className="text-sm text-gray-600">
+                            {feature}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -244,14 +259,20 @@ export default function AboutPage() {
           {/* Facilities */}
           <div className="mb-16">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Fasilitas</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Fasilitas
+              </h2>
               <p className="text-gray-600 max-w-2xl mx-auto">
-                Fasilitas lengkap untuk mendukung proses pembelajaran yang optimal
+                Fasilitas lengkap untuk mendukung proses pembelajaran yang
+                optimal
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {facilities.map((facility, index) => (
-                <div key={index} className="flex items-center gap-3 p-4 bg-white rounded-lg shadow-sm">
+                <div
+                  key={index}
+                  className="flex items-center gap-3 p-4 bg-white rounded-lg shadow-sm"
+                >
                   <Building className="h-5 w-5 text-teal-600" />
                   <span className="text-gray-700">{facility}</span>
                 </div>
@@ -272,8 +293,10 @@ export default function AboutPage() {
                   <MapPin className="h-8 w-8 text-teal-600" />
                   <h4 className="font-semibold text-gray-900">Alamat</h4>
                   <p className="text-gray-600 text-sm">
-                    Jl. Untung Suropati Labuhan Ratu<br />
-                    Kec. Labuhan Ratu<br />
+                    Jl. Untung Suropati Labuhan Ratu
+                    <br />
+                    Kec. Labuhan Ratu
+                    <br />
                     Kota Bandar Lampung
                   </p>
                 </div>
@@ -290,9 +313,7 @@ export default function AboutPage() {
               </div>
               <div className="text-center mt-8">
                 <Button asChild className="bg-teal-600 hover:bg-teal-700">
-                  <Link href="/contact">
-                    Hubungi Kami
-                  </Link>
+                  <Link href="/contact">Hubungi Kami</Link>
                 </Button>
               </div>
             </CardContent>

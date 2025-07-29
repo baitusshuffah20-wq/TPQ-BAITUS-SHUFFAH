@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { useSession } from 'next-auth/react';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSession } from "next-auth/react";
+import ExportModal from "@/components/export/ExportModal";
 import {
   Users,
   GraduationCap,
@@ -15,25 +16,30 @@ import {
   BookOpen,
   Award,
   ArrowUp,
-  ArrowDown
-} from 'lucide-react';
+  ArrowDown,
+  Smartphone,
+  Sparkles,
+  X,
+} from "lucide-react";
 
 const AdminDashboard = () => {
   const { data: session, status } = useSession();
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showMobileAppBanner, setShowMobileAppBanner] = useState(true);
   const router = useRouter();
 
   // Check authentication and role
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
+    if (status === "unauthenticated") {
+      router.push("/login");
       return;
     }
 
-    if (status === 'authenticated' && session?.user.role !== 'ADMIN') {
-      router.push('/dashboard');
+    if (status === "authenticated" && session?.user.role !== "ADMIN") {
+      router.push("/dashboard");
       return;
     }
   }, [session, status, router]);
@@ -43,63 +49,63 @@ const AdminDashboard = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/dashboard/admin');
+        const response = await fetch("/api/dashboard/admin");
         const data = await response.json();
 
         if (data.success) {
           setDashboardData(data.data);
         } else {
-          throw new Error('Failed to fetch dashboard data');
+          throw new Error("Failed to fetch dashboard data");
         }
       } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setError('Failed to load dashboard data');
+        console.error("Error fetching dashboard data:", err);
+        setError("Failed to load dashboard data");
 
         // Fallback data
         setDashboardData({
           stats: [
             {
-              title: 'Total Santri',
-              value: '250',
-              change: '+12%',
-              changeType: 'increase',
-              icon: 'Users',
-              color: 'text-blue-600',
-              bgColor: 'bg-blue-50'
+              title: "Total Santri",
+              value: "250",
+              change: "+12%",
+              changeType: "increase",
+              icon: "Users",
+              color: "text-blue-600",
+              bgColor: "bg-blue-50",
             },
             {
-              title: 'Total Musyrif',
-              value: '15',
-              change: '+2%',
-              changeType: 'increase',
-              icon: 'GraduationCap',
-              color: 'text-green-600',
-              bgColor: 'bg-green-50'
+              title: "Total Musyrif",
+              value: "15",
+              change: "+2%",
+              changeType: "increase",
+              icon: "GraduationCap",
+              color: "text-green-600",
+              bgColor: "bg-green-50",
             },
             {
-              title: 'Total Donasi',
-              value: 'Rp 25.5jt',
-              change: '+8%',
-              changeType: 'increase',
-              icon: 'Heart',
-              color: 'text-red-600',
-              bgColor: 'bg-red-50'
-            }
+              title: "Total Donasi",
+              value: "Rp 25.5jt",
+              change: "+8%",
+              changeType: "increase",
+              icon: "Heart",
+              color: "text-red-600",
+              bgColor: "bg-red-50",
+            },
           ],
           recentActivities: [],
-          upcomingEvents: []
+          upcomingEvents: [],
         });
       } finally {
         setLoading(false);
       }
     };
 
-    if (status === 'authenticated' && session) {
+    if (status === "authenticated" && session) {
       fetchDashboardData();
     }
   }, [session, status]);
 
-  if (status === 'loading' || loading) {
+  if (status === "loading" || loading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-96">
@@ -113,7 +119,7 @@ const AdminDashboard = () => {
   }
 
   // If user is not admin, don't render anything (redirect will happen)
-  if (status === 'authenticated' && session?.user.role !== 'ADMIN') {
+  if (status === "authenticated" && session?.user.role !== "ADMIN") {
     return null;
   }
 
@@ -126,7 +132,7 @@ const AdminDashboard = () => {
     BookOpen,
     Calendar,
     Award,
-    TrendingUp
+    TrendingUp,
   };
 
   const stats = dashboardData?.stats || [];
@@ -138,13 +144,47 @@ const AdminDashboard = () => {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Dashboard Admin
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard Admin</h1>
           <p className="text-gray-600">
             Selamat datang kembali, {session?.user.name}
           </p>
         </div>
+
+        {/* New Feature Banner */}
+        {showMobileAppBanner && (
+          <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 rounded-lg shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Sparkles className="h-6 w-6" />
+                <div>
+                  <h3 className="font-semibold">
+                    🎉 Fitur Baru: Mobile App Generator!
+                  </h3>
+                  <p className="text-sm opacity-90">
+                    Sekarang Anda bisa generate aplikasi mobile terpisah untuk
+                    Wali dan Musyrif dengan kustomisasi penuh
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() =>
+                    router.push("/dashboard/admin/mobile-app-generator")
+                  }
+                  className="px-4 py-2 bg-white text-orange-600 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                >
+                  Coba Sekarang
+                </button>
+                <button
+                  onClick={() => setShowMobileAppBanner(false)}
+                  className="p-1 hover:bg-white/20 rounded"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Error State */}
         {error && (
@@ -159,7 +199,10 @@ const AdminDashboard = () => {
           {stats.map((stat: any) => {
             const Icon = iconMap[stat.icon] || Users;
             return (
-              <Card key={stat.title} className="hover:shadow-lg transition-shadow">
+              <Card
+                key={stat.title}
+                className="hover:shadow-lg transition-shadow"
+              >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -170,14 +213,18 @@ const AdminDashboard = () => {
                         {stat.value}
                       </p>
                       <div className="flex items-center mt-2">
-                        {stat.changeType === 'increase' ? (
+                        {stat.changeType === "increase" ? (
                           <ArrowUp className="h-4 w-4 text-green-500 mr-1" />
                         ) : (
                           <ArrowDown className="h-4 w-4 text-red-500 mr-1" />
                         )}
-                        <span className={`text-sm font-medium ${
-                          stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
-                        }`}>
+                        <span
+                          className={`text-sm font-medium ${
+                            stat.changeType === "increase"
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
                           {stat.change}
                         </span>
                         <span className="text-sm text-gray-500 ml-1">
@@ -195,6 +242,52 @@ const AdminDashboard = () => {
           })}
         </div>
 
+        {/* Mobile App Generator Feature Card */}
+        <Card className="bg-gradient-to-r from-orange-50 to-red-50 border-orange-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-orange-100 rounded-lg">
+                  <Smartphone className="h-8 w-8 text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Mobile App Generator
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Generate aplikasi mobile terpisah untuk Wali dan Musyrif
+                    dengan kustomisasi penuh
+                  </p>
+                  <div className="flex items-center space-x-4 mt-2">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                      🤖 Auto Generate
+                    </span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      📱 Android & iOS
+                    </span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      🎨 Custom Design
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col space-y-2">
+                <button
+                  onClick={() =>
+                    router.push("/dashboard/admin/mobile-app-generator")
+                  }
+                  className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors shadow-lg hover:shadow-xl"
+                >
+                  Buat Aplikasi Mobile
+                </button>
+                <p className="text-xs text-gray-500 text-center">
+                  Generate APK Wali & Musyrif
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Activities */}
           <Card>
@@ -206,24 +299,29 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentActivities.length > 0 ? recentActivities.map((activity: any) => {
-                  const Icon = iconMap[activity.icon] || CreditCard;
-                  return (
-                    <div key={activity.id} className="flex items-start space-x-3">
-                      <div className={`p-2 rounded-full bg-gray-50`}>
-                        <Icon className={`h-4 w-4 ${activity.color}`} />
+                {recentActivities.length > 0 ? (
+                  recentActivities.map((activity: any) => {
+                    const Icon = iconMap[activity.icon] || CreditCard;
+                    return (
+                      <div
+                        key={activity.id}
+                        className="flex items-start space-x-3"
+                      >
+                        <div className={`p-2 rounded-full bg-gray-50`}>
+                          <Icon className={`h-4 w-4 ${activity.color}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-900">
+                            {activity.message}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {activity.time}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900">
-                          {activity.message}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {activity.time}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                }) : (
+                    );
+                  })
+                ) : (
                   <div className="text-center py-8">
                     <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500">Belum ada aktivitas terbaru</p>
@@ -243,29 +341,44 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {upcomingEvents.length > 0 ? upcomingEvents.map((event: any) => (
-                  <div key={event.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">
-                        {event.title}
-                      </h4>
-                      <p className="text-xs text-gray-500">
-                        {new Date(event.date).toLocaleDateString('id-ID')} • {event.time}
-                      </p>
+                {upcomingEvents.length > 0 ? (
+                  upcomingEvents.map((event: any) => (
+                    <div
+                      key={event.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-gray-900">
+                          {event.title}
+                        </h4>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {event.description || "Tidak ada deskripsi"}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {event.date} • {event.time}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            event.type === "news"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {event.type === "news"
+                            ? "Berita/Kegiatan"
+                            : "Jatuh Tempo"}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-teal-600">
-                        {event.participants}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        peserta
-                      </p>
-                    </div>
-                  </div>
-                )) : (
+                  ))
+                ) : (
                   <div className="text-center py-8">
                     <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">Belum ada kegiatan mendatang</p>
+                    <p className="text-gray-500">
+                      Belum ada kegiatan mendatang
+                    </p>
                   </div>
                 )}
               </div>
@@ -279,38 +392,79 @@ const AdminDashboard = () => {
             <CardTitle>Aksi Cepat</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <button className="p-4 text-center bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <button
+                onClick={() => router.push("/dashboard/admin/santri")}
+                className="p-4 text-center bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors border-2 border-teal-300 shadow"
+              >
                 <Users className="h-8 w-8 text-teal-600 mx-auto mb-2" />
                 <span className="text-sm font-medium text-teal-900">
                   Tambah Santri
                 </span>
               </button>
-              
-              <button className="p-4 text-center bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+
+              <button
+                onClick={() => router.push("/dashboard/admin/halaqah")}
+                className="p-4 text-center bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border-2 border-blue-300 shadow"
+              >
                 <BookOpen className="h-8 w-8 text-blue-600 mx-auto mb-2" />
                 <span className="text-sm font-medium text-blue-900">
                   Buat Halaqah
                 </span>
               </button>
-              
-              <button className="p-4 text-center bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+
+              <button
+                onClick={() => router.push("/dashboard/admin/payment")}
+                className="p-4 text-center bg-green-50 hover:bg-green-100 rounded-lg transition-colors border-2 border-green-300 shadow"
+              >
                 <CreditCard className="h-8 w-8 text-green-600 mx-auto mb-2" />
                 <span className="text-sm font-medium text-green-900">
                   Kelola Pembayaran
                 </span>
               </button>
-              
-              <button className="p-4 text-center bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
+
+              <button
+                onClick={() => router.push("/dashboard/admin/reports")}
+                className="p-4 text-center bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors border-2 border-purple-300 shadow"
+              >
                 <TrendingUp className="h-8 w-8 text-purple-600 mx-auto mb-2" />
                 <span className="text-sm font-medium text-purple-900">
                   Lihat Laporan
+                </span>
+              </button>
+
+              <button
+                onClick={() => setShowExportModal(true)}
+                className="p-4 text-center bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors border-2 border-indigo-300 shadow"
+              >
+                <ArrowDown className="h-8 w-8 text-indigo-600 mx-auto mb-2" />
+                <span className="text-sm font-medium text-indigo-900">
+                  Export Data
+                </span>
+              </button>
+
+              <button
+                onClick={() =>
+                  router.push("/dashboard/admin/mobile-app-generator")
+                }
+                className="p-4 text-center bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors border-2 border-orange-300 shadow"
+              >
+                <Smartphone className="h-8 w-8 text-orange-600 mx-auto mb-2" />
+                <span className="text-sm font-medium text-orange-900">
+                  Mobile App Generator
                 </span>
               </button>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        title="Export Data TPQ Baitus Shuffah"
+      />
     </DashboardLayout>
   );
 };

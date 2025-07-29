@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/Card';
-import { Star, Quote, ChevronLeft, ChevronRight, Loader } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Star, Quote, ChevronLeft, ChevronRight, Loader } from "lucide-react";
 
 interface Testimonial {
   id: string;
@@ -24,38 +24,40 @@ const TestimonialsSection = () => {
     const fetchTestimonials = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/testimonials');
+        const response = await fetch("/api/testimonials");
         const data = await response.json();
-        
+
         if (data.success) {
           setTestimonials(data.testimonials);
         } else {
-          throw new Error('Failed to fetch testimonials');
+          throw new Error("Failed to fetch testimonials");
         }
       } catch (err) {
-        console.error('Error fetching testimonials:', err);
-        setError('Failed to load testimonials');
-        
+        console.error("Error fetching testimonials:", err);
+        setError("Failed to load testimonials");
+
         // Fallback data if needed
         setTestimonials([
           {
-            id: '1',
-            authorName: 'Ahmad Fauzi',
-            authorRole: 'SANTRI',
+            id: "1",
+            authorName: "Ahmad Fauzi",
+            authorRole: "SANTRI",
             rating: 5,
-            content: 'Alhamdulillah, berkat bimbingan ustadz-ustadz yang sabar dan metode pembelajaran yang efektif, saya berhasil menyelesaikan hafalan 30 juz dalam waktu 2,5 tahun. Pengalaman yang sangat berharga dan mengubah hidup saya.',
+            content:
+              "Alhamdulillah, berkat bimbingan ustadz-ustadz yang sabar dan metode pembelajaran yang efektif, saya berhasil menyelesaikan hafalan 30 juz dalam waktu 2,5 tahun. Pengalaman yang sangat berharga dan mengubah hidup saya.",
             isFeatured: true,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
           },
           {
-            id: '2',
-            authorName: 'Siti Aisyah',
-            authorRole: 'WALI',
+            id: "2",
+            authorName: "Siti Aisyah",
+            authorRole: "WALI",
             rating: 5,
-            content: 'Anak saya sangat senang belajar di sini. Selain hafalan Al-Quran, akhlaknya juga semakin baik. Para ustadz sangat perhatian dan komunikatif dengan orang tua. Sistem pembelajaran yang modern namun tetap menjaga nilai-nilai tradisional.',
+            content:
+              "Anak saya sangat senang belajar di sini. Selain hafalan Al-Quran, akhlaknya juga semakin baik. Para ustadz sangat perhatian dan komunikatif dengan orang tua. Sistem pembelajaran yang modern namun tetap menjaga nilai-nilai tradisional.",
             isFeatured: true,
-            createdAt: new Date().toISOString()
-          }
+            createdAt: new Date().toISOString(),
+          },
         ]);
       } finally {
         setLoading(false);
@@ -70,7 +72,9 @@ const TestimonialsSection = () => {
   };
 
   const prevTestimonial = () => {
-    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    setCurrentIndex(
+      (prev) => (prev - 1 + testimonials.length) % testimonials.length,
+    );
   };
 
   const renderStars = (rating: number) => {
@@ -78,7 +82,7 @@ const TestimonialsSection = () => {
       <Star
         key={index}
         className={`h-4 w-4 ${
-          index < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+          index < rating ? "text-yellow-400 fill-current" : "text-gray-300"
         }`}
       />
     ));
@@ -87,17 +91,17 @@ const TestimonialsSection = () => {
   // Format role for display
   const formatRole = (role: string) => {
     switch (role) {
-      case 'SANTRI':
-        return 'Santri Aktif';
-      case 'WALI':
-        return 'Wali Santri';
-      case 'ALUMNI':
-        return 'Alumni';
+      case "SANTRI":
+        return "Santri Aktif";
+      case "WALI":
+        return "Wali Santri";
+      case "ALUMNI":
+        return "Alumni";
       default:
         return role;
     }
   };
-  
+
   // Get year from date
   const getYear = (dateString: string) => {
     return new Date(dateString).getFullYear().toString();
@@ -112,7 +116,7 @@ const TestimonialsSection = () => {
             Testimoni Alumni & Wali Santri
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Dengarkan pengalaman mereka yang telah merasakan manfaat bergabung 
+            Dengarkan pengalaman mereka yang telah merasakan manfaat bergabung
             dengan Rumah Tahfidz Baitus Shuffah
           </p>
         </div>
@@ -132,7 +136,9 @@ const TestimonialsSection = () => {
           <div className="text-center py-10">
             <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
               <p className="text-red-600 mb-2">{error}</p>
-              <p className="text-gray-600 text-sm">Silakan coba muat ulang halaman</p>
+              <p className="text-gray-600 text-sm">
+                Silakan coba muat ulang halaman
+              </p>
             </div>
           </div>
         )}
@@ -158,7 +164,7 @@ const TestimonialsSection = () => {
                     <div className="flex-1 text-center md:text-left">
                       {/* Quote Icon */}
                       <Quote className="h-8 w-8 text-teal-200 mb-4 mx-auto md:mx-0" />
-                      
+
                       {/* Rating */}
                       <div className="flex justify-center md:justify-start mb-4">
                         {renderStars(testimonials[currentIndex].rating)}
@@ -179,9 +185,14 @@ const TestimonialsSection = () => {
                         </div>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 text-sm text-gray-500">
                           <span className="bg-teal-100 text-teal-700 px-3 py-1 rounded-full">
-                            {testimonials[currentIndex].isFeatured ? 'Testimoni Pilihan' : 'Testimoni'}
+                            {testimonials[currentIndex].isFeatured
+                              ? "Testimoni Pilihan"
+                              : "Testimoni"}
                           </span>
-                          <span>Tahun {getYear(testimonials[currentIndex].createdAt)}</span>
+                          <span>
+                            Tahun{" "}
+                            {getYear(testimonials[currentIndex].createdAt)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -206,7 +217,7 @@ const TestimonialsSection = () => {
                       key={index}
                       onClick={() => setCurrentIndex(index)}
                       className={`w-3 h-3 rounded-full transition-colors ${
-                        index === currentIndex ? 'bg-teal-600' : 'bg-gray-300'
+                        index === currentIndex ? "bg-teal-600" : "bg-gray-300"
                       }`}
                     />
                   ))}
@@ -226,7 +237,10 @@ const TestimonialsSection = () => {
             {testimonials.length > 1 && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {testimonials.slice(0, 3).map((testimonial, index) => (
-                  <Card key={testimonial.id} className="bg-white hover:shadow-lg transition-shadow">
+                  <Card
+                    key={testimonial.id}
+                    className="bg-white hover:shadow-lg transition-shadow"
+                  >
                     <CardContent className="p-6">
                       <div className="flex items-center mb-4">
                         <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mr-4">
@@ -235,8 +249,12 @@ const TestimonialsSection = () => {
                           </span>
                         </div>
                         <div>
-                          <div className="font-semibold text-gray-900">{testimonial.authorName}</div>
-                          <div className="text-sm text-gray-600">{formatRole(testimonial.authorRole)}</div>
+                          <div className="font-semibold text-gray-900">
+                            {testimonial.authorName}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {formatRole(testimonial.authorRole)}
+                          </div>
                         </div>
                       </div>
 
@@ -249,7 +267,10 @@ const TestimonialsSection = () => {
                       </p>
 
                       <div className="text-xs text-gray-500">
-                        {testimonial.isFeatured ? 'Testimoni Pilihan' : 'Testimoni'} • {getYear(testimonial.createdAt)}
+                        {testimonial.isFeatured
+                          ? "Testimoni Pilihan"
+                          : "Testimoni"}{" "}
+                        • {getYear(testimonial.createdAt)}
                       </div>
                     </CardContent>
                   </Card>
@@ -273,7 +294,8 @@ const TestimonialsSection = () => {
               Ingin Menjadi Bagian dari Kesuksesan Ini?
             </h3>
             <p className="text-teal-100 mb-6">
-              Bergabunglah dengan ribuan alumni yang telah merasakan manfaat program kami
+              Bergabunglah dengan ribuan alumni yang telah merasakan manfaat
+              program kami
             </p>
             <button className="bg-white text-teal-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
               Mulai Perjalanan Anda

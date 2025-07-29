@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { useAuth } from '@/components/providers/AuthProvider';
+import React, { useState } from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/components/providers/AuthProvider";
 import {
   User,
   BookOpen,
@@ -20,123 +20,148 @@ import {
   Bell,
   Target,
   CheckCircle,
-  AlertCircle
-} from 'lucide-react';
+  AlertCircle,
+} from "lucide-react";
 
 const WaliSantriPage = () => {
   const { user } = useAuth();
-  const [selectedChild, setSelectedChild] = useState('1');
+  const [selectedChild, setSelectedChild] = useState("1");
 
   // Mock data for children of this wali
   const children = [
     {
-      id: '1',
-      name: 'Ahmad Fauzi',
-      nis: '24001',
+      id: "1",
+      name: "Ahmad Fauzi",
+      nis: "24001",
       age: 12,
-      class: '6 SD',
-      halaqah: 'Al-Fatihah',
-      musyrif: 'Ustadz Abdullah',
-      joinDate: '2024-01-15',
+      class: "6 SD",
+      halaqah: "Al-Fatihah",
+      musyrif: "Ustadz Abdullah",
+      joinDate: "2024-01-15",
       photo: null,
       progress: {
-        currentSurah: 'Al-Baqarah',
+        currentSurah: "Al-Baqarah",
         currentAyah: 45,
         totalAyah: 286,
         percentage: 75,
         weeklyTarget: 10,
         weeklyAchieved: 8,
         lastEvaluation: {
-          date: '2024-01-15',
+          date: "2024-01-15",
           score: 85,
           tajwid: 80,
           kelancaran: 90,
-          notes: 'Baik, perlu perbaikan mad'
-        }
+          notes: "Baik, perlu perbaikan mad",
+        },
       },
       attendance: {
         thisMonth: 22,
         totalDays: 24,
         percentage: 92,
-        lastAbsent: '2024-01-10',
-        reason: 'Sakit'
+        lastAbsent: "2024-01-10",
+        reason: "Sakit",
       },
       achievements: [
-        { id: '1', title: 'Hafal Juz 1', date: '2023-12-01', type: 'hafalan' },
-        { id: '2', title: 'Santri Terbaik Bulan Ini', date: '2024-01-01', type: 'prestasi' },
-        { id: '3', title: 'Kehadiran 100%', date: '2023-11-30', type: 'kehadiran' }
+        { id: "1", title: "Hafal Juz 1", date: "2023-12-01", type: "hafalan" },
+        {
+          id: "2",
+          title: "Santri Terbaik Bulan Ini",
+          date: "2024-01-01",
+          type: "prestasi",
+        },
+        {
+          id: "3",
+          title: "Kehadiran 100%",
+          date: "2023-11-30",
+          type: "kehadiran",
+        },
       ],
       schedule: [
-        { day: 'Senin', time: '08:00-09:30', activity: 'Hafalan Al-Baqarah' },
-        { day: 'Rabu', time: '08:00-09:30', activity: 'Hafalan Al-Baqarah' },
-        { day: 'Jumat', time: '08:00-09:30', activity: 'Hafalan Al-Baqarah' },
-        { day: 'Sabtu', time: '10:00-11:00', activity: 'Muraja\'ah' }
-      ]
+        { day: "Senin", time: "08:00-09:30", activity: "Hafalan Al-Baqarah" },
+        { day: "Rabu", time: "08:00-09:30", activity: "Hafalan Al-Baqarah" },
+        { day: "Jumat", time: "08:00-09:30", activity: "Hafalan Al-Baqarah" },
+        { day: "Sabtu", time: "10:00-11:00", activity: "Muraja'ah" },
+      ],
     },
     {
-      id: '2',
-      name: 'Siti Aisyah',
-      nis: '24002',
+      id: "2",
+      name: "Siti Aisyah",
+      nis: "24002",
       age: 10,
-      class: '4 SD',
-      halaqah: 'Al-Fatihah',
-      musyrif: 'Ustadzah Fatimah',
-      joinDate: '2024-02-01',
+      class: "4 SD",
+      halaqah: "Al-Fatihah",
+      musyrif: "Ustadzah Fatimah",
+      joinDate: "2024-02-01",
       photo: null,
       progress: {
-        currentSurah: 'Ali Imran',
+        currentSurah: "Ali Imran",
         currentAyah: 120,
         totalAyah: 200,
         percentage: 60,
         weeklyTarget: 8,
         weeklyAchieved: 9,
         lastEvaluation: {
-          date: '2024-01-14',
+          date: "2024-01-14",
           score: 95,
           tajwid: 95,
           kelancaran: 95,
-          notes: 'Excellent, sangat baik'
-        }
+          notes: "Excellent, sangat baik",
+        },
       },
       attendance: {
         thisMonth: 24,
         totalDays: 24,
         percentage: 100,
         lastAbsent: null,
-        reason: null
+        reason: null,
       },
       achievements: [
-        { id: '4', title: 'Hafal Al-Fatihah', date: '2024-01-15', type: 'hafalan' },
-        { id: '5', title: 'Kehadiran Perfect', date: '2024-01-31', type: 'kehadiran' }
+        {
+          id: "4",
+          title: "Hafal Al-Fatihah",
+          date: "2024-01-15",
+          type: "hafalan",
+        },
+        {
+          id: "5",
+          title: "Kehadiran Perfect",
+          date: "2024-01-31",
+          type: "kehadiran",
+        },
       ],
       schedule: [
-        { day: 'Selasa', time: '14:00-15:30', activity: 'Hafalan Ali Imran' },
-        { day: 'Kamis', time: '14:00-15:30', activity: 'Hafalan Ali Imran' },
-        { day: 'Sabtu', time: '08:00-09:00', activity: 'Muraja\'ah' }
-      ]
-    }
+        { day: "Selasa", time: "14:00-15:30", activity: "Hafalan Ali Imran" },
+        { day: "Kamis", time: "14:00-15:30", activity: "Hafalan Ali Imran" },
+        { day: "Sabtu", time: "08:00-09:00", activity: "Muraja'ah" },
+      ],
+    },
   ];
 
-  const selectedChildData = children.find(child => child.id === selectedChild) || children[0];
+  const selectedChildData =
+    children.find((child) => child.id === selectedChild) || children[0];
 
   const getProgressColor = (percentage: number) => {
-    if (percentage >= 80) return 'text-green-600 bg-green-100';
-    if (percentage >= 60) return 'text-yellow-600 bg-yellow-100';
-    return 'text-red-600 bg-red-100';
+    if (percentage >= 80) return "text-green-600 bg-green-100";
+    if (percentage >= 60) return "text-yellow-600 bg-yellow-100";
+    return "text-red-600 bg-red-100";
   };
 
   const getAttendanceColor = (percentage: number) => {
-    if (percentage >= 95) return 'text-green-600';
-    if (percentage >= 85) return 'text-yellow-600';
-    return 'text-red-600';
+    if (percentage >= 95) return "text-green-600";
+    if (percentage >= 85) return "text-yellow-600";
+    return "text-red-600";
   };
 
   const getAchievementIcon = (type: string) => {
     switch (type) {
-      case 'hafalan': return BookOpen;
-      case 'prestasi': return Award;
-      case 'kehadiran': return Calendar;
-      default: return CheckCircle;
+      case "hafalan":
+        return BookOpen;
+      case "prestasi":
+        return Award;
+      case "kehadiran":
+        return Calendar;
+      default:
+        return CheckCircle;
     }
   };
 
@@ -146,8 +171,12 @@ const WaliSantriPage = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Pantau Perkembangan Anak</h1>
-            <p className="text-gray-600">Lihat progress dan aktivitas anak Anda di TPQ</p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Pantau Perkembangan Anak
+            </h1>
+            <p className="text-gray-600">
+              Lihat progress dan aktivitas anak Anda di TPQ
+            </p>
           </div>
           <div className="mt-4 sm:mt-0 flex space-x-2">
             <Button variant="outline">
@@ -166,7 +195,9 @@ const WaliSantriPage = () => {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
-                <span className="text-sm font-medium text-gray-600">Pilih Anak:</span>
+                <span className="text-sm font-medium text-gray-600">
+                  Pilih Anak:
+                </span>
                 <div className="flex space-x-2">
                   {children.map((child) => (
                     <button
@@ -174,8 +205,8 @@ const WaliSantriPage = () => {
                       onClick={() => setSelectedChild(child.id)}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         selectedChild === child.id
-                          ? 'bg-teal-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? "bg-teal-600 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                     >
                       {child.name}
@@ -191,29 +222,47 @@ const WaliSantriPage = () => {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center space-x-6">
-              <div className="w-20 h-20 bg-teal-100 rounded-full flex items-center justify-center">
-                <span className="text-2xl font-bold text-teal-600">
-                  {selectedChildData.name.split(' ').map(n => n[0]).join('')}
-                </span>
+              <div className="w-20 h-20 bg-teal-100 rounded-full flex items-center justify-center overflow-hidden">
+                {selectedChildData.photo ? (
+                  <img
+                    src={selectedChildData.photo}
+                    alt={selectedChildData.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-2xl font-bold text-teal-600">
+                    {selectedChildData.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </span>
+                )}
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900">{selectedChildData.name}</h2>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {selectedChildData.name}
+                </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 text-sm text-gray-600">
                   <div>
-                    <span className="font-medium">NIS:</span> {selectedChildData.nis}
+                    <span className="font-medium">NIS:</span>{" "}
+                    {selectedChildData.nis}
                   </div>
                   <div>
-                    <span className="font-medium">Umur:</span> {selectedChildData.age} tahun
+                    <span className="font-medium">Umur:</span>{" "}
+                    {selectedChildData.age} tahun
                   </div>
                   <div>
-                    <span className="font-medium">Kelas:</span> {selectedChildData.class}
+                    <span className="font-medium">Kelas:</span>{" "}
+                    {selectedChildData.class}
                   </div>
                   <div>
-                    <span className="font-medium">Halaqah:</span> {selectedChildData.halaqah}
+                    <span className="font-medium">Halaqah:</span>{" "}
+                    {selectedChildData.halaqah}
                   </div>
                 </div>
                 <div className="mt-2 text-sm text-gray-600">
-                  <span className="font-medium">Musyrif:</span> {selectedChildData.musyrif}
+                  <span className="font-medium">Musyrif:</span>{" "}
+                  {selectedChildData.musyrif}
                 </div>
               </div>
             </div>
@@ -229,9 +278,15 @@ const WaliSantriPage = () => {
                   <BookOpen className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Progress Hafalan</p>
-                  <p className="text-2xl font-bold text-gray-900">{selectedChildData.progress.percentage}%</p>
-                  <p className="text-xs text-gray-500">{selectedChildData.progress.currentSurah}</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Progress Hafalan
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {selectedChildData.progress.percentage}%
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {selectedChildData.progress.currentSurah}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -245,7 +300,9 @@ const WaliSantriPage = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Kehadiran</p>
-                  <p className="text-2xl font-bold text-gray-900">{selectedChildData.attendance.percentage}%</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {selectedChildData.attendance.percentage}%
+                  </p>
                   <p className="text-xs text-gray-500">Bulan ini</p>
                 </div>
               </div>
@@ -259,8 +316,12 @@ const WaliSantriPage = () => {
                   <Award className="h-6 w-6 text-yellow-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Nilai Terakhir</p>
-                  <p className="text-2xl font-bold text-gray-900">{selectedChildData.progress.lastEvaluation.score}</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Nilai Terakhir
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {selectedChildData.progress.lastEvaluation.score}
+                  </p>
                   <p className="text-xs text-gray-500">Evaluasi</p>
                 </div>
               </div>
@@ -274,9 +335,12 @@ const WaliSantriPage = () => {
                   <Target className="h-6 w-6 text-purple-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Target Mingguan</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Target Mingguan
+                  </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {selectedChildData.progress.weeklyAchieved}/{selectedChildData.progress.weeklyTarget}
+                    {selectedChildData.progress.weeklyAchieved}/
+                    {selectedChildData.progress.weeklyTarget}
                   </p>
                   <p className="text-xs text-gray-500">Ayat</p>
                 </div>
@@ -299,13 +363,16 @@ const WaliSantriPage = () => {
                       {selectedChildData.progress.currentSurah}
                     </span>
                     <span className="text-sm font-semibold text-gray-900">
-                      {selectedChildData.progress.currentAyah}/{selectedChildData.progress.totalAyah}
+                      {selectedChildData.progress.currentAyah}/
+                      {selectedChildData.progress.totalAyah}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div 
-                      className="bg-teal-600 h-3 rounded-full" 
-                      style={{ width: `${selectedChildData.progress.percentage}%` }}
+                    <div
+                      className="bg-teal-600 h-3 rounded-full"
+                      style={{
+                        width: `${selectedChildData.progress.percentage}%`,
+                      }}
                     ></div>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
@@ -314,15 +381,21 @@ const WaliSantriPage = () => {
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Evaluasi Terakhir</h4>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">
+                    Evaluasi Terakhir
+                  </h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-gray-600">Tajwid:</span>
-                      <span className="ml-2 font-semibold">{selectedChildData.progress.lastEvaluation.tajwid}</span>
+                      <span className="ml-2 font-semibold">
+                        {selectedChildData.progress.lastEvaluation.tajwid}
+                      </span>
                     </div>
                     <div>
                       <span className="text-gray-600">Kelancaran:</span>
-                      <span className="ml-2 font-semibold">{selectedChildData.progress.lastEvaluation.kelancaran}</span>
+                      <span className="ml-2 font-semibold">
+                        {selectedChildData.progress.lastEvaluation.kelancaran}
+                      </span>
                     </div>
                   </div>
                   <p className="text-xs text-gray-600 mt-2">
@@ -341,13 +414,18 @@ const WaliSantriPage = () => {
             <CardContent>
               <div className="space-y-3">
                 {selectedChildData.schedule.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
                     <div>
                       <p className="font-medium text-gray-900">{item.day}</p>
                       <p className="text-sm text-gray-600">{item.activity}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">{item.time}</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {item.time}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -368,13 +446,20 @@ const WaliSantriPage = () => {
                 {selectedChildData.achievements.map((achievement) => {
                   const Icon = getAchievementIcon(achievement.type);
                   return (
-                    <div key={achievement.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <div
+                      key={achievement.id}
+                      className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
+                    >
                       <div className="p-2 bg-yellow-100 rounded-lg">
                         <Icon className="h-5 w-5 text-yellow-600" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900">{achievement.title}</p>
-                        <p className="text-sm text-gray-500">{achievement.date}</p>
+                        <p className="font-medium text-gray-900">
+                          {achievement.title}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {achievement.date}
+                        </p>
                       </div>
                     </div>
                   );
@@ -399,7 +484,8 @@ const WaliSantriPage = () => {
                   </div>
                   <div className="text-center p-4 bg-red-50 rounded-lg">
                     <p className="text-2xl font-bold text-red-600">
-                      {selectedChildData.attendance.totalDays - selectedChildData.attendance.thisMonth}
+                      {selectedChildData.attendance.totalDays -
+                        selectedChildData.attendance.thisMonth}
                     </p>
                     <p className="text-sm text-gray-600">Hari Tidak Hadir</p>
                   </div>
@@ -411,7 +497,8 @@ const WaliSantriPage = () => {
                       <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
                       <div>
                         <p className="text-sm font-medium text-yellow-800">
-                          Terakhir tidak hadir: {selectedChildData.attendance.lastAbsent}
+                          Terakhir tidak hadir:{" "}
+                          {selectedChildData.attendance.lastAbsent}
                         </p>
                         <p className="text-sm text-yellow-700">
                           Alasan: {selectedChildData.attendance.reason}

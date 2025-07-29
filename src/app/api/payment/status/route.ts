@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PaymentGatewayService } from '@/lib/payment-gateway';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { PaymentGatewayService } from "@/lib/payment-gateway";
+import { prisma } from "@/lib/prisma";
 
 // GET /api/payment/status - Check payment status
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const orderId = searchParams.get('orderId');
-    const paymentId = searchParams.get('paymentId');
+    const orderId = searchParams.get("orderId");
+    const paymentId = searchParams.get("paymentId");
 
     if (!orderId && !paymentId) {
       return NextResponse.json(
-        { success: false, message: 'Order ID or Payment ID is required' },
-        { status: 400 }
+        { success: false, message: "Order ID or Payment ID is required" },
+        { status: 400 },
       );
     }
 
@@ -25,27 +25,27 @@ export async function GET(request: NextRequest) {
         where: { id: orderId },
         include: {
           customer: {
-            select: { id: true, name: true, email: true }
-          }
-        }
+            select: { id: true, name: true, email: true },
+          },
+        },
       });
 
       if (!order) {
         return NextResponse.json(
-          { success: false, message: 'Order not found' },
-          { status: 404 }
+          { success: false, message: "Order not found" },
+          { status: 404 },
         );
       }
 
       // Get payment transaction
       if (order.paymentId) {
         paymentTransaction = await prisma.paymentTransaction.findUnique({
-          where: { paymentId: order.paymentId }
+          where: { paymentId: order.paymentId },
         });
       }
     } else if (paymentId) {
       paymentTransaction = await prisma.paymentTransaction.findUnique({
-        where: { paymentId }
+        where: { paymentId },
       });
 
       if (paymentTransaction) {
@@ -53,54 +53,57 @@ export async function GET(request: NextRequest) {
           where: { id: paymentTransaction.orderId },
           include: {
             customer: {
-              select: { id: true, name: true, email: true }
-            }
-          }
+              select: { id: true, name: true, email: true },
+            },
+          },
         });
       }
     }
 
     if (!order) {
       return NextResponse.json(
-        { success: false, message: 'Order not found' },
-        { status: 404 }
+        { success: false, message: "Order not found" },
+        { status: 404 },
       );
     }
 
     // Check payment status from gateway if payment is still pending
-    if (order.status === 'PENDING' && paymentTransaction) {
+    if (order.status === "PENDING" && paymentTransaction) {
       try {
         const paymentGatewayService = new PaymentGatewayService();
         const gatewayStatus = await paymentGatewayService.getPaymentStatus(
           paymentTransaction.paymentId,
-          paymentTransaction.gateway
+          paymentTransaction.gateway,
         );
 
         // Update status if changed
-        if (gatewayStatus.transaction_status === 'settlement' || gatewayStatus.status === 'SUCCEEDED') {
+        if (
+          gatewayStatus.transaction_status === "settlement" ||
+          gatewayStatus.status === "SUCCEEDED"
+        ) {
           await prisma.order.update({
             where: { id: order.id },
             data: {
-              status: 'PAID',
+              status: "PAID",
               paidAt: new Date(),
-              updatedAt: new Date()
-            }
+              updatedAt: new Date(),
+            },
           });
 
           await prisma.paymentTransaction.update({
             where: { paymentId: paymentTransaction.paymentId },
             data: {
-              status: 'SUCCESS',
+              status: "SUCCESS",
               paidAt: new Date(),
-              updatedAt: new Date()
-            }
+              updatedAt: new Date(),
+            },
           });
 
-          order.status = 'PAID';
+          order.status = "PAID";
           order.paidAt = new Date();
         }
       } catch (gatewayError) {
-        console.error('Error checking gateway status:', gatewayError);
+        console.error("Error checking gateway status:", gatewayError);
         // Continue with current status if gateway check fails
       }
     }
@@ -122,22 +125,22 @@ export async function GET(request: NextRequest) {
       items: orderItems,
       createdAt: order.createdAt,
       paidAt: order.paidAt,
-      metadata: order.metadata ? JSON.parse(order.metadata) : null
+      metadata: order.metadata ? JSON.parse(order.metadata) : null,
     };
 
     return NextResponse.json({
       success: true,
-      data: responseData
+      data: responseData,
     });
   } catch (error) {
-    console.error('Error checking payment status:', error);
+    console.error("Error checking payment status:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to check payment status',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to check payment status",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

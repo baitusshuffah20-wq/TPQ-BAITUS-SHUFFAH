@@ -1,31 +1,37 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { z } from 'zod';
-import { createAuditLog } from '@/lib/audit-log';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { z } from "zod";
+import { createAuditLog } from "@/lib/audit-log";
 
 // Schema for santri achievement update validation
 const santriAchievementUpdateSchema = z.object({
-  achievedAt: z.string().transform(str => new Date(str)).optional(),
+  achievedAt: z
+    .string()
+    .transform((str) => new Date(str))
+    .optional(),
   progress: z.number().min(0).max(100).optional(),
   isUnlocked: z.boolean().optional(),
   notificationSent: z.boolean().optional(),
   certificateGenerated: z.boolean().optional(),
   certificateUrl: z.string().optional(),
-  sharedAt: z.string().transform(str => new Date(str)).optional(),
+  sharedAt: z
+    .string()
+    .transform((str) => new Date(str))
+    .optional(),
   metadata: z.string().optional(),
 });
 
 // GET handler - Get a specific santri achievement
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || !session.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const id = params.id;
@@ -51,25 +57,35 @@ export async function GET(
     });
 
     if (!achievement) {
-      return NextResponse.json({ error: 'Achievement not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Achievement not found" },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json(achievement);
   } catch (error) {
-    console.error('Error fetching santri achievement:', error);
-    return NextResponse.json({ error: 'Failed to fetch santri achievement' }, { status: 500 });
+    console.error("Error fetching santri achievement:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch santri achievement" },
+      { status: 500 },
+    );
   }
 }
 
 // PUT handler - Update a santri achievement
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user || !['ADMIN', 'MUSYRIF'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (
+      !session ||
+      !session.user ||
+      !["ADMIN", "MUSYRIF"].includes(session.user.role)
+    ) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const id = params.id;
@@ -79,8 +95,11 @@ export async function PUT(
     const validationResult = santriAchievementUpdateSchema.safeParse(data);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validationResult.error.format() },
-        { status: 400 }
+        {
+          error: "Validation failed",
+          details: validationResult.error.format(),
+        },
+        { status: 400 },
       );
     }
 
@@ -90,7 +109,10 @@ export async function PUT(
     });
 
     if (!existingAchievement) {
-      return NextResponse.json({ error: 'Achievement not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Achievement not found" },
+        { status: 404 },
+      );
     }
 
     // Update achievement in database
@@ -122,8 +144,8 @@ export async function PUT(
 
     // Create audit log
     await createAuditLog({
-      action: 'UPDATE',
-      entity: 'SANTRI_ACHIEVEMENT',
+      action: "UPDATE",
+      entity: "SANTRI_ACHIEVEMENT",
       entityId: id,
       userId: session.user.id,
       oldData: JSON.stringify(existingAchievement),
@@ -132,20 +154,23 @@ export async function PUT(
 
     return NextResponse.json(updatedAchievement);
   } catch (error) {
-    console.error('Error updating santri achievement:', error);
-    return NextResponse.json({ error: 'Failed to update santri achievement' }, { status: 500 });
+    console.error("Error updating santri achievement:", error);
+    return NextResponse.json(
+      { error: "Failed to update santri achievement" },
+      { status: 500 },
+    );
   }
 }
 
 // DELETE handler - Delete a santri achievement
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session || !session.user || session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const id = params.id;
@@ -168,7 +193,10 @@ export async function DELETE(
     });
 
     if (!achievement) {
-      return NextResponse.json({ error: 'Achievement not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Achievement not found" },
+        { status: 404 },
+      );
     }
 
     // Delete achievement from database
@@ -178,8 +206,8 @@ export async function DELETE(
 
     // Create audit log
     await createAuditLog({
-      action: 'DELETE',
-      entity: 'SANTRI_ACHIEVEMENT',
+      action: "DELETE",
+      entity: "SANTRI_ACHIEVEMENT",
       entityId: id,
       userId: session.user.id,
       oldData: JSON.stringify(achievement),
@@ -187,7 +215,10 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting santri achievement:', error);
-    return NextResponse.json({ error: 'Failed to delete santri achievement' }, { status: 500 });
+    console.error("Error deleting santri achievement:", error);
+    return NextResponse.json(
+      { error: "Failed to delete santri achievement" },
+      { status: 500 },
+    );
   }
 }

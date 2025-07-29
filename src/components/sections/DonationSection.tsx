@@ -1,26 +1,25 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { 
-  Heart, 
-  Target, 
-  Users, 
-  TrendingUp,
-  Building,
+import React, { useEffect, useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertCircle,
   BookOpen,
-  GraduationCap,
-  Utensils,
-  CreditCard,
-  Smartphone,
-  QrCode,
-  ArrowRight,
+  Building,
   Check,
-  Loader2
-} from 'lucide-react';
-import { formatCurrency, formatPercentage } from '@/lib/utils';
+  GraduationCap,
+  Heart,
+  Loader2,
+  Target,
+  TrendingUp,
+  Users,
+  Utensils,
+  Gift,
+  Star,
+  Info,
+} from "lucide-react";
+import { formatCurrency, formatPercentage } from "@/lib/utils";
+import DonationForm from "@/components/forms/DonationForm";
 
 interface DonationCategory {
   id: string;
@@ -35,218 +34,137 @@ interface DonationCategory {
   isActive?: boolean;
 }
 
-interface PaymentMethod {
-  id: string;
-  name: string;
-  icon: React.ElementType;
-  description: string;
-}
-
 // Map icon strings to Lucide components
 const iconMap: Record<string, React.ElementType> = {
-  'Heart': Heart,
-  'Building': Building,
-  'GraduationCap': GraduationCap,
-  'BookOpen': BookOpen,
-  'Utensils': Utensils,
-  'Target': Target,
-  'Users': Users,
-  'TrendingUp': TrendingUp
+  Heart: Heart,
+  Building: Building,
+  GraduationCap: GraduationCap,
+  BookOpen: BookOpen,
+  Utensils: Utensils,
+  Target: Target,
+  Users: Users,
+  TrendingUp: TrendingUp,
+  Gift: Gift,
+  Star: Star,
 };
 
 const DonationSection = () => {
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
-  const [customAmount, setCustomAmount] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedPayment, setSelectedPayment] = useState('bank');
-  const [isLoading, setIsLoading] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-  const [donationCategories, setDonationCategories] = useState<DonationCategory[]>([]);
+  const [donationCategories, setDonationCategories] = useState<
+    DonationCategory[]
+  >([]);
   const [error, setError] = useState<string | null>(null);
-  const [donorData, setDonorData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: '',
-    isAnonymous: false
-  });
+  const [selectedCategory, setSelectedCategory] = useState("");
 
-  // Fetch donation categories from API
+  // useErrorHandler(); // Removed as it's not directly used here
+  // const { addToast } = useToast(); // Removed as it's not directly used here
+
+  // Fetch donation categories from API (using only one endpoint)
   useEffect(() => {
     const fetchDonationCategories = async () => {
       try {
         setIsLoadingCategories(true);
-        
-        // First try to get categories from database
-        let response;
+        console.log("Fetching donation categories...");
         try {
-          response = await fetch('/api/donations/categories/db?active=true');
+          const response = await fetch(
+            "/api/donations/categories/db?active=true",
+          );
+          console.log("Database categories response status:", response.status);
+
+          if (response.ok) {
+            const data = await response.json();
+            console.log("Data received from API:", data);
+
+            if (
+              data.success &&
+              Array.isArray(data.categories) &&
+              data.categories.length > 0
+            ) {
+              console.log(
+                "Setting categories from database (found active categories)",
+              );
+              setDonationCategories(data.categories);
+              const firstCategoryId = data.categories[0].id;
+              setSelectedCategory(firstCategoryId);
+              return;
+            } else if (
+              data.success &&
+              Array.isArray(data.categories) &&
+              data.categories.length === 0
+            ) {
+              console.warn(
+                "API returned no active donation categories. Proceeding to fallback.",
+              );
+              // Proceed to fallback categories if API returns an empty but successful array
+            } else {
+              console.warn(
+                "API response invalid or missing categories. Proceeding to fallback.",
+                data,
+              );
+              // Handle cases where data.categories is not an array or data.success is false
+            }
+          }
         } catch (fetchError) {
-          console.error('Network error fetching categories:', fetchError);
-          throw new Error('Network error when fetching donation categories');
+          console.error("Error fetching donation categories:", fetchError);
         }
-        
-        if (!response.ok) {
-          console.error('API error response:', response.status, response.statusText);
-          throw new Error(`Failed to fetch donation categories: ${response.status} ${response.statusText}`);
-        }
-        
-        let data;
-        try {
-          // Check content type before parsing
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            data = await response.json();
-          } else {
-            // Not JSON, get as text and log
-            const responseText = await response.text();
-            console.error('Non-JSON response received:', responseText);
-            console.error('Content-Type:', contentType);
-            throw new Error('Server did not return JSON. Received: ' + (contentType || 'unknown content type'));
-          }
-        } catch (jsonError) {
-          console.error('Error parsing response:', jsonError);
-          // Try to get the response text to see what's being returned
-          try {
-            const responseText = await response.text();
-            console.error('Response text:', responseText);
-          } catch (textError) {
-            console.error('Could not get response text:', textError);
-          }
-          throw new Error('Invalid response from server');
-        }
-        
-        if (data.success && data.categories && data.categories.length > 0) {
-          setDonationCategories(data.categories);
-          // Set the first category as selected by default
-          setSelectedCategory(data.categories[0].id);
-          return;
-        }
-        
-        // If no categories in database, try to seed them
-        try {
-          const seedResponse = await fetch('/api/donations/categories/db', {
-            method: 'POST'
-          });
-          
-          if (seedResponse.ok) {
-            // Check content type before parsing
-            const contentType = seedResponse.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-              console.error('Non-JSON response from seed API:', await seedResponse.text());
-              throw new Error('Seed API did not return JSON');
-            }
-            const seedData = await seedResponse.json();
-            
-            if (seedData.success && seedData.categories && seedData.categories.length > 0) {
-              setDonationCategories(seedData.categories);
-              setSelectedCategory(seedData.categories[0].id);
-              return;
-            }
-          }
-        } catch (seedError) {
-          console.error('Error seeding donation categories in DB:', seedError);
-        }
-        
-        // If database approach fails, try the old SiteSettings approach
-        try {
-          const oldResponse = await fetch('/api/donations/categories?active=true');
-          
-          if (oldResponse.ok) {
-            // Check content type before parsing
-            const contentType = oldResponse.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-              console.error('Non-JSON response from old API:', await oldResponse.text());
-              throw new Error('Old API did not return JSON');
-            }
-            const oldData = await oldResponse.json();
-            
-            if (oldData.success && oldData.categories && oldData.categories.length > 0) {
-              setDonationCategories(oldData.categories);
-              setSelectedCategory(oldData.categories[0].id);
-              return;
-            }
-          }
-          
-          // Try to seed old categories if none exist
-          const seedOldResponse = await fetch('/api/donations/categories/seed', {
-            method: 'POST'
-          });
-          
-          if (seedOldResponse.ok) {
-            // Check content type before parsing
-            const contentType = seedOldResponse.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-              console.error('Non-JSON response from seed old API:', await seedOldResponse.text());
-              throw new Error('Seed old API did not return JSON');
-            }
-            const seedOldData = await seedOldResponse.json();
-            
-            if (seedOldData.success && seedOldData.categories && seedOldData.categories.length > 0) {
-              setDonationCategories(seedOldData.categories);
-              setSelectedCategory(seedOldData.categories[0].id);
-              return;
-            }
-          }
-        } catch (oldError) {
-          console.error('Error with old categories approach:', oldError);
-        }
-        
+
         // Fallback to default categories if all approaches fail
+        console.log("Using fallback categories");
         const fallbackCategories = [
           {
-            id: 'general',
-            title: 'Donasi Umum',
-            description: 'Untuk operasional sehari-hari rumah tahfidz',
+            id: "general",
+            title: "Donasi Umum",
+            description: "Untuk operasional sehari-hari rumah tahfidz",
             target: 100000000,
             collected: 75000000,
-            icon: 'Heart',
-            color: 'text-red-600',
-            bgColor: 'bg-red-50'
+            icon: "Heart",
+            color: "text-red-600",
+            bgColor: "bg-red-50",
           },
           {
-            id: 'building',
-            title: 'Pembangunan Gedung',
-            description: 'Renovasi dan pembangunan fasilitas baru',
+            id: "building",
+            title: "Pembangunan Gedung",
+            description: "Renovasi dan pembangunan fasilitas baru",
             target: 500000000,
             collected: 320000000,
-            icon: 'Building',
-            color: 'text-blue-600',
-            bgColor: 'bg-blue-50',
-            urgent: true
+            icon: "Building",
+            color: "text-blue-600",
+            bgColor: "bg-blue-50",
+            urgent: true,
           },
           {
-            id: 'scholarship',
-            title: 'Beasiswa Santri',
-            description: 'Bantuan biaya pendidikan untuk santri kurang mampu',
+            id: "scholarship",
+            title: "Beasiswa Santri",
+            description: "Bantuan biaya pendidikan untuk santri kurang mampu",
             target: 200000000,
             collected: 150000000,
-            icon: 'GraduationCap',
-            color: 'text-green-600',
-            bgColor: 'bg-green-50'
-          }
+            icon: "GraduationCap",
+            color: "text-green-600",
+            bgColor: "bg-green-50",
+          },
         ];
-        
+
+        console.log("Setting fallback categories");
         setDonationCategories(fallbackCategories);
-        setSelectedCategory('general');
-        console.warn('Using fallback categories after all API approaches failed');
+        console.log("Setting selected category to general");
+        setSelectedCategory("general");
       } catch (error) {
-        console.error('Error fetching donation categories:', error);
-        setError('Failed to load donation categories. Please try again later.');
-        // Set fallback categories
+        console.error("Error fetching donation categories:", error);
+        setError("Gagal memuat kategori donasi. Silakan coba lagi nanti.");
+
+        // Set fallback category
         setDonationCategories([
           {
-            id: 'general',
-            title: 'Donasi Umum',
-            description: 'Untuk operasional sehari-hari rumah tahfidz',
+            id: "general",
+            title: "Donasi Umum",
+            description: "Untuk operasional sehari-hari rumah tahfidz",
             target: 100000000,
             collected: 75000000,
-            icon: 'Heart',
-            color: 'text-red-600',
-            bgColor: 'bg-red-50'
-          }
+            icon: "Heart",
+            color: "text-red-600",
+            bgColor: "bg-red-50",
+          },
         ]);
-        setSelectedCategory('general');
       } finally {
         setIsLoadingCategories(false);
       }
@@ -255,31 +173,26 @@ const DonationSection = () => {
     fetchDonationCategories();
   }, []);
 
-  const paymentMethods: PaymentMethod[] = [
-    {
-      id: 'bank',
-      name: 'Transfer Bank',
-      icon: CreditCard,
-      description: 'BCA, Mandiri, BNI, BRI'
-    },
-    {
-      id: 'ewallet',
-      name: 'E-Wallet',
-      icon: Smartphone,
-      description: 'GoPay, OVO, DANA, ShopeePay'
-    },
-    {
-      id: 'qris',
-      name: 'QRIS',
-      icon: QrCode,
-      description: 'Scan QR Code untuk pembayaran'
+  // Find the selected category data
+  const selectedCategoryData = useMemo(() => {
+    // Ensure selectedCategory is valid
+    if (!selectedCategory && donationCategories.length > 0) {
+      setSelectedCategory(donationCategories[0].id);
     }
-  ];
 
-  const quickAmounts = [50000, 100000, 250000, 500000, 1000000];
+    // Try to find the selected category
+    const category = donationCategories.find(
+      (cat) => cat.id === selectedCategory,
+    );
 
-  const selectedCategoryData = donationCategories.find(cat => cat.id === selectedCategory);
-  const finalAmount = selectedAmount || parseInt(customAmount) || 0;
+    if (!category && donationCategories.length) {
+      console.log("Selected category not found, defaulting to first one");
+      return donationCategories[0];
+    }
+
+    console.log("Selected category data:", category);
+    return category;
+  }, [selectedCategory, donationCategories]);
 
   // Function to get icon component from string
   const getIconComponent = (iconName: string): React.ElementType => {
@@ -287,469 +200,254 @@ const DonationSection = () => {
     return iconMap[iconName] || Heart; // Default to Heart if icon not found
   };
 
-  const handleDonationSubmit = async () => {
-    if (finalAmount === 0) return;
-
-    setIsLoading(true);
-
-    try {
-      // Get category name for display
-      const categoryName = selectedCategoryData?.title || 'Umum';
-      
-      // Prepare payment data
-      const paymentData = {
-        type: 'donation',
-        amount: finalAmount,
-        donationData: {
-          donorName: donorData.name || 'Donatur Anonim',
-          donorEmail: donorData.email || 'anonymous@example.com',
-          donorPhone: donorData.phone || '08123456789',
-          type: selectedCategory, // This will be used as the type in the database
-          message: donorData.message,
-          isAnonymous: donorData.isAnonymous,
-          categoryName: categoryName
-        }
-      };
-      
-      // Only add categoryId if it's a valid ID from the database
-      if (selectedCategoryData && selectedCategoryData.id && selectedCategoryData.id !== 'general') {
-        // @ts-ignore
-        paymentData.donationData.categoryId = selectedCategoryData.id;
-      }
-      
-      console.log('Sending payment data:', paymentData);
-      
-      // Create payment directly without cart
-      let response;
-      try {
-        response = await fetch('/api/payment/create', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(paymentData)
-        });
-      } catch (fetchError) {
-        console.error('Network error creating payment:', fetchError);
-        throw new Error('Network error when creating payment. Please check your internet connection.');
-      }
-
-      // Check if response is OK
-      if (!response.ok) {
-        let errorMessage = `Server error: ${response.status}`;
-        try {
-          // Check content type before parsing
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            // Try to parse error response as JSON
-            const errorData = await response.json();
-            console.error('Server error response:', response.status, errorData);
-            
-            if (errorData.error) {
-              errorMessage = errorData.error;
-              if (errorData.details) {
-                errorMessage += ` - ${errorData.details}`;
-              }
-            }
-          } else {
-            // Not JSON, get as text
-            const errorText = await response.text();
-            console.error('Non-JSON error response:', errorText);
-            errorMessage = `Server error: ${response.status} - Non-JSON response`;
-          }
-        } catch (parseError) {
-          // If can't parse as JSON, get as text
-          try {
-            const errorText = await response.text();
-            console.error('Server error response (text):', response.status, errorText);
-            errorMessage = `${errorMessage} - ${errorText}`;
-          } catch (textError) {
-            console.error('Error getting response text:', textError);
-            errorMessage = `${errorMessage} - Could not read error details`;
-          }
-        }
-        
-        throw new Error(errorMessage);
-      }
-
-      // Parse response as JSON
-      let result;
-      try {
-        // Check content type before parsing
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          result = await response.json();
-        } else {
-          // Not JSON, get as text and log
-          const responseText = await response.text();
-          console.error('Non-JSON response received:', responseText);
-          console.error('Content-Type:', contentType);
-          throw new Error('Server did not return JSON. Received: ' + (contentType || 'unknown content type'));
-        }
-      } catch (jsonError) {
-        console.error('Error parsing payment response:', jsonError);
-        // Try to get the response text
-        try {
-          const responseText = await response.text();
-          console.error('Response text:', responseText);
-        } catch (textError) {
-          console.error('Error getting response text:', textError);
-        }
-        throw new Error('Could not process payment response from server');
-      }
-      console.log('Payment creation result:', result);
-
-      if (result.success) {
-        // Check if we're in development mode
-        if (result.devMode) {
-          alert('PERHATIAN: Aplikasi berjalan dalam mode pengembangan. Konfigurasi Midtrans belum diatur.\n\n' +
-                'Data donasi telah disimpan, tetapi tidak ada proses pembayaran yang sebenarnya.\n\n' +
-                'Kategori: ' + categoryName + '\n' +
-                'Jumlah: ' + formatCurrency(finalAmount) + '\n' +
-                'Donatur: ' + (donorData.isAnonymous ? 'Anonim' : donorData.name));
-        }
-        
-        // Redirect to Midtrans payment page
-        if (result.redirectUrl) {
-          window.open(result.redirectUrl, '_blank');
-        } else {
-          console.warn('No redirect URL provided in successful response');
-          alert('Donasi berhasil dibuat, tetapi tidak ada URL pembayaran. Silakan hubungi admin.');
-        }
-      } else {
-        const errorMessage = result.error || 'Terjadi kesalahan';
-        const errorDetails = result.details ? `\nDetail: ${result.details}` : '';
-        console.error('Donation error:', errorMessage, errorDetails);
-        alert(`Gagal membuat donasi: ${errorMessage}${errorDetails}`);
-      }
-    } catch (error) {
-      console.error('Error creating donation:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan tidak diketahui';
-      alert(`Terjadi kesalahan saat membuat donasi: ${errorMessage}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDonorDataChange = (field: string, value: string | boolean) => {
-    setDonorData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
+  // Recent donors data (static for now, could be fetched from API)
+  const recentDonors = [
+    { name: "Hamba Allah", amount: 500000, time: "2 jam lalu" },
+    { name: "Ahmad Fauzi", amount: 250000, time: "5 jam lalu" },
+    { name: "Anonim", amount: 100000, time: "1 hari lalu" },
+    { name: "Siti Aminah", amount: 1000000, time: "2 hari lalu" },
+  ];
 
   return (
-    <section className="py-20 bg-gray-50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Donasi untuk Kemajuan Tahfidz
+    <section
+      id="donation"
+      className="py-16 bg-gradient-to-b from-white to-gray-50"
+    >
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            Donasi untuk Kebaikan
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Berpartisipasilah dalam membangun generasi penghafal Al-Quran. 
-            Setiap donasi Anda sangat berarti untuk kemajuan pendidikan Islam.
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Bantu kami mewujudkan pendidikan Al-Qur'an yang berkualitas untuk
+            generasi masa depan
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Donation Categories */}
-          <div className="lg:col-span-2">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">
-              Pilih Kategori Donasi
-            </h3>
-            
-            {isLoadingCategories ? (
-              <div className="flex items-center justify-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
-                <span className="ml-2 text-gray-600">Memuat kategori donasi...</span>
-              </div>
-            ) : error ? (
-              <div className="bg-red-50 text-red-700 p-4 rounded-lg">
-                <p>{error}</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                {donationCategories.map((category) => {
-                  const Icon = getIconComponent(category.icon);
-                  const percentage = (category.collected / category.target) * 100;
-                  
-                  return (
-                    <Card 
-                      key={category.id}
-                      className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                        selectedCategory === category.id 
-                          ? 'ring-2 ring-teal-500 shadow-lg' 
-                          : 'hover:shadow-md'
-                      }`}
-                      onClick={() => setSelectedCategory(category.id)}
-                    >
-                      <CardHeader className="pb-4">
-                        <div className="flex items-center justify-between">
-                          <div className={`p-3 rounded-lg ${category.bgColor} ${category.color}`}>
-                            <Icon className="h-6 w-6" />
-                          </div>
-                          {category.urgent && (
-                            <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-semibold">
-                              Mendesak
-                            </span>
-                          )}
-                        </div>
-                        
-                        <CardTitle className="text-lg">
-                          {category.title}
-                        </CardTitle>
-                        
-                        <p className="text-gray-600 text-sm">
-                          {category.description}
-                        </p>
-                      </CardHeader>
-
-                      <CardContent className="pt-0">
-                        {/* Progress Bar */}
-                        <div className="mb-4">
-                          <div className="flex justify-between text-sm mb-2">
-                            <span className="text-gray-600">Terkumpul</span>
-                            <span className="font-semibold text-gray-900">
-                              {formatPercentage(category.collected, category.target)}
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-teal-600 h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${Math.min(percentage, 100)}%` }}
-                            ></div>
-                          </div>
-                        </div>
-
-                        {/* Amount Info */}
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">
-                            {formatCurrency(category.collected)}
-                          </span>
-                          <span className="text-gray-600">
-                            Target: {formatCurrency(category.target)}
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-8 flex items-center">
+            <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+            <span>{error}</span>
           </div>
+        )}
 
-          {/* Donation Form */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-8">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Heart className="h-5 w-5 text-red-500 mr-2" />
-                  Form Donasi
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Donation Categories */}
+          <div className="lg:col-span-4">
+            <Card className="h-full shadow-sm hover:shadow-md transition-shadow duration-300">
+              <CardHeader className="border-b bg-gradient-to-r from-teal-500 to-green-500 text-white">
+                <CardTitle className="flex items-center gap-2">
+                  <Gift className="h-5 w-5" />
+                  Program Donasi
                 </CardTitle>
               </CardHeader>
-
-              <CardContent className="space-y-6">
-                {/* Selected Category Info */}
-                {selectedCategoryData && (
-                  <div className={`p-4 rounded-lg ${selectedCategoryData.bgColor}`}>
-                    <div className="flex items-center mb-2">
-                      {React.createElement(
-                        getIconComponent(selectedCategoryData.icon),
-                        { className: `h-4 w-4 mr-2 ${selectedCategoryData.color}` }
-                      )}
-                      <span className="font-semibold text-gray-900">
-                        {selectedCategoryData.title}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      {selectedCategoryData.description}
-                    </p>
+              <CardContent className="p-0">
+                {isLoadingCategories ? (
+                  <div className="flex justify-center items-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
+                    <span className="ml-2 text-gray-600">
+                      Memuat kategori donasi...
+                    </span>
                   </div>
-                )}
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {donationCategories.map((category, idx) => {
+                      const IconComponent = getIconComponent(category.icon);
+                      const isSelected = selectedCategory === category.id;
+                      const progress =
+                        category.target > 0
+                          ? (category.collected / category.target) * 100
+                          : 0;
 
-                {/* Quick Amount Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Pilih Nominal Donasi
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    {quickAmounts.map((amount) => (
-                      <button
-                        key={amount}
-                        onClick={() => {
-                          setSelectedAmount(amount);
-                          setCustomAmount('');
-                        }}
-                        className={`p-3 text-sm font-medium rounded-lg border transition-colors ${
-                          selectedAmount === amount
-                            ? 'bg-teal-600 text-white border-teal-600'
-                            : 'bg-white text-gray-700 border-gray-300 hover:border-teal-300'
-                        }`}
-                      >
-                        {formatCurrency(amount)}
-                      </button>
-                    ))}
-                  </div>
-                  
-                  <Input
-                    type="number"
-                    placeholder="Nominal lainnya"
-                    value={customAmount}
-                    onChange={(e) => {
-                      setCustomAmount(e.target.value);
-                      setSelectedAmount(null);
-                    }}
-                  />
-                </div>
-
-                {/* Payment Method */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Metode Pembayaran
-                  </label>
-                  <div className="space-y-2">
-                    {paymentMethods.map((method) => {
-                      const Icon = method.icon;
                       return (
                         <button
-                          key={method.id}
-                          onClick={() => setSelectedPayment(method.id)}
-                          className={`w-full p-3 text-left rounded-lg border transition-colors ${
-                            selectedPayment === method.id
-                              ? 'bg-teal-50 border-teal-300 text-teal-900'
-                              : 'bg-white border-gray-300 hover:border-gray-400'
+                          key={category.id ?? `category-${idx}`}
+                          type="button"
+                          className={`w-full text-left p-4 transition-all cursor-pointer ${
+                            isSelected
+                              ? "bg-teal-50 border-l-4 border-teal-500"
+                              : "hover:bg-gray-50 border-l-4 border-transparent"
                           }`}
+                          onClick={() => {
+                            console.log("Category clicked:", category.id);
+                            setSelectedCategory(category.id);
+                          }}
                         >
-                          <div className="flex items-center">
-                            <Icon className="h-5 w-5 mr-3 text-gray-600" />
-                            <div>
-                              <div className="font-medium">{method.name}</div>
-                              <div className="text-sm text-gray-500">{method.description}</div>
+                          <div className="flex items-start">
+                            <div
+                              className={`p-2 rounded-full ${category.bgColor || "bg-teal-50"} mr-3`}
+                            >
+                              <IconComponent
+                                className={`h-5 w-5 ${category.color || "text-teal-500"}`}
+                              />
                             </div>
-                            {selectedPayment === method.id && (
-                              <Check className="h-5 w-5 text-teal-600 ml-auto" />
-                            )}
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <h3 className="font-medium text-gray-900">
+                                  {category.title}
+                                </h3>
+                                {isSelected && (
+                                  <Check className="h-4 w-4 text-teal-500" />
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-600 mt-1">
+                                {category.description}
+                              </p>
+
+                              {/* Progress bar */}
+                              {category.target > 0 && (
+                                <div className="mt-3">
+                                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                                    <span>
+                                      Terkumpul:{" "}
+                                      {formatCurrency(category.collected)}
+                                    </span>
+                                    <span>
+                                      {formatPercentage(
+                                        category.collected,
+                                        category.target,
+                                      )}
+                                      %
+                                    </span>
+                                  </div>
+                                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-gradient-to-r from-teal-500 to-green-400 rounded-full transition-all duration-500"
+                                      style={{
+                                        width: `${Math.min(progress, 100)}%`,
+                                      }}
+                                    ></div>
+                                  </div>
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    Target: {formatCurrency(category.target)}
+                                  </div>
+                                </div>
+                              )}
+
+                              {category.urgent && (
+                                <div className="mt-2 inline-block px-2 py-1 bg-red-100 text-red-600 text-xs rounded-full font-medium">
+                                  Mendesak
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </button>
                       );
                     })}
                   </div>
-                </div>
+                )}
+              </CardContent>
+            </Card>
 
-                {/* Donor Info */}
-                <div className="space-y-4">
-                  <Input
-                    placeholder="Nama Donatur (Opsional)"
-                    value={donorData.name}
-                    onChange={(e) => handleDonorDataChange('name', e.target.value)}
-                  />
-                  <Input
-                    type="email"
-                    placeholder="Email (Opsional)"
-                    value={donorData.email}
-                    onChange={(e) => handleDonorDataChange('email', e.target.value)}
-                  />
-                  <Input
-                    type="tel"
-                    placeholder="No. HP (Opsional)"
-                    value={donorData.phone}
-                    onChange={(e) => handleDonorDataChange('phone', e.target.value)}
-                  />
-                  <Input
-                    placeholder="Pesan/Doa (Opsional)"
-                    value={donorData.message}
-                    onChange={(e) => handleDonorDataChange('message', e.target.value)}
-                  />
-
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="anonymous"
-                      checked={donorData.isAnonymous}
-                      onChange={(e) => handleDonorDataChange('isAnonymous', e.target.checked)}
-                      className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="anonymous" className="ml-2 text-sm text-gray-700">
-                      Donasi sebagai anonim
-                    </label>
-                  </div>
-                </div>
-
-                {/* Total & Submit */}
-                <div className="border-t pt-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-lg font-semibold text-gray-900">
-                      Total Donasi:
-                    </span>
-                    <span className="text-2xl font-bold text-teal-600">
-                      {formatCurrency(finalAmount)}
-                    </span>
-                  </div>
-                  
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    disabled={finalAmount === 0}
-                    loading={isLoading}
-                    onClick={handleDonationSubmit}
-                  >
-                    {isLoading ? 'Memproses...' : 'Lanjutkan Pembayaran'}
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                  
-                  <p className="text-xs text-gray-500 text-center mt-3">
-                    Donasi Anda akan digunakan sesuai kategori yang dipilih
-                  </p>
+            {/* Recent Donors Card */}
+            <Card className="mt-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <CardHeader className="border-b bg-gradient-to-r from-yellow-500 to-amber-500 text-white">
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="h-5 w-5" />
+                  Donatur Terbaru
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-gray-100">
+                  {recentDonors.map((donor, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-4 hover:bg-gray-50"
+                    >
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {donor.name}
+                        </p>
+                        <p className="text-sm text-gray-500">{donor.time}</p>
+                      </div>
+                      <p className="font-semibold text-green-600">
+                        {formatCurrency(donor.amount)}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
           </div>
-        </div>
 
-        {/* Donation Impact */}
-        <div className="mt-16">
-          <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">
-            Dampak Donasi Anda
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                id: 'santri',
-                icon: Users,
-                bgColor: 'bg-teal-100',
-                iconColor: 'text-teal-600',
-                title: '250+ Santri Terbantu',
-                description: 'Donasi Anda membantu biaya pendidikan santri dari keluarga kurang mampu'
-              },
-              {
-                id: 'fasilitas',
-                icon: Target,
-                bgColor: 'bg-yellow-100',
-                iconColor: 'text-yellow-600',
-                title: 'Fasilitas Berkualitas',
-                description: 'Membantu pengadaan fasilitas pembelajaran yang modern dan nyaman'
-              },
-              {
-                id: 'kualitas',
-                icon: TrendingUp,
-                bgColor: 'bg-green-100',
-                iconColor: 'text-green-600',
-                title: 'Kualitas Pendidikan',
-                description: 'Meningkatkan kualitas pembelajaran dan metode tahfidz yang efektif'
-              }
-            ].map((item) => (
-              <div key={item.id} className="text-center">
-                <div className={`${item.bgColor} w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4`}>
-                  <item.icon className={`h-8 w-8 ${item.iconColor}`} />
-                </div>
-                <h4 className="font-semibold text-gray-900 mb-2">{item.title}</h4>
-                <p className="text-gray-600 text-sm">
-                  {item.description}
+          {/* Donation Form */}
+          <div className="lg:col-span-8">
+            <DonationForm
+              selectedCategory={selectedCategory}
+              selectedCategoryData={selectedCategoryData}
+              getIconComponent={getIconComponent}
+            />
+            {/* Debug info - remove in production */}
+            {process.env.NODE_ENV !== "production" && (
+              <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-600">
+                <p>Debug: Selected Category ID: {selectedCategory}</p>
+                <p>
+                  Debug: Selected Category Title: {selectedCategoryData?.title}
                 </p>
               </div>
-            ))}
+            )}
+
+            {/* Impact Card */}
+            <Card className="mt-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <CardHeader className="border-b bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
+                <CardTitle className="flex items-center gap-2">
+                  <Info className="h-5 w-5" />
+                  Dampak Donasi Anda
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-blue-100 rounded-full">
+                        <Building className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          Fasilitas Belajar
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          Membangun ruang kelas yang nyaman untuk para santri
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-green-50 rounded-lg border border-green-100">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-green-100 rounded-full">
+                        <GraduationCap className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          Beasiswa Santri
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          Memberikan kesempatan belajar bagi yang kurang mampu
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-purple-100 rounded-full">
+                        <BookOpen className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          Generasi Qur'ani
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          Mencetak generasi yang hafal Al-Quran dan berakhlak
+                          mulia
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

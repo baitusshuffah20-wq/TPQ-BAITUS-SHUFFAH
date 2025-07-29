@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import UserAvatar from "@/components/ui/UserAvatar";
 import {
   X,
   User,
@@ -18,8 +19,8 @@ import {
   GraduationCap,
   Briefcase,
   FileText,
-  ExternalLink
-} from 'lucide-react';
+  ExternalLink,
+} from "lucide-react";
 
 interface MusyrifDetailModalProps {
   isOpen: boolean;
@@ -34,25 +35,33 @@ const MusyrifDetailModal: React.FC<MusyrifDetailModalProps> = ({
   onClose,
   onEdit,
   onDelete,
-  musyrif
+  musyrif,
 }) => {
   if (!isOpen || !musyrif) return null;
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'ACTIVE': return 'bg-green-100 text-green-800';
-      case 'INACTIVE': return 'bg-red-100 text-red-800';
-      case 'ON_LEAVE': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "ACTIVE":
+        return "bg-green-100 text-green-800";
+      case "INACTIVE":
+        return "bg-red-100 text-red-800";
+      case "ON_LEAVE":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'ACTIVE': return 'Aktif';
-      case 'INACTIVE': return 'Tidak Aktif';
-      case 'ON_LEAVE': return 'Cuti';
-      default: return status;
+      case "ACTIVE":
+        return "Aktif";
+      case "INACTIVE":
+        return "Tidak Aktif";
+      case "ON_LEAVE":
+        return "Cuti";
+      default:
+        return status;
     }
   };
 
@@ -61,20 +70,23 @@ const MusyrifDetailModal: React.FC<MusyrifDetailModalProps> = ({
     const birth = new Date(birthDate);
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
       age--;
     }
-    
+
     return age;
   };
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
     });
   };
 
@@ -107,34 +119,36 @@ const MusyrifDetailModal: React.FC<MusyrifDetailModalProps> = ({
             <div className="space-y-8">
               {/* Header with Avatar and Basic Info */}
               <div className="flex items-start space-x-6">
-                <div className="w-24 h-24 bg-teal-100 rounded-full flex items-center justify-center overflow-hidden">
-                  {musyrif.photo ? (
-                    <img src={musyrif.photo} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-2xl font-bold text-teal-600">
-                      {musyrif.name?.charAt(0) || 'M'}
-                    </span>
-                  )}
-                </div>
+                <UserAvatar
+                  name={musyrif.name || "Musyrif"}
+                  photo={musyrif.photo}
+                  size="xl"
+                />
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
-                    <h2 className="text-2xl font-bold text-gray-900">{musyrif.name}</h2>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(musyrif.status)}`}>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      {musyrif.name}
+                    </h2>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(musyrif.status)}`}
+                    >
                       {getStatusText(musyrif.status)}
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
                     <div className="flex items-center">
                       <BookOpen className="h-4 w-4 mr-2" />
-                      {musyrif.specialization || 'Umum'}
+                      {musyrif.specialization || "Umum"}
                     </div>
                     <div className="flex items-center">
                       <Calendar className="h-4 w-4 mr-2" />
-                      {musyrif.birthDate ? `${calculateAge(musyrif.birthDate)} tahun` : '-'}
+                      {musyrif.birthDate
+                        ? `${calculateAge(musyrif.birthDate)} tahun`
+                        : "-"}
                     </div>
                     <div className="flex items-center">
                       <BookOpen className="h-4 w-4 mr-2" />
-                      {musyrif.halaqah?.name || 'Belum ada halaqah'}
+                      {musyrif.halaqah?.name || "Belum ada halaqah"}
                     </div>
                     <div className="flex items-center">
                       <Calendar className="h-4 w-4 mr-2" />
@@ -155,42 +169,45 @@ const MusyrifDetailModal: React.FC<MusyrifDetailModalProps> = ({
                     <label className="block text-sm font-medium text-gray-500 mb-1">
                       Nama Lengkap
                     </label>
-                    <p className="text-gray-900">{musyrif.name || '-'}</p>
+                    <p className="text-gray-900">{musyrif.name || "-"}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">
                       Jenis Kelamin
                     </label>
-                    <p className="text-gray-900">{musyrif.gender === 'MALE' ? 'Laki-laki' : 'Perempuan'}</p>
+                    <p className="text-gray-900">
+                      {musyrif.gender === "MALE" ? "Laki-laki" : "Perempuan"}
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">
                       Tempat, Tanggal Lahir
                     </label>
                     <p className="text-gray-900">
-                      {musyrif.birthPlace && musyrif.birthDate 
+                      {musyrif.birthPlace && musyrif.birthDate
                         ? `${musyrif.birthPlace}, ${formatDate(musyrif.birthDate)}`
-                        : '-'
-                      }
+                        : "-"}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">
                       Nomor Telepon
                     </label>
-                    <p className="text-gray-900">{musyrif.phone || '-'}</p>
+                    <p className="text-gray-900">{musyrif.phone || "-"}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">
                       Email
                     </label>
-                    <p className="text-gray-900">{musyrif.email || '-'}</p>
+                    <p className="text-gray-900">{musyrif.email || "-"}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">
                       Status
                     </label>
-                    <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(musyrif.status)}`}>
+                    <span
+                      className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(musyrif.status)}`}
+                    >
                       {getStatusText(musyrif.status)}
                     </span>
                   </div>
@@ -198,7 +215,7 @@ const MusyrifDetailModal: React.FC<MusyrifDetailModalProps> = ({
                     <label className="block text-sm font-medium text-gray-500 mb-1">
                       Alamat
                     </label>
-                    <p className="text-gray-900">{musyrif.address || '-'}</p>
+                    <p className="text-gray-900">{musyrif.address || "-"}</p>
                   </div>
                 </div>
               </div>
@@ -214,19 +231,25 @@ const MusyrifDetailModal: React.FC<MusyrifDetailModalProps> = ({
                     <label className="block text-sm font-medium text-gray-500 mb-1">
                       Spesialisasi
                     </label>
-                    <p className="text-gray-900">{musyrif.specialization || 'Umum'}</p>
+                    <p className="text-gray-900">
+                      {musyrif.specialization || "Umum"}
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">
                       Halaqah
                     </label>
-                    <p className="text-gray-900">{musyrif.halaqah?.name || 'Belum ada halaqah'}</p>
+                    <p className="text-gray-900">
+                      {musyrif.halaqah?.name || "Belum ada halaqah"}
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">
                       Tanggal Bergabung
                     </label>
-                    <p className="text-gray-900">{formatDate(musyrif.joinDate)}</p>
+                    <p className="text-gray-900">
+                      {formatDate(musyrif.joinDate)}
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">
@@ -238,7 +261,9 @@ const MusyrifDetailModal: React.FC<MusyrifDetailModalProps> = ({
                           <Users className="h-4 w-4 mr-1 text-teal-600" />
                           ID: {musyrif.userId}
                         </span>
-                      ) : 'Belum ada akun terhubung'}
+                      ) : (
+                        "Belum ada akun terhubung"
+                      )}
                     </p>
                   </div>
                 </div>
@@ -253,14 +278,21 @@ const MusyrifDetailModal: React.FC<MusyrifDetailModalProps> = ({
                   </h3>
                   <div className="space-y-4">
                     {musyrif.education.map((edu: any, index: number) => (
-                      <div key={edu.id || index} className="p-4 bg-gray-50 rounded-lg">
+                      <div
+                        key={edu.id || index}
+                        className="p-4 bg-gray-50 rounded-lg"
+                      >
                         <div className="flex justify-between">
-                          <div className="font-medium text-gray-900">{edu.institution}</div>
+                          <div className="font-medium text-gray-900">
+                            {edu.institution}
+                          </div>
                           <div className="text-gray-600">{edu.year}</div>
                         </div>
                         <div className="text-gray-700 mt-1">{edu.degree}</div>
                         {edu.description && (
-                          <div className="text-gray-600 text-sm mt-2">{edu.description}</div>
+                          <div className="text-gray-600 text-sm mt-2">
+                            {edu.description}
+                          </div>
                         )}
                       </div>
                     ))}
@@ -277,16 +309,26 @@ const MusyrifDetailModal: React.FC<MusyrifDetailModalProps> = ({
                   </h3>
                   <div className="space-y-4">
                     {musyrif.experience.map((exp: any, index: number) => (
-                      <div key={exp.id || index} className="p-4 bg-gray-50 rounded-lg">
+                      <div
+                        key={exp.id || index}
+                        className="p-4 bg-gray-50 rounded-lg"
+                      >
                         <div className="flex justify-between">
-                          <div className="font-medium text-gray-900">{exp.position}</div>
+                          <div className="font-medium text-gray-900">
+                            {exp.position}
+                          </div>
                           <div className="text-gray-600">
-                            {formatDate(exp.startDate)} - {exp.endDate ? formatDate(exp.endDate) : 'Sekarang'}
+                            {formatDate(exp.startDate)} -{" "}
+                            {exp.endDate ? formatDate(exp.endDate) : "Sekarang"}
                           </div>
                         </div>
-                        <div className="text-gray-700 mt-1">{exp.organization}</div>
+                        <div className="text-gray-700 mt-1">
+                          {exp.organization}
+                        </div>
                         {exp.description && (
-                          <div className="text-gray-600 text-sm mt-2">{exp.description}</div>
+                          <div className="text-gray-600 text-sm mt-2">
+                            {exp.description}
+                          </div>
                         )}
                       </div>
                     ))}
@@ -303,14 +345,23 @@ const MusyrifDetailModal: React.FC<MusyrifDetailModalProps> = ({
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {musyrif.certificates.map((cert: any, index: number) => (
-                      <div key={cert.id || index} className="p-4 bg-gray-50 rounded-lg">
+                      <div
+                        key={cert.id || index}
+                        className="p-4 bg-gray-50 rounded-lg"
+                      >
                         <div className="flex justify-between">
-                          <div className="font-medium text-gray-900">{cert.name}</div>
-                          <div className="text-gray-600">{formatDate(cert.issueDate)}</div>
+                          <div className="font-medium text-gray-900">
+                            {cert.name}
+                          </div>
+                          <div className="text-gray-600">
+                            {formatDate(cert.issueDate)}
+                          </div>
                         </div>
                         <div className="text-gray-700 mt-1">{cert.issuer}</div>
                         {cert.description && (
-                          <div className="text-gray-600 text-sm mt-2">{cert.description}</div>
+                          <div className="text-gray-600 text-sm mt-2">
+                            {cert.description}
+                          </div>
                         )}
                         {cert.documentUrl && (
                           <a
@@ -331,8 +382,8 @@ const MusyrifDetailModal: React.FC<MusyrifDetailModalProps> = ({
 
               {/* Action Buttons */}
               <div className="flex justify-between pt-6 border-t border-gray-200">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={onDelete}
                   className="text-red-600 border-red-600 hover:bg-red-50"
                 >

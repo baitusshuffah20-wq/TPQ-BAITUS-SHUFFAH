@@ -8,26 +8,26 @@ export function cn(...inputs: ClassValue[]) {
 // Date utilities
 export function formatDate(date: Date | string): string {
   const d = new Date(date);
-  return d.toLocaleDateString('id-ID', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
+  return d.toLocaleDateString("id-ID", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }
 
 export function formatDateTime(date: Date | string): string {
   const d = new Date(date);
-  return d.toLocaleString('id-ID', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+  return d.toLocaleString("id-ID", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
 export function formatTime(time: string): string {
-  const [hours, minutes] = time.split(':');
+  const [hours, minutes] = time.split(":");
   return `${hours}:${minutes}`;
 }
 
@@ -37,7 +37,7 @@ export function getRelativeTime(date: Date | string): string {
   const diffInSeconds = Math.floor((now.getTime() - target.getTime()) / 1000);
 
   if (diffInSeconds < 60) {
-    return 'Baru saja';
+    return "Baru saja";
   } else if (diffInSeconds < 3600) {
     const minutes = Math.floor(diffInSeconds / 60);
     return `${minutes} menit yang lalu`;
@@ -54,20 +54,20 @@ export function getRelativeTime(date: Date | string): string {
 
 // Number utilities
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(amount);
 }
 
 export function formatNumber(num: number): string {
-  return new Intl.NumberFormat('id-ID').format(num);
+  return new Intl.NumberFormat("id-ID").format(num);
 }
 
 export function formatPercentage(value: number, total: number): string {
-  if (total === 0) return '0%';
+  if (total === 0) return "0%";
   const percentage = (value / total) * 100;
   return `${percentage.toFixed(1)}%`;
 }
@@ -75,7 +75,7 @@ export function formatPercentage(value: number, total: number): string {
 // String utilities
 export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength) + '...';
+  return text.substring(0, maxLength) + "...";
 }
 
 export function capitalizeFirst(str: string): string {
@@ -84,8 +84,10 @@ export function capitalizeFirst(str: string): string {
 
 export function generateNIS(): string {
   const year = new Date().getFullYear().toString().slice(-2);
-  const month = (new Date().getMonth() + 1).toString().padStart(2, '0');
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  const month = (new Date().getMonth() + 1).toString().padStart(2, "0");
+  const random = Math.floor(Math.random() * 1000)
+    .toString()
+    .padStart(3, "0");
   return `${year}${month}${random}`;
 }
 
@@ -97,7 +99,7 @@ export function isValidEmail(email: string): boolean {
 
 export function isValidPhone(phone: string): boolean {
   const phoneRegex = /^(\+62|62|0)[0-9]{9,13}$/;
-  return phoneRegex.test(phone.replace(/\s/g, ''));
+  return phoneRegex.test(phone.replace(/\s/g, ""));
 }
 
 export function isValidNIS(nis: string): boolean {
@@ -107,62 +109,69 @@ export function isValidNIS(nis: string): boolean {
 
 // Array utilities
 export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
-  return array.reduce((groups, item) => {
-    const group = String(item[key]);
-    groups[group] = groups[group] || [];
-    groups[group].push(item);
-    return groups;
-  }, {} as Record<string, T[]>);
+  return array.reduce(
+    (groups, item) => {
+      const group = String(item[key]);
+      groups[group] = groups[group] || [];
+      groups[group].push(item);
+      return groups;
+    },
+    {} as Record<string, T[]>,
+  );
 }
 
-export function sortBy<T>(array: T[], key: keyof T, direction: 'asc' | 'desc' = 'asc'): T[] {
+export function sortBy<T>(
+  array: T[],
+  key: keyof T,
+  direction: "asc" | "desc" = "asc",
+): T[] {
   return [...array].sort((a, b) => {
     const aVal = a[key];
     const bVal = b[key];
-    
-    if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-    if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+
+    if (aVal < bVal) return direction === "asc" ? -1 : 1;
+    if (aVal > bVal) return direction === "asc" ? 1 : -1;
     return 0;
   });
 }
 
 // File utilities
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
-  
+  if (bytes === 0) return "0 Bytes";
+
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
 export function getFileExtension(filename: string): string {
-  return filename.slice((filename.lastIndexOf('.') - 1 >>> 0) + 2);
+  return filename.slice(((filename.lastIndexOf(".") - 1) >>> 0) + 2);
 }
 
 // Color utilities
 export function getInitials(name: string): string {
   return name
-    .split(' ')
-    .map(word => word.charAt(0))
-    .join('')
+    .split(" ")
+    .map((word) => word.charAt(0))
+    .join("")
     .toUpperCase()
     .slice(0, 2);
 }
 
 export function getAvatarColor(name: string): string {
   const colors = [
-    'bg-red-500',
-    'bg-blue-500',
-    'bg-green-500',
-    'bg-yellow-500',
-    'bg-purple-500',
-    'bg-pink-500',
-    'bg-indigo-500',
-    'bg-teal-500'
+    "bg-red-500",
+    "bg-blue-500",
+    "bg-green-500",
+    "bg-yellow-500",
+    "bg-purple-500",
+    "bg-pink-500",
+    "bg-indigo-500",
+    "bg-teal-500",
   ];
-  
+
   const index = name.charCodeAt(0) % colors.length;
   return colors[index];
 }
@@ -170,18 +179,35 @@ export function getAvatarColor(name: string): string {
 // Islamic utilities
 export function getSurahName(surahNumber: number): string {
   const surahs = [
-    'Al-Fatihah', 'Al-Baqarah', 'Ali \'Imran', 'An-Nisa\'', 'Al-Ma\'idah',
-    'Al-An\'am', 'Al-A\'raf', 'Al-Anfal', 'At-Tawbah', 'Yunus',
-    'Hud', 'Yusuf', 'Ar-Ra\'d', 'Ibrahim', 'Al-Hijr',
-    'An-Nahl', 'Al-Isra\'', 'Al-Kahf', 'Maryam', 'Ta-Ha',
+    "Al-Fatihah",
+    "Al-Baqarah",
+    "Ali 'Imran",
+    "An-Nisa'",
+    "Al-Ma'idah",
+    "Al-An'am",
+    "Al-A'raf",
+    "Al-Anfal",
+    "At-Tawbah",
+    "Yunus",
+    "Hud",
+    "Yusuf",
+    "Ar-Ra'd",
+    "Ibrahim",
+    "Al-Hijr",
+    "An-Nahl",
+    "Al-Isra'",
+    "Al-Kahf",
+    "Maryam",
+    "Ta-Ha",
     // Add more surahs as needed
   ];
-  
+
   return surahs[surahNumber - 1] || `Surah ${surahNumber}`;
 }
 
-export function getJuzFromSurah(surahNumber: number, ayahNumber: number): number {
+export function getJuzFromSurah(surahNumber: number): number {
   // Simplified juz calculation - in real app, use proper mapping
+  // TODO: Add ayahNumber parameter for more precise juz calculation
   if (surahNumber <= 2) return 1;
   if (surahNumber <= 4) return 2;
   // Add more mappings as needed
@@ -189,11 +215,11 @@ export function getJuzFromSurah(surahNumber: number, ayahNumber: number): number
 }
 
 // Local storage utilities
-export function setLocalStorage(key: string, value: any): void {
+export function setLocalStorage(key: string, value: unknown): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
-    console.error('Error saving to localStorage:', error);
+    console.error("Error saving to localStorage:", error);
   }
 }
 
@@ -202,7 +228,7 @@ export function getLocalStorage<T>(key: string, defaultValue: T): T {
     const item = localStorage.getItem(key);
     return item ? JSON.parse(item) : defaultValue;
   } catch (error) {
-    console.error('Error reading from localStorage:', error);
+    console.error("Error reading from localStorage:", error);
     return defaultValue;
   }
 }
@@ -211,30 +237,32 @@ export function removeLocalStorage(key: string): void {
   try {
     localStorage.removeItem(key);
   } catch (error) {
-    console.error('Error removing from localStorage:', error);
+    console.error("Error removing from localStorage:", error);
   }
 }
 
 // URL utilities
-export function createQueryString(params: Record<string, string | number | boolean>): string {
+export function createQueryString(
+  params: Record<string, string | number | boolean>,
+): string {
   const searchParams = new URLSearchParams();
-  
+
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
+    if (value !== undefined && value !== null && value !== "") {
       searchParams.set(key, String(value));
     }
   });
-  
+
   return searchParams.toString();
 }
 
 // Debounce utility
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
-  wait: number
+  wait: number,
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout;
-  
+  let timeout: ReturnType<typeof setTimeout>;
+
   return (...args: Parameters<T>) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
@@ -243,5 +271,82 @@ export function debounce<T extends (...args: any[]) => any>(
 
 // Sleep utility
 export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Browser feature detection utilities
+export function isBrowser(): boolean {
+  return typeof window !== "undefined";
+}
+
+export function hasClipboardAPI(): boolean {
+  return (
+    isBrowser() && !!navigator.clipboard && !!navigator.clipboard.writeText
+  );
+}
+
+export function hasExecCommand(): boolean {
+  return isBrowser() && !!document.execCommand;
+}
+
+// Clipboard utility with fallback and error handling
+export async function copyToClipboard(text: string): Promise<boolean> {
+  if (!isBrowser()) {
+    console.warn(
+      "Clipboard operations are only available in browser environments",
+    );
+    return false;
+  }
+
+  try {
+    // Modern Clipboard API
+    if (hasClipboardAPI()) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (clipboardErr) {
+        console.warn(
+          "Clipboard API failed, falling back to execCommand:",
+          clipboardErr,
+        );
+        // Fall through to execCommand fallback
+      }
+    }
+
+    // Fallback for browsers that don't support the Clipboard API
+    if (hasExecCommand()) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+
+      // Make the textarea out of viewport
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      textArea.style.opacity = "0";
+
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        const successful = document.execCommand("copy");
+        document.body.removeChild(textArea);
+        if (!successful) {
+          console.warn('execCommand("copy") was unsuccessful');
+        }
+        return successful;
+      } catch (execErr) {
+        document.body.removeChild(textArea);
+        console.error("execCommand fallback failed:", execErr);
+        return false;
+      }
+    }
+
+    // If we get here, neither method is supported
+    console.error("Copy to clipboard is not supported in this browser");
+    return false;
+  } catch (err) {
+    console.error("Failed to copy text:", err);
+    return false;
+  }
 }

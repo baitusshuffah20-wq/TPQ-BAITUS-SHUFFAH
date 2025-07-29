@@ -6,6 +6,7 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
 model User {
   id                    String                 @id @default(cuid())
   email                 String                 @unique
@@ -15,11 +16,14 @@ model User {
   password              String
   avatar                String?
   isActive              Boolean                @default(true)
+  status                String                 @default("ACTIVE") // Added for compatibility
+  halaqahId             String?                // Added for musyrif assignment
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   attendanceAsMusyrif   Attendance[]           @relation("MusyrifAttendance")
   auditLogs             AuditLog[]
   cartItems             CartItem[]
+  productCartItems      ProductCartItem[]      @relation("ProductCartItems")
   donationsConfirmed    Donation[]             @relation("DonationConfirmer")
   emailMessages         EmailMessage[]
   emailTemplates        EmailTemplate[]
@@ -39,6 +43,7 @@ model User {
   whatsappIncoming      WhatsAppIncoming[]     @relation("WhatsAppIncoming")
   whatsappLogs          WhatsAppLog[]          @relation("WhatsAppLogs")
   whatsappMessages      WhatsAppMessage[]
+  behaviorRecords       Behavior[]             @relation("BehaviorRecorder")
 
   @@map("users")
 }
@@ -71,13 +76,12 @@ model Santri {
   testimonials    Testimonial[]
   transactions    Transaction[]     @relation("SantriTransactions")
   achievements    SantriAchievement[]
+  behaviorRecords Behavior[]
 
   @@index([halaqahId], map: "santri_halaqahId_fkey")
   @@index([waliId], map: "santri_waliId_fkey")
   @@map("santri")
 }
-
-
 
 model Musyrif {
   id               String   @id @default(cuid())
@@ -111,7 +115,9 @@ model Halaqah {
   name        String
   description String?
   capacity    Int               @default(20)
-  level       String
+  level       String            @default("BEGINNER")
+  room        String?
+  schedule    String?           // JSON string for schedule data
   status      String            @default("ACTIVE")
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
@@ -120,6 +126,7 @@ model Halaqah {
   musyrif     Musyrif?          @relation("MusyrifHalaqah", fields: [musyrifId], references: [id])
   schedules   HalaqahSchedule[]
   santri      Santri[]          @relation("SantriHalaqah")
+  behaviorRecords Behavior[]
 
   @@map("halaqah")
 }
@@ -397,252 +404,69 @@ model Testimonial {
 }
 
 model AchievementBadge {
-  id             String              @id @default(cuid())
-  name           String
-  nameArabic     String
-  description    String
-  icon           String
-  color          String
-  category       String
-  criteriaType   String
-  criteriaValue  Int
+  id                String              @id @default(cuid())
+  name              String
+  nameArabic        String
+  description       String
+  icon              String
+  color             String
+  category          String
+  criteriaType      String
+  criteriaValue     Int
   criteriaCondition String
-  timeframe      String?
-  rarity         String
-  points         Int
-  isActive       Boolean             @default(true)
-  unlockMessage  String
-  shareMessage   String
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  achievements   SantriAchievement[]
+  timeframe         String?
+  rarity            String
+  points            Int
+  isActive          Boolean             @default(true)
+  unlockMessage     String
+  shareMessage      String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  santriAchievements SantriAchievement[]
 
   @@map("achievement_badges")
 }
 
-
-
 model SantriAchievement {
-  id                  String           @id @default(cuid())
-  santriId            String
-  badgeId             String
-  achievedAt          DateTime         @default(now())
-  progress            Int              @default(100)
-  isUnlocked          Boolean          @default(true)
-  notificationSent    Boolean          @default(false)
-  certificateGenerated Boolean         @default(false)
-  certificateUrl      String?
-  sharedAt            DateTime?
-  metadata            String?
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
-  santri              Santri           @relation(fields: [santriId], references: [id], onDelete: Cascade)
-  badge               AchievementBadge @relation(fields: [badgeId], references: [id])
+  id                String           @id @default(cuid())
+  santriId          String
+  badgeId           String
+  awardedAt         DateTime         @default(now())
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  badge             AchievementBadge @relation(fields: [badgeId], references: [id])
+  santri            Santri           @relation(fields: [santriId], references: [id], onDelete: Cascade)
 
   @@unique([santriId, badgeId])
-  @@index([santriId], map: "santri_achievements_santriId_fkey")
   @@index([badgeId], map: "santri_achievements_badgeId_fkey")
   @@map("santri_achievements")
 }
 
-model FinancialAccount {
-  id            String        @id @default(cuid())
-  name          String
-  type          String
-  accountNumber String?
-  balance       Float         @default(0)
-  isActive      Boolean       @default(true)
-  description   String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  transactions  Transaction[]
-
-  @@map("financial_accounts")
-}
-
-model Transaction {
-  id              String           @id @default(cuid())
-  type            String
-  category        String
-  amount          Float
-  description     String
-  reference       String?
-  accountId       String
-  santriId        String?
-  donationId      String?
-  paymentId       String?
-  transactionDate DateTime         @default(now())
-  createdBy       String
-  attachments     String?
-  tags            String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  sppRecord       SPPRecord?       @relation("SPPTransaction")
-  account         FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  createdByUser   User             @relation("TransactionCreator", fields: [createdBy], references: [id])
-  donation        Donation?        @relation(fields: [donationId], references: [id])
-  payment         Payment?         @relation(fields: [paymentId], references: [id])
-  santri          Santri?          @relation("SantriTransactions", fields: [santriId], references: [id])
-
-  @@index([accountId], map: "transactions_accountId_fkey")
-  @@index([createdBy], map: "transactions_createdBy_fkey")
-  @@index([donationId], map: "transactions_donationId_fkey")
-  @@index([paymentId], map: "transactions_paymentId_fkey")
-  @@index([santriId], map: "transactions_santriId_fkey")
-  @@map("transactions")
-}
-
-model Donation {
-  id              String           @id @default(cuid())
-  donorName       String
-  donorEmail      String?
-  donorPhone      String?
-  amount          Float
-  type            String
-  message         String?
-  isAnonymous     Boolean          @default(false)
-  status          String           @default("PENDING")
-  paymentMethod   String?
-  paymentProof    String?
-  confirmedBy     String?
-  confirmedAt     DateTime?
-  categoryId      String?
-  reference       String?          // Add reference field
-  midtransToken   String?          // Add midtransToken field
-  method          String?          // Add method field
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  confirmedByUser User?            @relation("DonationConfirmer", fields: [confirmedBy], references: [id])
-  category        DonationCategory? @relation("CategoryDonations", fields: [categoryId], references: [id])
-  transactions    Transaction[]
-
-  @@index([confirmedBy], map: "donations_confirmedBy_fkey")
-  @@index([categoryId], map: "donations_categoryId_fkey")
-  @@map("donations")
-}
-
-model FinancialReport {
-  id              String   @id @default(cuid())
-  title           String
-  type            String
-  periodStart     DateTime
-  periodEnd       DateTime
-  totalIncome     Float
-  totalExpense    Float
-  netIncome       Float
-  reportData      String
-  generatedBy     String
-  filePath        String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  generatedByUser User     @relation("ReportGenerator", fields: [generatedBy], references: [id])
-
-  @@index([generatedBy], map: "financial_reports_generatedBy_fkey")
-  @@map("financial_reports")
-}
-
-model Notification {
-  id            String            @id @default(cuid())
-  title         String
-  message       String
-  type          String
-  priority      String            @default("NORMAL")
-  status        String            @default("PENDING")
-  channels      String
-  recipientId   String?
-  recipientType String?
-  metadata      String?
-  scheduledAt   DateTime?
-  sentAt        DateTime?
-  readAt        DateTime?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  createdBy     String
-  logs          NotificationLog[]
-  creator       User              @relation("NotificationCreator", fields: [createdBy], references: [id])
-  recipient     User?             @relation(fields: [recipientId], references: [id])
-
-  @@index([createdBy], map: "notifications_createdBy_fkey")
-  @@index([recipientId], map: "notifications_recipientId_fkey")
-  @@map("notifications")
-}
-
-model NotificationTemplate {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  title     String
-  message   String
-  type      String
-  channels  String
-  variables String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  createdBy String
-  creator   User     @relation(fields: [createdBy], references: [id])
-
-  @@index([createdBy], map: "notification_templates_createdBy_fkey")
-  @@map("notification_templates")
-}
-
-model NotificationLog {
-  id             String       @id @default(cuid())
-  notificationId String
-  channel        String
-  recipient      String
-  status         String
-  response       String?
-  attemptCount   Int          @default(1)
-  lastAttemptAt  DateTime     @default(now())
-  deliveredAt    DateTime?
-  errorMessage   String?
-  createdAt      DateTime     @default(now())
-  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
-
-  @@index([notificationId], map: "notification_logs_notificationId_fkey")
-  @@map("notification_logs")
-}
-
 model WhatsAppMessage {
-  id                String    @id @default(cuid())
-  recipient         String
-  messageType       String
-  content           String
-  status            String
-  whatsappMessageId String?
-  templateName      String?
-  parameters        String?
-  errorMessage      String?
-  context           String?
-  sentAt            DateTime?
-  deliveredAt       DateTime?
-  readAt            DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  userId            String?
-  user              User?     @relation(fields: [userId], references: [id])
+  id          String   @id @default(cuid())
+  userId      String
+  messageType String
+  content     String
+  status      String   @default("PENDING")
+  sentAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId], map: "whatsapp_messages_userId_fkey")
   @@map("whatsapp_messages")
 }
 
 model EmailMessage {
-  id           String    @id @default(cuid())
-  recipient    String
-  subject      String
-  content      String
-  status       String
-  messageId    String?
-  priority     String    @default("NORMAL")
-  errorMessage String?
-  context      String?
-  sentAt       DateTime?
-  deliveredAt  DateTime?
-  bouncedAt    DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  userId       String?
-  user         User?     @relation(fields: [userId], references: [id])
+  id        String   @id @default(cuid())
+  userId    String
+  subject   String
+  content   String
+  status    String   @default("PENDING")
+  sentAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId], map: "email_messages_userId_fkey")
   @@map("email_messages")
@@ -650,236 +474,379 @@ model EmailMessage {
 
 model EmailTemplate {
   id          String   @id @default(cuid())
-  name        String   @unique
+  name        String
   subject     String
-  html        String
-  text        String?
-  variables   String?
+  content     String
   description String?
-  category    String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  createdBy   String
-  creator     User     @relation(fields: [createdBy], references: [id])
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
 
-  @@index([createdBy], map: "email_templates_createdBy_fkey")
+  @@index([createdById], map: "email_templates_createdById_fkey")
   @@map("email_templates")
 }
 
-model SystemSetting {
+model NotificationTemplate {
   id          String   @id @default(cuid())
-  category    String
-  key         String
-  value       String
+  name        String
+  title       String
+  content     String
   description String?
-  isEncrypted Boolean  @default(false)
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
 
-  @@unique([category, key], name: "category_key")
-  @@map("system_settings")
+  @@index([createdById], map: "notification_templates_createdById_fkey")
+  @@map("notification_templates")
 }
 
-model PaymentTransaction {
-  id              String    @id @default(cuid())
-  paymentId       String    @unique
-  orderId         String    @unique
-  gateway         String
-  amount          Float
-  currency        String    @default("IDR")
-  status          String
-  customerId      String
-  items           String
-  metadata        String?
-  gatewayResponse String?
-  paidAt          DateTime?
-  expiresAt       DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  customer        User      @relation(fields: [customerId], references: [id])
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  title     String
+  content   String
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  creator   User      @relation("NotificationCreator", fields: [createdBy], references: [id])
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([customerId], map: "payment_transactions_customerId_fkey")
-  @@map("payment_transactions")
+  @@index([createdBy], map: "notifications_createdBy_fkey")
+  @@index([userId], map: "notifications_userId_fkey")
+  @@map("notifications")
+}
+
+model FinancialAccount {
+  id           String        @id @default(cuid())
+  name         String
+  accountType  String
+  balance      Float         @default(0)
+  description  String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+
+  @@map("financial_accounts")
+}
+
+model Transaction {
+  id                String          @id @default(cuid())
+  transactionType   String
+  amount            Float
+  description       String?
+  date              DateTime
+  reference         String?
+  status            String          @default("COMPLETED")
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  accountId         String
+  createdById       String
+  santriId          String?
+  paymentId         String?
+  account           FinancialAccount @relation(fields: [accountId], references: [id])
+  createdBy         User            @relation("TransactionCreator", fields: [createdById], references: [id])
+  payment           Payment?        @relation(fields: [paymentId], references: [id])
+  santri            Santri?         @relation("SantriTransactions", fields: [santriId], references: [id])
+  sppRecord         SPPRecord?      @relation("SPPTransaction")
+
+  @@index([accountId], map: "transactions_accountId_fkey")
+  @@index([createdById], map: "transactions_createdById_fkey")
+  @@index([paymentId], map: "transactions_paymentId_fkey")
+  @@index([santriId], map: "transactions_santriId_fkey")
+  @@map("transactions")
+}
+
+model FinancialReport {
+  id          String   @id @default(cuid())
+  reportType  String
+  period      String
+  startDate   DateTime
+  endDate     DateTime
+  data        String
+  summary     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  generatedBy String
+  generator   User     @relation("ReportGenerator", fields: [generatedBy], references: [id])
+
+  @@index([generatedBy], map: "financial_reports_generatedBy_fkey")
+  @@map("financial_reports")
+}
+
+model Product {
+  id          String     @id @default(cuid())
+  name        String
+  description String
+  price       Float
+  stock       Int        @default(0)
+  image       String?
+  category    String
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  cartItems   ProductCartItem[]
+  orderItems  OrderItem[]
+
+  @@map("products")
 }
 
 model CartItem {
   id          String   @id @default(cuid())
   cartId      String
   userId      String?
-  itemType    String
-  itemId      String
+  itemType    String   // SPP, DONATION, PRODUCT, etc.
+  itemId      String   // Reference to the actual item
   name        String
   description String?
   price       Float
-  quantity    Int      @default(1)
-  metadata    String?
+  quantity    Int
+  metadata    String?  // JSON string for additional data
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  user        User?    @relation(fields: [userId], references: [id])
 
-  @@index([userId], map: "cart_items_userId_fkey")
+  // Optional relations
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([cartId])
+  @@index([userId])
+  @@index([itemType, itemId])
   @@map("cart_items")
 }
 
-model PaymentMethod {
-  id          String   @id @default(cuid())
-  name        String
-  code        String   @unique
-  gateway     String
-  isActive    Boolean  @default(true)
-  icon        String?
-  description String?
-  config      String?
-  fees        Float?
-  minAmount   Float?
-  maxAmount   Float?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+// Keep the old CartItem as ProductCartItem for e-commerce
+model ProductCartItem {
+  id        String   @id @default(cuid())
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation("ProductCartItems", fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("payment_methods")
+  @@index([productId], map: "product_cart_items_productId_fkey")
+  @@index([userId], map: "product_cart_items_userId_fkey")
+  @@map("product_cart_items")
 }
 
 model Order {
-  id             String    @id
-  customerId     String?
-  customerName   String
-  customerEmail  String
-  customerPhone  String?
-  items          String
-  subtotal       Float
-  tax            Float     @default(0)
-  discount       Float     @default(0)
-  total          Float
-  status         String    @default("PENDING")
-  paymentId      String?
-  paymentGateway String?
-  paymentMethod  String?
-  paidAt         DateTime?
-  metadata       String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  customer       User?     @relation(fields: [customerId], references: [id])
+  id              String          @id @default(cuid())
+  orderNumber     String          @unique
+  status          String          @default("PENDING")
+  totalAmount     Float
+  notes           String?
+  shippingAddress String?
+  paymentMethod   String?
+  paymentStatus   String          @default("PENDING")
+  paidAt          DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  userId          String
+  items           OrderItem[]
+  transactions    PaymentTransaction[]
+  user            User            @relation(fields: [userId], references: [id])
 
-  @@index([customerId], map: "orders_customerId_fkey")
+  @@index([userId], map: "orders_userId_fkey")
   @@map("orders")
 }
 
-model Subscription {
-  id                    String                @id @default(cuid())
-  studentId             String
-  planType              String
-  amount                Float
-  currency              String                @default("IDR")
-  status                String                @default("ACTIVE")
-  startDate             DateTime
-  endDate               DateTime?
-  nextBillingDate       DateTime
-  billingCycle          String                @default("MONTHLY")
-  paymentMethod         String?
-  gateway               String?
-  gatewaySubscriptionId String?
-  autoRenewal           Boolean               @default(true)
-  trialEndDate          DateTime?
-  metadata              String?
-  createdAt             DateTime              @default(now())
-  updatedAt             DateTime              @updatedAt
-  createdBy             String?
-  billings              SubscriptionBilling[]
-  student               User                  @relation(fields: [studentId], references: [id])
+model OrderItem {
+  id        String   @id @default(cuid())
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orderId   String
+  productId String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id])
 
-  @@index([studentId], map: "subscriptions_studentId_fkey")
+  @@index([orderId], map: "order_items_orderId_fkey")
+  @@index([productId], map: "order_items_productId_fkey")
+  @@map("order_items")
+}
+
+model PaymentTransaction {
+  id            String   @id @default(cuid())
+  amount        Float
+  paymentMethod String
+  status        String   @default("PENDING")
+  reference     String?
+  notes         String?
+  paidAt        DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  orderId       String
+  userId        String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@index([orderId], map: "payment_transactions_orderId_fkey")
+  @@index([userId], map: "payment_transactions_userId_fkey")
+  @@map("payment_transactions")
+}
+
+model DonationCategory {
+  id          String     @id @default(cuid())
+  title       String     @map("name")
+  slug        String
+  description String?
+  target      Int        @default(0)
+  collected   Int        @default(0)
+  icon        String?
+  color       String?
+  bgColor     String?
+  urgent      Boolean    @default(false)
+  isActive    Boolean    @default(true)
+  order       Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  donations   Donation[]
+
+  @@map("donation_categories")
+}
+
+model Donation {
+  id          String    @id @default(cuid())
+  amount      Float
+  donorName   String
+  donorEmail  String?
+  donorPhone  String?
+  purpose     String
+  message     String?
+  isAnonymous Boolean   @default(false) // Added field
+  status      String    @default("PENDING")
+  paymentMethod String?
+  reference   String?
+  confirmedAt DateTime?
+  confirmedBy String?
+  categoryId  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  category    DonationCategory? @relation(fields: [categoryId], references: [id])
+  confirmer   User?     @relation("DonationConfirmer", fields: [confirmedBy], references: [id])
+
+  @@index([categoryId], map: "donations_categoryId_fkey")
+  @@index([confirmedBy], map: "donations_confirmedBy_fkey")
+  @@map("donations")
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "subscriptions_userId_fkey")
   @@map("subscriptions")
 }
 
-model SubscriptionBilling {
-  id             String       @id @default(cuid())
-  subscriptionId String
-  billingDate    DateTime
-  amount         Float
-  status         String       @default("PENDING")
-  paymentId      String?
-  orderId        String?
-  dueDate        DateTime
-  paidAt         DateTime?
-  failureReason  String?
-  retryCount     Int          @default(0)
-  nextRetryDate  DateTime?
-  metadata       String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+model SiteSettings {
+  id                String   @id @default(cuid())
+  siteName          String   @default("Rumah Tahfidz Baitus Shuffah")
+  siteDescription   String   @default("Sistem Informasi Rumah Tahfidz")
+  contactEmail      String   @default("info@rumahtahfidz.com")
+  contactPhone      String   @default("+62123456789")
+  address           String   @default("Jl. Contoh No. 123, Jakarta")
+  socialFacebook    String?
+  socialInstagram   String?
+  socialTwitter     String?
+  socialYoutube     String?
+  logoUrl           String?
+  faviconUrl        String?
+  maintenanceMode   Boolean  @default(false)
+  registrationOpen  Boolean  @default(true)
+  paymentGateway    String   @default("MANUAL")
+  paymentApiKey     String?
+  whatsappApiKey    String?
+  whatsappInstance  String?
+  emailSmtpHost     String?
+  emailSmtpPort     Int?
+  emailSmtpUser     String?
+  emailSmtpPass     String?
+  emailFromAddress  String?
+  emailFromName     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  @@index([subscriptionId], map: "subscription_billings_subscriptionId_fkey")
-  @@map("subscription_billings")
-}
-
-model SubscriptionPlan {
-  id           String   @id @default(cuid())
-  name         String
-  description  String?
-  amount       Float
-  currency     String   @default("IDR")
-  billingCycle String
-  trialDays    Int      @default(0)
-  features     String?
-  isActive     Boolean  @default(true)
-  sortOrder    Int      @default(0)
-  metadata     String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@map("subscription_plans")
+  @@map("site_settings")
 }
 
 model SiteSetting {
   id          String   @id @default(cuid())
   key         String   @unique
   value       String
-  type        String
-  category    String
+  type        String   @default("STRING") // STRING, BOOLEAN, NUMBER, JSON, IMAGE
+  category    String   @default("GENERAL") // GENERAL, SYSTEM, CONTACT, ABOUT, INTEGRATION, APPEARANCE
   label       String
   description String?
-  isPublic    Boolean  @default(false)
+  isPublic    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@map("site_settings")
+  @@map("site_setting")
 }
 
 model Theme {
   id        String   @id @default(cuid())
   name      String
-  colors    Json
-  buttons   Json
-  fonts     Json
-  layout    Json
-  logo      Json
+  colors    String
+  buttons   String
+  fonts     String
+  layout    String
+  logo      String
   isActive  Boolean  @default(false)
   userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id])
 
+  @@index([userId], map: "theme_userId_fkey")
   @@map("themes")
 }
 
-model DonationCategory {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  target      Float
-  collected   Float    @default(0)
-  icon        String
-  color       String
-  bgColor     String
-  urgent      Boolean  @default(false)
-  isActive    Boolean  @default(true)
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  donations   Donation[] @relation("CategoryDonations")
+model Behavior {
+  id              String    @id @default(cuid())
+  santriId        String
+  halaqahId       String?
+  criteriaId      String
+  criteriaName    String
+  category        String    // AKHLAQ, IBADAH, SOSIAL, AKADEMIK
+  type            String    // POSITIVE, NEGATIVE
+  severity        String    @default("LOW") // LOW, MEDIUM, HIGH
+  points          Int       @default(0)
+  date            DateTime  @default(now())
+  time            String?
+  description     String
+  context         String?
+  location        String?
+  status          String    @default("ACTIVE") // ACTIVE, RESOLVED, ARCHIVED
+  recordedBy      String
+  recordedAt      DateTime  @default(now())
+  followUpRequired Boolean  @default(false)
+  parentNotified  Boolean   @default(false)
+  parentNotifiedAt DateTime?
+  metadata        Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  @@map("donation_categories")
+  santri          Santri    @relation(fields: [santriId], references: [id], onDelete: Cascade)
+  halaqah         Halaqah?  @relation(fields: [halaqahId], references: [id])
+  recordedByUser  User      @relation("BehaviorRecorder", fields: [recordedBy], references: [id])
+
+  @@index([santriId], map: "behavior_santriId_fkey")
+  @@index([halaqahId], map: "behavior_halaqahId_fkey")
+  @@index([recordedBy], map: "behavior_recordedBy_fkey")
+  @@map("behavior")
 }
-

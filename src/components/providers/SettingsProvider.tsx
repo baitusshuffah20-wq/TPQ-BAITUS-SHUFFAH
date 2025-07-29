@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 // Define types for settings
 interface SiteSettings {
@@ -44,184 +44,261 @@ interface SettingsContextType {
 }
 
 // Create context
-const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+const SettingsContext = createContext<SettingsContextType | undefined>(
+  undefined,
+);
 
 // Default settings
 const defaultSettings: Settings = {
   system: {
-    siteName: 'TPQ Baitus Shuffah',
-    siteDescription: 'Lembaga Pendidikan Tahfidz Al-Quran',
-    logo: '/logo.png',
-    favicon: '/favicon.ico',
-    timezone: 'Asia/Jakarta',
-    language: 'id',
+    siteName: "TPQ Baitus Shuffah",
+    siteDescription: "Lembaga Pendidikan Tahfidz Al-Quran",
+    logo: "/logo.png",
+    favicon: "/favicon.ico",
+    timezone: "Asia/Jakarta",
+    language: "id",
     maintenanceMode: false,
   },
   contact: {
-    address: '',
-    phone: '',
-    email: '',
-    whatsapp: '',
-    operationalHours: '',
+    address: "",
+    phone: "",
+    email: "",
+    whatsapp: "",
+    operationalHours: "",
   },
   about: {
-    vision: '',
-    mission: '',
-    history: '',
-    values: '',
-    achievements: '',
+    vision: "",
+    mission: "",
+    history: "",
+    values: "",
+    achievements: "",
   },
 };
 
-export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState<number>(0);
+  const maxRetries = 3;
 
   const fetchSettings = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      console.log('Fetching settings...');
-      const response = await fetch('/api/settings?public=true');
-      
+      console.log("Fetching settings...");
+
+      // Add timeout to the fetch request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+      const response = await fetch("/api/settings?public=true", {
+        signal: controller.signal,
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      });
+
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error('Failed to fetch settings');
+        throw new Error(
+          `Failed to fetch settings: ${response.status} ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
-      console.log('Settings fetched successfully:', data);
+      console.log("Settings fetched successfully:", data);
 
       if (data.success && data.settings) {
         const newSettings = { ...defaultSettings };
 
         // System settings
-        if (data.settings['site.name']) {
-          newSettings.system.siteName = data.settings['site.name'].value;
+        if (data.settings["site.name"]) {
+          newSettings.system.siteName = data.settings["site.name"].value;
         }
-        
-        if (data.settings['site.description']) {
-          newSettings.system.siteDescription = data.settings['site.description'].value;
+
+        if (data.settings["site.description"]) {
+          newSettings.system.siteDescription =
+            data.settings["site.description"].value;
         }
-        
-        if (data.settings['site.logo']) {
-          newSettings.system.logo = data.settings['site.logo'].value;
+
+        if (data.settings["site.logo"]) {
+          newSettings.system.logo = data.settings["site.logo"].value;
         }
-        
-        if (data.settings['site.favicon']) {
-          newSettings.system.favicon = data.settings['site.favicon'].value;
+
+        if (data.settings["site.favicon"]) {
+          newSettings.system.favicon = data.settings["site.favicon"].value;
         }
-        
-        if (data.settings['site.timezone']) {
-          newSettings.system.timezone = data.settings['site.timezone'].value;
+
+        if (data.settings["site.timezone"]) {
+          newSettings.system.timezone = data.settings["site.timezone"].value;
         }
-        
-        if (data.settings['site.language']) {
-          newSettings.system.language = data.settings['site.language'].value;
+
+        if (data.settings["site.language"]) {
+          newSettings.system.language = data.settings["site.language"].value;
         }
-        
-        if (data.settings['site.maintenanceMode']) {
+
+        if (data.settings["site.maintenanceMode"]) {
           // Convert string 'true'/'false' to boolean
-          newSettings.system.maintenanceMode = data.settings['site.maintenanceMode'].value === true || 
-                                              data.settings['site.maintenanceMode'].value === 'true';
-          console.log('Maintenance mode set to:', newSettings.system.maintenanceMode);
+          newSettings.system.maintenanceMode =
+            data.settings["site.maintenanceMode"].value === true ||
+            data.settings["site.maintenanceMode"].value === "true";
+          console.log(
+            "Maintenance mode set to:",
+            newSettings.system.maintenanceMode,
+          );
         }
 
         // Contact settings
-        if (data.settings['contact.address']) {
-          newSettings.contact.address = data.settings['contact.address'].value;
+        if (data.settings["contact.address"]) {
+          newSettings.contact.address = data.settings["contact.address"].value;
         }
-        
-        if (data.settings['contact.phone']) {
-          newSettings.contact.phone = data.settings['contact.phone'].value;
+
+        if (data.settings["contact.phone"]) {
+          newSettings.contact.phone = data.settings["contact.phone"].value;
         }
-        
-        if (data.settings['contact.email']) {
-          newSettings.contact.email = data.settings['contact.email'].value;
+
+        if (data.settings["contact.email"]) {
+          newSettings.contact.email = data.settings["contact.email"].value;
         }
-        
-        if (data.settings['contact.whatsapp']) {
-          newSettings.contact.whatsapp = data.settings['contact.whatsapp'].value;
+
+        if (data.settings["contact.whatsapp"]) {
+          newSettings.contact.whatsapp =
+            data.settings["contact.whatsapp"].value;
         }
-        
-        if (data.settings['contact.operationalHours']) {
-          newSettings.contact.operationalHours = data.settings['contact.operationalHours'].value;
+
+        if (data.settings["contact.operationalHours"]) {
+          newSettings.contact.operationalHours =
+            data.settings["contact.operationalHours"].value;
         }
 
         // About settings
-        if (data.settings['about.vision']) {
-          newSettings.about.vision = data.settings['about.vision'].value;
+        if (data.settings["about.vision"]) {
+          newSettings.about.vision = data.settings["about.vision"].value;
         }
-        
-        if (data.settings['about.mission']) {
-          newSettings.about.mission = data.settings['about.mission'].value;
+
+        if (data.settings["about.mission"]) {
+          newSettings.about.mission = data.settings["about.mission"].value;
         }
-        
-        if (data.settings['about.history']) {
-          newSettings.about.history = data.settings['about.history'].value;
+
+        if (data.settings["about.history"]) {
+          newSettings.about.history = data.settings["about.history"].value;
         }
-        
-        if (data.settings['about.values']) {
-          newSettings.about.values = data.settings['about.values'].value;
+
+        if (data.settings["about.values"]) {
+          newSettings.about.values = data.settings["about.values"].value;
         }
-        
-        if (data.settings['about.achievements']) {
-          newSettings.about.achievements = data.settings['about.achievements'].value;
+
+        if (data.settings["about.achievements"]) {
+          newSettings.about.achievements =
+            data.settings["about.achievements"].value;
         }
 
         setSettings(newSettings);
+        setRetryCount(0); // Reset retry count on success
 
         // Apply settings to document
         document.title = newSettings.system.siteName;
-        console.log('Setting document title to:', newSettings.system.siteName);
-        
+        console.log("Setting document title to:", newSettings.system.siteName);
+
         // Update favicon
-        const faviconLink = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+        const faviconLink = document.querySelector(
+          'link[rel="icon"]',
+        ) as HTMLLinkElement;
         if (faviconLink) {
           faviconLink.href = newSettings.system.favicon;
-          console.log('Updated favicon to:', newSettings.system.favicon);
+          console.log("Updated favicon to:", newSettings.system.favicon);
         } else {
-          const newFaviconLink = document.createElement('link');
-          newFaviconLink.rel = 'icon';
+          const newFaviconLink = document.createElement("link");
+          newFaviconLink.rel = "icon";
           newFaviconLink.href = newSettings.system.favicon;
           document.head.appendChild(newFaviconLink);
-          console.log('Created new favicon link with href:', newSettings.system.favicon);
+          console.log(
+            "Created new favicon link with href:",
+            newSettings.system.favicon,
+          );
         }
-        
+
         // Update logo in meta tags
-        let logoMetaTag = document.querySelector('meta[property="og:image"]') as HTMLMetaElement;
+        let logoMetaTag = document.querySelector(
+          'meta[property="og:image"]',
+        ) as HTMLMetaElement;
         if (logoMetaTag) {
           logoMetaTag.content = newSettings.system.logo;
-          console.log('Updated og:image meta tag to:', newSettings.system.logo);
+          console.log("Updated og:image meta tag to:", newSettings.system.logo);
         } else {
-          logoMetaTag = document.createElement('meta');
-          logoMetaTag.setAttribute('property', 'og:image');
+          logoMetaTag = document.createElement("meta");
+          logoMetaTag.setAttribute("property", "og:image");
           logoMetaTag.content = newSettings.system.logo;
           document.head.appendChild(logoMetaTag);
-          console.log('Created new og:image meta tag with content:', newSettings.system.logo);
+          console.log(
+            "Created new og:image meta tag with content:",
+            newSettings.system.logo,
+          );
         }
-        
+
         // Update description in meta tags
-        let descMetaTag = document.querySelector('meta[name="description"]') as HTMLMetaElement;
+        let descMetaTag = document.querySelector(
+          'meta[name="description"]',
+        ) as HTMLMetaElement;
         if (descMetaTag) {
           descMetaTag.content = newSettings.system.siteDescription;
-          console.log('Updated description meta tag to:', newSettings.system.siteDescription);
+          console.log(
+            "Updated description meta tag to:",
+            newSettings.system.siteDescription,
+          );
         } else {
-          descMetaTag = document.createElement('meta');
-          descMetaTag.setAttribute('name', 'description');
+          descMetaTag = document.createElement("meta");
+          descMetaTag.setAttribute("name", "description");
           descMetaTag.content = newSettings.system.siteDescription;
           document.head.appendChild(descMetaTag);
-          console.log('Created new description meta tag with content:', newSettings.system.siteDescription);
+          console.log(
+            "Created new description meta tag with content:",
+            newSettings.system.siteDescription,
+          );
         }
-        
+
         // Set language attribute on html tag
         document.documentElement.lang = newSettings.system.language;
-        console.log('Set document language to:', newSettings.system.language);
+        console.log("Set document language to:", newSettings.system.language);
       }
     } catch (err) {
-      console.error('Error fetching settings:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      console.error("Error fetching settings:", err);
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      setError(errorMessage);
+
+      // Implement retry logic
+      if (retryCount < maxRetries) {
+        console.log(
+          `Retrying settings fetch (${retryCount + 1}/${maxRetries})...`,
+        );
+        setRetryCount((prev) => prev + 1);
+
+        // Exponential backoff for retries
+        const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+        setTimeout(fetchSettings, retryDelay);
+      } else {
+        console.log("Max retries reached, using default settings");
+        // Log error to server if available
+        try {
+          fetch("/api/error-logger", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: `Settings fetch failed after ${maxRetries} retries: ${errorMessage}`,
+              severity: "ERROR",
+              context: "SettingsProvider",
+            }),
+          }).catch((e) => console.error("Failed to log error:", e));
+        } catch (logError) {
+          console.error("Failed to log error:", logError);
+        }
+      }
     } finally {
       setIsLoading(false);
     }
@@ -229,12 +306,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     fetchSettings();
-    
+
     // Add event listener for when settings are updated
-    window.addEventListener('settings-updated', fetchSettings);
-    
+    window.addEventListener("settings-updated", fetchSettings);
+
     return () => {
-      window.removeEventListener('settings-updated', fetchSettings);
+      window.removeEventListener("settings-updated", fetchSettings);
     };
   }, []);
 
@@ -245,13 +322,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     refreshSettings: fetchSettings,
   };
 
-  return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
+  return (
+    <SettingsContext.Provider value={value}>
+      {children}
+    </SettingsContext.Provider>
+  );
 };
 
 export const useSettings = (): SettingsContextType => {
   const context = useContext(SettingsContext);
   if (context === undefined) {
-    throw new Error('useSettings must be used within a SettingsProvider');
+    throw new Error("useSettings must be used within a SettingsProvider");
   }
   return context;
 };

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Users,
   BookOpen,
@@ -9,8 +9,8 @@ import {
   TrendingUp,
   Award,
   Clock,
-  MapPin
-} from 'lucide-react';
+  MapPin,
+} from "lucide-react";
 
 interface StatItem {
   id: string;
@@ -40,9 +40,12 @@ interface OperationalInfo {
 
 const StatsSection = () => {
   const [isVisible, setIsVisible] = useState(false);
-  const [animatedValues, setAnimatedValues] = useState<Record<string, number>>({});
+  const [animatedValues, setAnimatedValues] = useState<Record<string, number>>(
+    {},
+  );
   const [stats, setStats] = useState<StatItem[]>([]);
-  const [operationalInfo, setOperationalInfo] = useState<OperationalInfo | null>(null);
+  const [operationalInfo, setOperationalInfo] =
+    useState<OperationalInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,7 +58,7 @@ const StatsSection = () => {
     TrendingUp,
     Award,
     Clock,
-    MapPin
+    MapPin,
   };
 
   // Fetch stats from API
@@ -63,91 +66,95 @@ const StatsSection = () => {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/stats/homepage');
+        const response = await fetch("/api/stats/homepage");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
-        
+
         if (data.success) {
           setStats(data.data.stats);
           setOperationalInfo(data.data.operationalInfo);
         } else {
-          throw new Error('Failed to fetch stats');
+          throw new Error(data.message || "Failed to fetch stats");
         }
       } catch (err) {
-        console.error('Error fetching stats:', err);
-        setError('Failed to load statistics');
-        
+        console.error("Error fetching stats:", err);
+        setError("Failed to load statistics");
+
         // Fallback to default stats
         setStats([
           {
-            id: 'santri',
-            label: 'Santri Aktif',
+            id: "santri",
+            label: "Santri Aktif",
             value: 250,
-            suffix: '+',
-            icon: 'Users',
-            color: 'text-teal-600',
-            description: 'Santri yang sedang menghafal Al-Quran'
+            suffix: "+",
+            icon: "Users",
+            color: "text-teal-600",
+            description: "Santri yang sedang menghafal Al-Quran",
           },
           {
-            id: 'hafidz',
-            label: 'Hafidz/Hafidzah',
+            id: "hafidz",
+            label: "Hafidz/Hafidzah",
             value: 50,
-            suffix: '+',
-            icon: 'GraduationCap',
-            color: 'text-yellow-600',
-            description: 'Lulusan yang telah menyelesaikan 30 Juz'
+            suffix: "+",
+            icon: "GraduationCap",
+            color: "text-yellow-600",
+            description: "Lulusan yang telah menyelesaikan 30 Juz",
           },
           {
-            id: 'experience',
-            label: 'Tahun Berpengalaman',
+            id: "experience",
+            label: "Tahun Berpengalaman",
             value: 15,
-            suffix: '',
-            icon: 'Award',
-            color: 'text-green-600',
-            description: 'Pengalaman dalam pendidikan tahfidz'
+            suffix: "",
+            icon: "Award",
+            color: "text-green-600",
+            description: "Pengalaman dalam pendidikan tahfidz",
           },
           {
-            id: 'donations',
-            label: 'Total Donasi',
+            id: "donations",
+            label: "Total Donasi",
             value: 500,
-            suffix: 'Jt+',
-            icon: 'Heart',
-            color: 'text-red-600',
-            description: 'Dana yang terkumpul untuk operasional'
+            suffix: "Jt+",
+            icon: "Heart",
+            color: "text-red-600",
+            description: "Dana yang terkumpul untuk operasional",
           },
           {
-            id: 'programs',
-            label: 'Program Aktif',
+            id: "programs",
+            label: "Program Aktif",
             value: 8,
-            suffix: '',
-            icon: 'BookOpen',
-            color: 'text-blue-600',
-            description: 'Program pembelajaran yang tersedia'
+            suffix: "",
+            icon: "BookOpen",
+            color: "text-blue-600",
+            description: "Program pembelajaran yang tersedia",
           },
           {
-            id: 'success',
-            label: 'Tingkat Keberhasilan',
+            id: "success",
+            label: "Tingkat Keberhasilan",
             value: 95,
-            suffix: '%',
-            icon: 'TrendingUp',
-            color: 'text-purple-600',
-            description: 'Santri yang berhasil menyelesaikan target'
-          }
+            suffix: "%",
+            icon: "TrendingUp",
+            color: "text-purple-600",
+            description: "Santri yang berhasil menyelesaikan target",
+          },
         ]);
-        
+
         setOperationalInfo({
           hours: {
-            weekdays: '07:00 - 17:00',
-            saturday: '07:00 - 15:00',
-            sunday: '08:00 - 12:00'
+            weekdays: "07:00 - 17:00",
+            saturday: "07:00 - 15:00",
+            sunday: "08:00 - 12:00",
           },
           location: {
-            address: 'Jl. Islamic Center No. 123, Jakarta Pusat',
-            description: 'Berlokasi di pusat kota dengan akses mudah menggunakan transportasi umum'
+            address: "Jl. Islamic Center No. 123, Jakarta Pusat",
+            description:
+              "Berlokasi di pusat kota dengan akses mudah menggunakan transportasi umum",
           },
           todayActivity: {
             attendance: 0,
-            description: 'Data tidak tersedia'
-          }
+            description: "Data tidak tersedia",
+          },
         });
       } finally {
         setLoading(false);
@@ -165,7 +172,7 @@ const StatsSection = () => {
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          
+
           // Animate numbers
           stats.forEach((stat) => {
             let start = 0;
@@ -179,18 +186,18 @@ const StatsSection = () => {
                 start = end;
                 clearInterval(timer);
               }
-              setAnimatedValues(prev => ({
+              setAnimatedValues((prev) => ({
                 ...prev,
-                [stat.id]: Math.floor(start)
+                [stat.id]: Math.floor(start),
               }));
             }, 16);
           });
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.3 },
     );
 
-    const element = document.getElementById('stats-section');
+    const element = document.getElementById("stats-section");
     if (element) {
       observer.observe(element);
     }
@@ -207,8 +214,8 @@ const StatsSection = () => {
             Pencapaian Kami
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Dengan dedikasi dan komitmen tinggi, kami telah mencapai berbagai prestasi 
-            dalam pendidikan tahfidz Al-Quran
+            Dengan dedikasi dan komitmen tinggi, kami telah mencapai berbagai
+            prestasi dalam pendidikan tahfidz Al-Quran
           </p>
         </div>
 
@@ -234,12 +241,12 @@ const StatsSection = () => {
             {stats.map((stat, index) => {
               const Icon = iconMap[stat.icon] || Users;
               const animatedValue = animatedValues[stat.id] || 0;
-            
+
               return (
                 <div
                   key={stat.id}
                   className={`bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${
-                    isVisible ? 'animate-slide-up' : 'opacity-0'
+                    isVisible ? "animate-slide-up" : "opacity-0"
                   }`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
@@ -249,18 +256,17 @@ const StatsSection = () => {
                     </div>
                     <div className="text-right">
                       <div className="text-3xl font-bold text-gray-900">
-                        {animatedValue}{stat.suffix}
+                        {animatedValue}
+                        {stat.suffix}
                       </div>
                     </div>
                   </div>
-                  
+
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     {stat.label}
                   </h3>
-                  
-                  <p className="text-gray-600 text-sm">
-                    {stat.description}
-                  </p>
+
+                  <p className="text-gray-600 text-sm">{stat.description}</p>
                 </div>
               );
             })}
@@ -280,24 +286,32 @@ const StatsSection = () => {
                   Jam Operasional
                 </h3>
               </div>
-              
+
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Senin - Jumat</span>
-                  <span className="font-medium text-gray-900">{operationalInfo.hours.weekdays}</span>
+                  <span className="font-medium text-gray-900">
+                    {operationalInfo.hours.weekdays}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Sabtu</span>
-                  <span className="font-medium text-gray-900">{operationalInfo.hours.saturday}</span>
+                  <span className="font-medium text-gray-900">
+                    {operationalInfo.hours.saturday}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Minggu</span>
-                  <span className="font-medium text-gray-900">{operationalInfo.hours.sunday}</span>
+                  <span className="font-medium text-gray-900">
+                    {operationalInfo.hours.sunday}
+                  </span>
                 </div>
                 <div className="pt-2 border-t border-gray-200">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Kehadiran Hari Ini</span>
-                    <span className="font-medium text-teal-600">{operationalInfo.todayActivity.attendance} santri</span>
+                    <span className="font-medium text-teal-600">
+                      {operationalInfo.todayActivity.attendance} santri
+                    </span>
                   </div>
                 </div>
               </div>
@@ -313,7 +327,7 @@ const StatsSection = () => {
                   Lokasi Strategis
                 </h3>
               </div>
-              
+
               <div className="space-y-3">
                 <p className="text-gray-600">
                   {operationalInfo.location.description}
@@ -339,7 +353,8 @@ const StatsSection = () => {
               Bergabunglah dengan Keluarga Besar Kami
             </h3>
             <p className="text-xl mb-8 text-white/90">
-              Jadilah bagian dari komunitas penghafal Al-Quran terbaik di Indonesia
+              Jadilah bagian dari komunitas penghafal Al-Quran terbaik di
+              Indonesia
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button className="bg-white text-teal-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">

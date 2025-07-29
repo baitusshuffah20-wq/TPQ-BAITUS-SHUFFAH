@@ -1,102 +1,113 @@
-const { PrismaClient } = require('@prisma/client');
+// @ts-check
+/* eslint-env node */
+/* global console, process */
+import { PrismaClient } from "@prisma/client";
+
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log('Seeding donation categories...');
+/**
+ * @typedef {Object} DonationCategorySeedData
+ * @property {string} title
+ * @property {string} slug
+ * @property {string} description
+ * @property {number} target
+ * @property {number} collected
+ * @property {string} icon
+ * @property {string} color
+ * @property {string} bgColor
+ * @property {boolean} urgent
+ * @property {boolean} isActive
+ * @property {number} order
+ */
 
-  try {
-    // Check if donationCategory model exists
-    const models = Object.keys(prisma);
-    if (!models.includes('donationCategory')) {
-      console.log('DonationCategory model not found in Prisma client. You may need to run prisma generate first.');
-      console.log('Available models:', models.join(', '));
-      return;
-    }
-    
-    // Delete existing categories
-    await prisma.donationCategory.deleteMany({});
-  
-  // Create donation categories
-  const categories = [
+/**
+ * Seed donation categories data
+ * @returns {Promise<void>}
+ */
+async function seedDonationCategories() {
+  console.log("🌱 Seeding donation categories...");
+
+  /** @type {DonationCategorySeedData[]} */
+  const donationCategoriesData = [
     {
-      title: 'Donasi Umum',
-      description: 'Untuk operasional sehari-hari rumah tahfidz',
+      title: "Pembangunan & Renovasi",
+      slug: "pembangunan-renovasi",
+      description:
+        "Dana untuk pembangunan dan renovasi fasilitas TPQ, termasuk ruang kelas baru dan perbaikan masjid.",
       target: 100000000,
-      collected: 75000000,
-      icon: 'Heart',
-      color: 'text-red-600',
-      bgColor: 'bg-red-50',
-      urgent: false,
-      isActive: true,
-      order: 1
-    },
-    {
-      title: 'Pembangunan Gedung',
-      description: 'Renovasi dan pembangunan fasilitas baru',
-      target: 500000000,
-      collected: 320000000,
-      icon: 'Building',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      collected: 0,
+      icon: "Building",
+      color: "text-green-600",
+      bgColor: "bg-green-100",
       urgent: true,
       isActive: true,
-      order: 2
+      order: 1,
     },
     {
-      title: 'Beasiswa Santri',
-      description: 'Bantuan biaya pendidikan untuk santri kurang mampu',
-      target: 200000000,
-      collected: 150000000,
-      icon: 'GraduationCap',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-      urgent: false,
-      isActive: true,
-      order: 3
-    },
-    {
-      title: 'Buku & Alat Tulis',
-      description: 'Pengadaan Al-Quran dan buku pembelajaran',
+      title: "Beasiswa Santri Yatim & Dhuafa",
+      slug: "beasiswa-santri-yatim-dhuafa",
+      description:
+        "Bantuan biaya pendidikan untuk santri yatim dan dari keluarga kurang mampu agar mereka tetap bisa belajar Al-Quran.",
       target: 50000000,
-      collected: 35000000,
-      icon: 'BookOpen',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      urgent: false,
+      collected: 0,
+      icon: "Users",
+      color: "text-blue-600",
+      bgColor: "bg-blue-100",
+      urgent: true,
       isActive: true,
-      order: 4
+      order: 2,
     },
     {
-      title: 'Konsumsi Santri',
-      description: 'Biaya makan dan snack untuk santri',
-      target: 80000000,
-      collected: 60000000,
-      icon: 'Utensils',
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-50',
+      title: "Wakaf Al-Quran & Buku Islam",
+      slug: "wakaf-al-quran-buku-islam",
+      description:
+        "Menyediakan Al-Quran, buku Iqro, dan buku-buku penunjang lainnya untuk para santri.",
+      target: 15000000,
+      collected: 0,
+      icon: "BookOpen",
+      color: "text-purple-600",
+      bgColor: "bg-purple-100",
       urgent: false,
       isActive: true,
-      order: 5
-    }
+      order: 3,
+    },
+    {
+      title: "Infaq Operasional TPQ",
+      slug: "infaq-operasional-tpq",
+      description:
+        "Dukungan untuk biaya operasional bulanan TPQ, seperti listrik, air, dan kebutuhan harian lainnya.",
+      target: 0,
+      collected: 0,
+      icon: "HeartHandshake",
+      color: "text-orange-600",
+      bgColor: "bg-orange-100",
+      urgent: false,
+      isActive: true,
+      order: 4,
+    },
   ];
 
-    for (const category of categories) {
-      await prisma.donationCategory.create({
-        data: category
-      });
-    }
+  try {
+    const createdCategories = await Promise.all(
+      donationCategoriesData.map((category) =>
+        prisma.donationCategory.upsert({
+          where: { slug: category.slug },
+          update: { ...category },
+          create: { ...category },
+        }),
+      ),
+    );
 
-    console.log('Donation categories seeded successfully!');
+    console.log(
+      "✅ Berhasil membuat/memperbarui kategori donasi:",
+      createdCategories.map((c) => c.title).join(", "),
+    );
   } catch (error) {
-    console.error('Error during seeding:', error);
+    console.error("❌ Gagal membuat kategori donasi:", error);
+    process.exit(1);
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
-main()
-  .catch((e) => {
-    console.error('Error seeding donation categories:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+seedDonationCategories();

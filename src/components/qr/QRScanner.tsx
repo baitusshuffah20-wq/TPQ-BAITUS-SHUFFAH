@@ -1,9 +1,15 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import { Camera, CameraOff, RotateCcw, CheckCircle, AlertCircle } from 'lucide-react';
-import Button from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Camera,
+  CameraOff,
+  RotateCcw,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface QRScannerProps {
   onScan: (data: string) => void;
@@ -12,27 +18,30 @@ interface QRScannerProps {
   title?: string;
   description?: string;
   continuous?: boolean;
-  facingMode?: 'user' | 'environment';
+  facingMode?: "user" | "environment";
 }
 
 const QRScanner: React.FC<QRScannerProps> = ({
   onScan,
   onError,
-  className = '',
-  title = 'QR Scanner',
-  description = 'Arahkan kamera ke QR code untuk scan',
+  className = "",
+  title = "QR Scanner",
+  description = "Arahkan kamera ke QR code untuk scan",
   continuous = false,
-  facingMode = 'environment'
+  facingMode = "environment",
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [lastScan, setLastScan] = useState<string>('');
-  const [scanResult, setScanResult] = useState<{ data: string; timestamp: number } | null>(null);
-  const [error, setError] = useState<string>('');
+  const [lastScan, setLastScan] = useState<string>("");
+  const [scanResult, setScanResult] = useState<{
+    data: string;
+    timestamp: number;
+  } | null>(null);
+  const [error, setError] = useState<string>("");
   const streamRef = useRef<MediaStream | null>(null);
-  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const scanIntervalRef = useRef<number | null>(null);
 
   // Simple QR code detection (for demo purposes)
   // In production, you would use a proper QR code library like qr-scanner
@@ -40,68 +49,70 @@ const QRScanner: React.FC<QRScannerProps> = ({
     // This is a mock implementation
     // In real app, you would use a proper QR detection library
     const mockQRData = [
-      'attendance_2024-02-12_halaqah-1',
-      'santri_24001_ahmad-fauzi',
-      'payment_spp_2024-02',
-      'event_wisuda_2024-02-20'
+      "attendance_2024-02-12_halaqah-1",
+      "santri_24001_ahmad-fauzi",
+      "payment_spp_2024-02",
+      "event_wisuda_2024-02-20",
     ];
-    
+
     // Simulate QR detection with random success
-    if (Math.random() > 0.8) { // 20% chance of detection
+    if (Math.random() > 0.8) {
+      // 20% chance of detection
       return mockQRData[Math.floor(Math.random() * mockQRData.length)];
     }
-    
+
     return null;
   };
 
   const startCamera = async () => {
     try {
-      setError('');
-      
+      setError("");
+
       const constraints = {
         video: {
           facingMode: facingMode,
           width: { ideal: 640 },
-          height: { ideal: 480 }
-        }
+          height: { ideal: 480 },
+        },
       };
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.play();
       }
-      
+
       setHasPermission(true);
       setIsScanning(true);
-      
+
       // Start scanning
       startScanning();
-      
     } catch (error) {
-      console.error('Camera access error:', error);
+      console.error("Camera access error:", error);
       setHasPermission(false);
-      setError('Tidak dapat mengakses kamera. Pastikan izin kamera telah diberikan.');
-      
+      setError(
+        "Tidak dapat mengakses kamera. Pastikan izin kamera telah diberikan.",
+      );
+
       if (onError) {
-        onError('Camera access denied');
+        onError("Camera access denied");
       }
     }
   };
 
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
-    
+
     if (scanIntervalRef.current) {
       clearInterval(scanIntervalRef.current);
       scanIntervalRef.current = null;
     }
-    
+
     setIsScanning(false);
   };
 
@@ -110,7 +121,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
 
     if (!ctx) return;
 
@@ -118,17 +129,17 @@ const QRScanner: React.FC<QRScannerProps> = ({
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        
+
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
+
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const qrData = detectQRCode(imageData);
-        
+
         if (qrData && qrData !== lastScan) {
           setLastScan(qrData);
           setScanResult({ data: qrData, timestamp: Date.now() });
           onScan(qrData);
-          
+
           if (!continuous) {
             stopCamera();
           }
@@ -138,10 +149,10 @@ const QRScanner: React.FC<QRScannerProps> = ({
   };
 
   const resetScanner = () => {
-    setLastScan('');
+    setLastScan("");
     setScanResult(null);
-    setError('');
-    
+    setError("");
+
     if (!isScanning) {
       startCamera();
     }
@@ -159,29 +170,18 @@ const QRScanner: React.FC<QRScannerProps> = ({
         <CardTitle className="flex items-center justify-between">
           <span>{title}</span>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetScanner}
-            >
+            <Button variant="outline" size="sm" onClick={resetScanner}>
               <RotateCcw className="h-4 w-4 mr-2" />
               Reset
             </Button>
-            
+
             {isScanning ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={stopCamera}
-              >
+              <Button variant="outline" size="sm" onClick={stopCamera}>
                 <CameraOff className="h-4 w-4 mr-2" />
                 Stop
               </Button>
             ) : (
-              <Button
-                size="sm"
-                onClick={startCamera}
-              >
+              <Button size="sm" onClick={startCamera}>
                 <Camera className="h-4 w-4 mr-2" />
                 Start
               </Button>
@@ -190,7 +190,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
         </CardTitle>
         <p className="text-sm text-gray-600">{description}</p>
       </CardHeader>
-      
+
       <CardContent>
         {/* Camera View */}
         <div className="relative mb-4">
@@ -201,7 +201,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
               playsInline
               muted
             />
-            
+
             {/* Scanning Overlay */}
             {isScanning && (
               <div className="absolute inset-0 flex items-center justify-center">
@@ -210,13 +210,13 @@ const QRScanner: React.FC<QRScannerProps> = ({
                   <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-teal-500"></div>
                   <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-teal-500"></div>
                   <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-teal-500"></div>
-                  
+
                   {/* Scanning Line */}
                   <div className="absolute inset-x-0 top-1/2 h-0.5 bg-teal-500 animate-pulse"></div>
                 </div>
               </div>
             )}
-            
+
             {/* Status Overlay */}
             {!isScanning && hasPermission !== null && (
               <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
@@ -236,12 +236,9 @@ const QRScanner: React.FC<QRScannerProps> = ({
               </div>
             )}
           </div>
-          
+
           {/* Hidden Canvas for Processing */}
-          <canvas
-            ref={canvasRef}
-            className="hidden"
-          />
+          <canvas ref={canvasRef} className="hidden" />
         </div>
 
         {/* Error Message */}
@@ -257,12 +254,15 @@ const QRScanner: React.FC<QRScannerProps> = ({
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center mb-2">
               <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-              <span className="text-sm font-medium text-green-700">QR Code Detected!</span>
+              <span className="text-sm font-medium text-green-700">
+                QR Code Detected!
+              </span>
             </div>
             <div className="text-sm text-gray-600">
               <p className="font-mono break-all">{scanResult.data}</p>
               <p className="text-xs mt-1">
-                Scanned at: {new Date(scanResult.timestamp).toLocaleTimeString()}
+                Scanned at:{" "}
+                {new Date(scanResult.timestamp).toLocaleTimeString()}
               </p>
             </div>
           </div>

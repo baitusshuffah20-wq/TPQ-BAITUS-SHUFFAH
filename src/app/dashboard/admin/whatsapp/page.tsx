@@ -1,11 +1,11 @@
-'use client';
+﻿"use client";
 
-import React, { useState, useEffect } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect } from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   MessageSquare,
   Send,
@@ -19,9 +19,9 @@ import {
   Eye,
   TrendingUp,
   Phone,
-  Calendar
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  Calendar,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface WhatsAppMessage {
   id: string;
@@ -53,14 +53,14 @@ export default function WhatsAppDashboard() {
   const [stats, setStats] = useState<WhatsAppStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    search: '',
-    status: '',
-    type: '',
-    dateRange: ''
+    search: "",
+    status: "",
+    type: "",
+    dateRange: "",
   });
   const [testMessage, setTestMessage] = useState({
-    to: '',
-    message: ''
+    to: "",
+    message: "",
   });
   const [sendingTest, setSendingTest] = useState(false);
 
@@ -75,20 +75,21 @@ export default function WhatsAppDashboard() {
       // Simulate data for now since API might not be ready
       setMessages([
         {
-          id: '1',
-          recipient: '+6281234567890',
-          messageType: 'TEXT',
-          content: 'Assalamu\'alaikum, ini adalah pesan test dari TPQ Baitus Shuffah',
-          status: 'SENT',
-          whatsappMessageId: 'wamid.123',
+          id: "1",
+          recipient: "+6281234567890",
+          messageType: "TEXT",
+          content:
+            "Assalamu'alaikum, ini adalah pesan test dari TPQ Baitus Shuffah",
+          status: "SENT",
+          whatsappMessageId: "wamid.123",
           sentAt: new Date().toISOString(),
           createdAt: new Date().toISOString(),
-          user: { name: 'Admin', email: 'admin@tpq.com' }
-        }
+          user: { name: "Admin", email: "admin@tpq.com" },
+        },
       ]);
     } catch (error) {
-      console.error('Error loading WhatsApp messages:', error);
-      toast.error('Gagal memuat pesan WhatsApp');
+      console.error("Error loading WhatsApp messages:", error);
+      toast.error("Gagal memuat pesan WhatsApp");
     } finally {
       setLoading(false);
     }
@@ -104,53 +105,55 @@ export default function WhatsAppDashboard() {
           DELIVERED: 100,
           READ: 80,
           FAILED: 5,
-          PENDING: 25
+          PENDING: 25,
         },
         byType: {
           TEXT: 100,
-          TEMPLATE: 50
-        }
+          TEMPLATE: 50,
+        },
       });
     } catch (error) {
-      console.error('Error loading WhatsApp stats:', error);
+      console.error("Error loading WhatsApp stats:", error);
     }
   };
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleFilterChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   const sendTestMessage = async () => {
     if (!testMessage.to || !testMessage.message) {
-      toast.error('Nomor telepon dan pesan wajib diisi');
+      toast.error("Nomor telepon dan pesan wajib diisi");
       return;
     }
 
     setSendingTest(true);
     try {
-      const response = await fetch('/api/whatsapp/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/whatsapp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: testMessage.to,
           message: testMessage.message,
-          type: 'text'
-        })
+          type: "text",
+        }),
       });
 
       if (response.ok) {
-        toast.success('Pesan test berhasil dikirim');
-        setTestMessage({ to: '', message: '' });
+        toast.success("Pesan test berhasil dikirim");
+        setTestMessage({ to: "", message: "" });
         loadMessages();
         loadStats();
       } else {
         const error = await response.json();
-        toast.error(error.message || 'Gagal mengirim pesan test');
+        toast.error(error.message || "Gagal mengirim pesan test");
       }
     } catch (error) {
-      console.error('Error sending test message:', error);
-      toast.error('Gagal mengirim pesan test');
+      console.error("Error sending test message:", error);
+      toast.error("Gagal mengirim pesan test");
     } finally {
       setSendingTest(false);
     }
@@ -158,15 +161,15 @@ export default function WhatsAppDashboard() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'SENT':
+      case "SENT":
         return <Badge variant="success">Terkirim</Badge>;
-      case 'DELIVERED':
+      case "DELIVERED":
         return <Badge variant="success">Tersampaikan</Badge>;
-      case 'READ':
+      case "READ":
         return <Badge variant="success">Dibaca</Badge>;
-      case 'PENDING':
+      case "PENDING":
         return <Badge variant="warning">Menunggu</Badge>;
-      case 'FAILED':
+      case "FAILED":
         return <Badge variant="destructive">Gagal</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
@@ -174,19 +177,19 @@ export default function WhatsAppDashboard() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const formatPhoneNumber = (phone: string) => {
     // Format phone number for display
-    if (phone.startsWith('62')) {
-      return '+' + phone;
+    if (phone.startsWith("62")) {
+      return "+" + phone;
     }
     return phone;
   };
@@ -196,7 +199,9 @@ export default function WhatsAppDashboard() {
       <DashboardLayout>
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">WhatsApp Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              WhatsApp Dashboard
+            </h1>
           </div>
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
@@ -212,7 +217,9 @@ export default function WhatsAppDashboard() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">WhatsApp Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            WhatsApp Dashboard
+          </h1>
           <div className="flex gap-3">
             <Button
               onClick={loadMessages}
@@ -232,8 +239,12 @@ export default function WhatsAppDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Pesan</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Total Pesan
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {stats.total}
+                    </p>
                   </div>
                   <div className="p-3 bg-green-100 rounded-full">
                     <MessageSquare className="h-6 w-6 text-green-600" />
@@ -246,8 +257,12 @@ export default function WhatsAppDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Terkirim</p>
-                    <p className="text-2xl font-bold text-green-600">{stats.byStatus.SENT || 0}</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Terkirim
+                    </p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {stats.byStatus.SENT || 0}
+                    </p>
                   </div>
                   <div className="p-3 bg-green-100 rounded-full">
                     <CheckCircle className="h-6 w-6 text-green-600" />
@@ -261,7 +276,9 @@ export default function WhatsAppDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Dibaca</p>
-                    <p className="text-2xl font-bold text-blue-600">{stats.byStatus.READ || 0}</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {stats.byStatus.READ || 0}
+                    </p>
                   </div>
                   <div className="p-3 bg-blue-100 rounded-full">
                     <Eye className="h-6 w-6 text-blue-600" />
@@ -274,8 +291,12 @@ export default function WhatsAppDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Menunggu</p>
-                    <p className="text-2xl font-bold text-yellow-600">{stats.byStatus.PENDING || 0}</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Menunggu
+                    </p>
+                    <p className="text-2xl font-bold text-yellow-600">
+                      {stats.byStatus.PENDING || 0}
+                    </p>
                   </div>
                   <div className="p-3 bg-yellow-100 rounded-full">
                     <Clock className="h-6 w-6 text-yellow-600" />
@@ -289,7 +310,9 @@ export default function WhatsAppDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Gagal</p>
-                    <p className="text-2xl font-bold text-red-600">{stats.byStatus.FAILED || 0}</p>
+                    <p className="text-2xl font-bold text-red-600">
+                      {stats.byStatus.FAILED || 0}
+                    </p>
                   </div>
                   <div className="p-3 bg-red-100 rounded-full">
                     <AlertTriangle className="h-6 w-6 text-red-600" />
@@ -317,7 +340,9 @@ export default function WhatsAppDashboard() {
                 <Input
                   type="text"
                   value={testMessage.to}
-                  onChange={(e) => setTestMessage(prev => ({ ...prev, to: e.target.value }))}
+                  onChange={(e) =>
+                    setTestMessage((prev) => ({ ...prev, to: e.target.value }))
+                  }
                   placeholder="628123456789"
                 />
               </div>
@@ -328,7 +353,12 @@ export default function WhatsAppDashboard() {
                 <Input
                   type="text"
                   value={testMessage.message}
-                  onChange={(e) => setTestMessage(prev => ({ ...prev, message: e.target.value }))}
+                  onChange={(e) =>
+                    setTestMessage((prev) => ({
+                      ...prev,
+                      message: e.target.value,
+                    }))
+                  }
                   placeholder="Masukkan pesan test..."
                 />
               </div>
@@ -343,7 +373,7 @@ export default function WhatsAppDashboard() {
                   ) : (
                     <Send className="h-4 w-4" />
                   )}
-                  {sendingTest ? 'Mengirim...' : 'Kirim Test'}
+                  {sendingTest ? "Mengirim..." : "Kirim Test"}
                 </Button>
               </div>
             </div>
@@ -379,7 +409,9 @@ export default function WhatsAppDashboard() {
                           </div>
                           {getStatusBadge(message.status)}
                         </div>
-                        <p className="text-gray-600 text-sm mb-2">{message.content}</p>
+                        <p className="text-gray-600 text-sm mb-2">
+                          {message.content}
+                        </p>
                         <div className="flex items-center gap-4 text-xs text-gray-500">
                           <span>Dikirim: {formatDate(message.createdAt)}</span>
                           {message.user && (

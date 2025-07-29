@@ -1,9 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/badge';
-import { 
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import {
   DollarSign,
   CreditCard,
   TrendingUp,
@@ -11,8 +10,7 @@ import {
   Clock,
   CheckCircle,
   BarChart3,
-  Target
-} from 'lucide-react';
+} from "lucide-react";
 
 interface OverviewStats {
   totalRevenue: number;
@@ -28,85 +26,88 @@ interface PaymentOverviewCardsProps {
   loading?: boolean;
 }
 
-export default function PaymentOverviewCards({ stats, loading }: PaymentOverviewCardsProps) {
+export default function PaymentOverviewCards({
+  stats,
+  loading,
+}: PaymentOverviewCardsProps) {
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
   const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('id-ID').format(num);
+    return new Intl.NumberFormat("id-ID").format(num);
   };
 
   const formatPercentage = (percentage: number) => {
-    return `${percentage >= 0 ? '+' : ''}${percentage.toFixed(1)}%`;
+    return `${percentage >= 0 ? "+" : ""}${percentage.toFixed(1)}%`;
   };
 
   const cards = [
     {
-      title: 'Total Revenue',
+      title: "Total Revenue",
       value: formatCurrency(stats.totalRevenue),
       icon: DollarSign,
-      iconColor: 'text-green-600',
-      bgColor: 'bg-green-100',
-      description: 'Total pendapatan bulan ini',
+      iconColor: "text-green-600",
+      bgColor: "bg-green-100",
+      description: "Total pendapatan bulan ini",
       trend: stats.monthlyGrowth,
-      trendLabel: 'vs bulan lalu'
+      trendLabel: "vs bulan lalu",
     },
     {
-      title: 'Total Transaksi',
+      title: "Total Transaksi",
       value: formatNumber(stats.totalTransactions),
       icon: CreditCard,
-      iconColor: 'text-blue-600',
-      bgColor: 'bg-blue-100',
-      description: 'Jumlah transaksi bulan ini',
+      iconColor: "text-blue-600",
+      bgColor: "bg-blue-100",
+      description: "Jumlah transaksi bulan ini",
       trend: null,
-      trendLabel: 'transaksi'
+      trendLabel: "transaksi",
     },
     {
-      title: 'Success Rate',
+      title: "Success Rate",
       value: `${stats.successRate.toFixed(1)}%`,
       icon: CheckCircle,
-      iconColor: 'text-emerald-600',
-      bgColor: 'bg-emerald-100',
-      description: 'Tingkat keberhasilan pembayaran',
+      iconColor: "text-emerald-600",
+      bgColor: "bg-emerald-100",
+      description: "Tingkat keberhasilan pembayaran",
       trend: null,
-      trendLabel: 'dari total transaksi'
+      trendLabel: "dari total transaksi",
     },
     {
-      title: 'Rata-rata Transaksi',
+      title: "Rata-rata Transaksi",
       value: formatCurrency(stats.averageTransactionValue),
       icon: BarChart3,
-      iconColor: 'text-purple-600',
-      bgColor: 'bg-purple-100',
-      description: 'Nilai rata-rata per transaksi',
+      iconColor: "text-purple-600",
+      bgColor: "bg-purple-100",
+      description: "Nilai rata-rata per transaksi",
       trend: null,
-      trendLabel: 'per transaksi'
+      trendLabel: "per transaksi",
     },
     {
-      title: 'Pending Amount',
+      title: "Pending Amount",
       value: formatCurrency(stats.pendingAmount),
       icon: Clock,
-      iconColor: 'text-orange-600',
-      bgColor: 'bg-orange-100',
-      description: 'Total pembayaran pending',
+      iconColor: "text-orange-600",
+      bgColor: "bg-orange-100",
+      description: "Total pembayaran pending",
       trend: null,
-      trendLabel: 'menunggu pembayaran'
+      trendLabel: "menunggu pembayaran",
     },
     {
-      title: 'Monthly Growth',
+      title: "Monthly Growth",
       value: formatPercentage(stats.monthlyGrowth),
       icon: stats.monthlyGrowth >= 0 ? TrendingUp : TrendingDown,
-      iconColor: stats.monthlyGrowth >= 0 ? 'text-green-600' : 'text-red-600',
-      bgColor: stats.monthlyGrowth >= 0 ? 'bg-green-100' : 'bg-red-100',
-      description: 'Pertumbuhan bulan ini',
+      iconColor: stats.monthlyGrowth >= 0 ? "text-green-600" : "text-red-600",
+      bgColor: stats.monthlyGrowth >= 0 ? "bg-green-100" : "bg-red-100",
+      description: "Pertumbuhan bulan ini",
       trend: stats.monthlyGrowth,
-      trendLabel: 'dibanding bulan lalu'
-    }
+      trendLabel: "dibanding bulan lalu",
+    },
   ];
 
   if (loading) {
@@ -137,10 +138,12 @@ export default function PaymentOverviewCards({ stats, loading }: PaymentOverview
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-600">{card.title}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  {card.title}
+                </p>
                 <p className="text-2xl font-bold text-gray-900">{card.value}</p>
                 <p className="text-xs text-gray-500">{card.description}</p>
-                
+
                 {card.trend !== null && (
                   <div className="flex items-center gap-1">
                     {card.trend >= 0 ? (
@@ -148,16 +151,20 @@ export default function PaymentOverviewCards({ stats, loading }: PaymentOverview
                     ) : (
                       <TrendingDown className="h-3 w-3 text-red-600" />
                     )}
-                    <span className={`text-xs font-medium ${
-                      card.trend >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
+                    <span
+                      className={`text-xs font-medium ${
+                        card.trend >= 0 ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
                       {formatPercentage(card.trend)}
                     </span>
-                    <span className="text-xs text-gray-500">{card.trendLabel}</span>
+                    <span className="text-xs text-gray-500">
+                      {card.trendLabel}
+                    </span>
                   </div>
                 )}
               </div>
-              
+
               <div className={`p-3 rounded-full ${card.bgColor}`}>
                 <card.icon className={`h-6 w-6 ${card.iconColor}`} />
               </div>

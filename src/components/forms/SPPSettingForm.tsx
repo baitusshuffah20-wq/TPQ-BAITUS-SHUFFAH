@@ -1,20 +1,20 @@
-'use client';
+﻿"use client";
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  GraduationCap, 
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  GraduationCap,
   DollarSign,
   Save,
   X,
   BookOpen,
   Star,
-  Award
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  Award,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface SPPSettingFormData {
   id?: string;
@@ -33,25 +33,45 @@ interface SPPSettingFormProps {
 }
 
 const SPP_LEVELS = [
-  { value: 'PEMULA', label: 'Pemula', icon: <BookOpen className="h-4 w-4" />, color: 'bg-blue-100 text-blue-800' },
-  { value: 'MENENGAH', label: 'Menengah', icon: <GraduationCap className="h-4 w-4" />, color: 'bg-green-100 text-green-800' },
-  { value: 'LANJUTAN', label: 'Lanjutan', icon: <Star className="h-4 w-4" />, color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'TAHFIDZ', label: 'Tahfidz', icon: <Award className="h-4 w-4" />, color: 'bg-purple-100 text-purple-800' }
+  {
+    value: "PEMULA",
+    label: "Pemula",
+    icon: <BookOpen className="h-4 w-4" />,
+    color: "bg-blue-100 text-blue-800",
+  },
+  {
+    value: "MENENGAH",
+    label: "Menengah",
+    icon: <GraduationCap className="h-4 w-4" />,
+    color: "bg-green-100 text-green-800",
+  },
+  {
+    value: "LANJUTAN",
+    label: "Lanjutan",
+    icon: <Star className="h-4 w-4" />,
+    color: "bg-yellow-100 text-yellow-800",
+  },
+  {
+    value: "TAHFIDZ",
+    label: "Tahfidz",
+    icon: <Award className="h-4 w-4" />,
+    color: "bg-purple-100 text-purple-800",
+  },
 ];
 
-export default function SPPSettingForm({ 
-  sppSetting, 
-  onSubmit, 
-  onCancel, 
-  isLoading = false 
+export default function SPPSettingForm({
+  sppSetting,
+  onSubmit,
+  onCancel,
+  isLoading = false,
 }: SPPSettingFormProps) {
   const [formData, setFormData] = useState<SPPSettingFormData>({
-    name: sppSetting?.name || '',
+    name: sppSetting?.name || "",
     amount: sppSetting?.amount || 0,
-    description: sppSetting?.description || '',
+    description: sppSetting?.description || "",
     isActive: sppSetting?.isActive ?? true,
-    level: sppSetting?.level || '',
-    ...sppSetting
+    level: sppSetting?.level || "",
+    ...sppSetting,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -63,14 +83,14 @@ export default function SPPSettingForm({
 
     // Name validation
     if (!formData.name) {
-      newErrors.name = 'Nama SPP wajib diisi';
+      newErrors.name = "Nama SPP wajib diisi";
     } else if (formData.name.length < 3) {
-      newErrors.name = 'Nama SPP minimal 3 karakter';
+      newErrors.name = "Nama SPP minimal 3 karakter";
     }
 
     // Amount validation
     if (!formData.amount || formData.amount <= 0) {
-      newErrors.amount = 'Jumlah SPP harus lebih dari 0';
+      newErrors.amount = "Jumlah SPP harus lebih dari 0";
     }
 
     setErrors(newErrors);
@@ -79,43 +99,51 @@ export default function SPPSettingForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
-      toast.error('Mohon perbaiki kesalahan pada form');
+      toast.error("Mohon perbaiki kesalahan pada form");
       return;
     }
 
     try {
       await onSubmit(formData);
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
-               type === 'number' ? parseFloat(value) || 0 : value
+      [name]:
+        type === "checkbox"
+          ? (e.target as HTMLInputElement).checked
+          : type === "number"
+            ? parseFloat(value) || 0
+            : value,
     }));
 
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(amount);
   };
 
   const getLevelInfo = (level: string) => {
-    return SPP_LEVELS.find(l => l.value === level);
+    return SPP_LEVELS.find((l) => l.value === level);
   };
 
   return (
@@ -123,7 +151,7 @@ export default function SPPSettingForm({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <GraduationCap className="h-6 w-6 text-blue-600" />
-          {isEdit ? 'Edit Pengaturan SPP' : 'Tambah Pengaturan SPP Baru'}
+          {isEdit ? "Edit Pengaturan SPP" : "Tambah Pengaturan SPP Baru"}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -140,7 +168,7 @@ export default function SPPSettingForm({
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="Contoh: SPP Reguler, SPP Tahfidz"
-                className={errors.name ? 'border-red-500' : ''}
+                className={errors.name ? "border-red-500" : ""}
                 disabled={isLoading}
               />
               {errors.name && (
@@ -162,7 +190,7 @@ export default function SPPSettingForm({
                   placeholder="0"
                   min="0"
                   step="1000"
-                  className={`pl-10 ${errors.amount ? 'border-red-500' : ''}`}
+                  className={`pl-10 ${errors.amount ? "border-red-500" : ""}`}
                   disabled={isLoading}
                 />
               </div>
@@ -181,16 +209,16 @@ export default function SPPSettingForm({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <label
                   className={`flex items-center gap-2 p-3 border rounded-lg cursor-pointer transition-colors ${
-                    formData.level === ''
-                      ? 'border-gray-500 bg-gray-50'
-                      : 'border-gray-300 hover:border-gray-400'
+                    formData.level === ""
+                      ? "border-gray-500 bg-gray-50"
+                      : "border-gray-300 hover:border-gray-400"
                   }`}
                 >
                   <input
                     type="radio"
                     name="level"
                     value=""
-                    checked={formData.level === ''}
+                    checked={formData.level === ""}
                     onChange={handleChange}
                     className="sr-only"
                     disabled={isLoading}
@@ -202,8 +230,8 @@ export default function SPPSettingForm({
                     key={level.value}
                     className={`flex items-center gap-2 p-3 border rounded-lg cursor-pointer transition-colors ${
                       formData.level === level.value
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-300 hover:border-blue-300'
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-300 hover:border-blue-300"
                     }`}
                   >
                     <input
@@ -252,24 +280,29 @@ export default function SPPSettingForm({
               <label className="text-sm font-medium text-gray-700">
                 Pengaturan Aktif
               </label>
-              <Badge variant={formData.isActive ? 'success' : 'secondary'}>
-                {formData.isActive ? 'Aktif' : 'Tidak Aktif'}
+              <Badge variant={formData.isActive ? "success" : "secondary"}>
+                {formData.isActive ? "Aktif" : "Tidak Aktif"}
               </Badge>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Pengaturan yang tidak aktif tidak dapat digunakan untuk membuat SPP baru
+              Pengaturan yang tidak aktif tidak dapat digunakan untuk membuat
+              SPP baru
             </p>
           </div>
 
           {/* Preview */}
           <div className="border-t pt-6">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Preview Pengaturan SPP:</h4>
+            <h4 className="text-sm font-medium text-gray-700 mb-3">
+              Preview Pengaturan SPP:
+            </h4>
             <div className="p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <GraduationCap className="h-6 w-6 text-blue-600" />
                   <div>
-                    <p className="font-medium text-gray-900">{formData.name || 'Nama SPP'}</p>
+                    <p className="font-medium text-gray-900">
+                      {formData.name || "Nama SPP"}
+                    </p>
                     <div className="flex items-center gap-2 mt-1">
                       {formData.level && (
                         <Badge className={getLevelInfo(formData.level)?.color}>
@@ -279,8 +312,10 @@ export default function SPPSettingForm({
                           </span>
                         </Badge>
                       )}
-                      <Badge variant={formData.isActive ? 'success' : 'secondary'}>
-                        {formData.isActive ? 'Aktif' : 'Tidak Aktif'}
+                      <Badge
+                        variant={formData.isActive ? "success" : "secondary"}
+                      >
+                        {formData.isActive ? "Aktif" : "Tidak Aktif"}
                       </Badge>
                     </div>
                   </div>
@@ -322,7 +357,7 @@ export default function SPPSettingForm({
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              {isLoading ? 'Menyimpan...' : (isEdit ? 'Update' : 'Simpan')}
+              {isLoading ? "Menyimpan..." : isEdit ? "Update" : "Simpan"}
             </Button>
           </div>
         </form>

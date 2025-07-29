@@ -8,44 +8,49 @@
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
-  
+
   /* Button colors */
   --button-primary: #008080;
-  --button-secondary: #6B7280;
+  --button-secondary: #6b7280;
   --button-accent: #22c55e;
   --button-danger: #ef4444;
-  --button-info: #3B82F6;
-  
-  --font-heading: 'Inter', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  --font-arabic: 'Amiri', serif;
-  
+  --button-info: #3b82f6;
+
+  --font-heading: "Inter", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-arabic: "Amiri", serif;
+
   --border-radius: 0.5rem;
   --container-width: 1280px;
 }
 
 /* Apply theme variables to components */
-.btn-primary, .bg-primary {
+.btn-primary,
+.bg-primary {
   background-color: var(--button-primary) !important;
-  color: white;
+  color: rgb(255, 255, 255);
 }
 
-.btn-secondary, .bg-secondary {
+.btn-secondary,
+.bg-secondary {
   background-color: var(--button-secondary) !important;
   color: white;
 }
 
-.btn-accent, .bg-accent {
+.btn-accent,
+.bg-accent {
   background-color: var(--button-accent) !important;
   color: white;
 }
 
-.btn-danger, .bg-danger {
+.btn-danger,
+.bg-danger {
   background-color: var(--button-danger) !important;
   color: white;
 }
 
-.btn-info, .bg-info {
+.btn-info,
+.bg-info {
   background-color: var(--button-info) !important;
   color: white;
 }
@@ -66,7 +71,12 @@
 }
 
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
 }
 

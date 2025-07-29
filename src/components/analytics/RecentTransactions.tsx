@@ -1,22 +1,21 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/badge';
-import Button from '@/components/ui/Button';
-import { 
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
   Clock,
   CreditCard,
   Building,
   Smartphone,
   QrCode,
   Wallet,
-  ExternalLink,
   Eye,
   CheckCircle,
   XCircle,
-  AlertCircle
-} from 'lucide-react';
+  AlertCircle,
+} from "lucide-react";
 
 interface Transaction {
   id: string;
@@ -26,7 +25,7 @@ interface Transaction {
   status: string;
   paymentMethod: string;
   createdAt: Date;
-  items: any[];
+  items: { name: string; quantity: number; price: number }[];
 }
 
 interface RecentTransactionsProps {
@@ -35,44 +34,48 @@ interface RecentTransactionsProps {
   onViewDetails?: (transaction: Transaction) => void;
 }
 
-export default function RecentTransactions({ 
-  transactions, 
-  loading, 
-  onViewDetails 
+export default function RecentTransactions({
+  transactions,
+  loading,
+  onViewDetails,
 }: RecentTransactionsProps) {
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(date).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getPaymentMethodIcon = (method: string) => {
     const methodLower = method.toLowerCase();
-    
-    if (methodLower.includes('credit') || methodLower.includes('cc')) {
+
+    if (methodLower.includes("credit") || methodLower.includes("cc")) {
       return <CreditCard className="h-4 w-4 text-blue-600" />;
     }
-    if (methodLower.includes('va') || methodLower.includes('bank')) {
+    if (methodLower.includes("va") || methodLower.includes("bank")) {
       return <Building className="h-4 w-4 text-green-600" />;
     }
-    if (methodLower.includes('gopay') || methodLower.includes('shopeepay') || 
-        methodLower.includes('dana') || methodLower.includes('ovo')) {
+    if (
+      methodLower.includes("gopay") ||
+      methodLower.includes("shopeepay") ||
+      methodLower.includes("dana") ||
+      methodLower.includes("ovo")
+    ) {
       return <Smartphone className="h-4 w-4 text-purple-600" />;
     }
-    if (methodLower.includes('qris')) {
+    if (methodLower.includes("qris")) {
       return <QrCode className="h-4 w-4 text-red-600" />;
     }
     return <Wallet className="h-4 w-4 text-gray-600" />;
@@ -80,12 +83,12 @@ export default function RecentTransactions({
 
   const getStatusIcon = (status: string) => {
     switch (status.toUpperCase()) {
-      case 'PAID':
+      case "PAID":
         return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'FAILED':
-      case 'CANCELLED':
+      case "FAILED":
+      case "CANCELLED":
         return <XCircle className="h-4 w-4 text-red-600" />;
-      case 'PENDING':
+      case "PENDING":
         return <AlertCircle className="h-4 w-4 text-orange-600" />;
       default:
         return <Clock className="h-4 w-4 text-gray-600" />;
@@ -94,13 +97,13 @@ export default function RecentTransactions({
 
   const getStatusBadge = (status: string) => {
     switch (status.toUpperCase()) {
-      case 'PAID':
+      case "PAID":
         return <Badge variant="success">Paid</Badge>;
-      case 'FAILED':
+      case "FAILED":
         return <Badge variant="destructive">Failed</Badge>;
-      case 'CANCELLED':
+      case "CANCELLED":
         return <Badge variant="destructive">Cancelled</Badge>;
-      case 'PENDING':
+      case "PENDING":
         return <Badge variant="warning">Pending</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
@@ -109,18 +112,18 @@ export default function RecentTransactions({
 
   const getPaymentMethodName = (method: string) => {
     const methods: Record<string, string> = {
-      'credit_card': 'Kartu Kredit',
-      'cc': 'Kartu Kredit',
-      'bca_va': 'BCA VA',
-      'bni_va': 'BNI VA',
-      'bri_va': 'BRI VA',
-      'mandiri_va': 'Mandiri VA',
-      'gopay': 'GoPay',
-      'shopeepay': 'ShopeePay',
-      'dana': 'DANA',
-      'ovo': 'OVO',
-      'qris': 'QRIS',
-      'bank_transfer': 'Transfer Bank'
+      credit_card: "Kartu Kredit",
+      cc: "Kartu Kredit",
+      bca_va: "BCA VA",
+      bni_va: "BNI VA",
+      bri_va: "BRI VA",
+      mandiri_va: "Mandiri VA",
+      gopay: "GoPay",
+      shopeepay: "ShopeePay",
+      dana: "DANA",
+      ovo: "OVO",
+      qris: "QRIS",
+      bank_transfer: "Transfer Bank",
     };
     return methods[method.toLowerCase()] || method;
   };
@@ -137,7 +140,10 @@ export default function RecentTransactions({
         <CardContent>
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
+              <div
+                key={i}
+                className="flex items-center gap-4 p-4 border rounded-lg"
+              >
                 <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
                 <div className="flex-1 space-y-2">
                   <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
@@ -171,13 +177,15 @@ export default function RecentTransactions({
           <div className="text-center py-8">
             <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-600 mb-2">Tidak ada transaksi terbaru</p>
-            <p className="text-sm text-gray-500">Transaksi akan muncul di sini setelah ada pembayaran</p>
+            <p className="text-sm text-gray-500">
+              Transaksi akan muncul di sini setelah ada pembayaran
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
             {transactions.map((transaction, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="flex items-center gap-4 p-4 border rounded-lg hover:shadow-sm transition-shadow"
               >
                 {/* Payment Method Icon */}
@@ -195,7 +203,7 @@ export default function RecentTransactions({
                     </h4>
                     {getStatusIcon(transaction.status)}
                   </div>
-                  
+
                   <div className="flex items-center gap-4 text-sm text-gray-600">
                     <span className="flex items-center gap-1">
                       {getPaymentMethodIcon(transaction.paymentMethod)}
@@ -204,15 +212,17 @@ export default function RecentTransactions({
                     <span>•</span>
                     <span>{formatDate(transaction.createdAt)}</span>
                   </div>
-                  
+
                   <div className="mt-1">
                     <p className="text-xs text-gray-500">
                       Order ID: {transaction.orderId}
                     </p>
                     {transaction.items.length > 0 && (
                       <p className="text-xs text-gray-500">
-                        {transaction.items.length} item(s): {transaction.items[0].name}
-                        {transaction.items.length > 1 && ` +${transaction.items.length - 1} lainnya`}
+                        {transaction.items.length} item(s):{" "}
+                        {transaction.items[0].name}
+                        {transaction.items.length > 1 &&
+                          ` +${transaction.items.length - 1} lainnya`}
                       </p>
                     )}
                   </div>

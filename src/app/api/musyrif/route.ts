@@ -1,210 +1,150 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { NextRequest, NextResponse } from "next/server";
+import mysql from "mysql2/promise";
 
-import { prisma } from '@/lib/prisma';
-// Use the shared Prisma instance instead of creating a new one
-// const prisma = new PrismaClient();
+// Database connection configuration
+const dbConfig = {
+  host: "localhost",
+  user: "root",
+  password: "admin123",
+  database: "db_tpq",
+};
 
-// GET /api/musyrif - Get all musyrif
 export async function GET(req: NextRequest) {
+  let connection;
   try {
-    // Temporarily disable authentication check for development
-    // const session = await getServerSession(authOptions);
-    
-    // if (!session) {
-    //   return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    // }
+    console.log("🔌 Connecting to database for Musyrif API...");
+    connection = await mysql.createConnection(dbConfig);
 
-    // Parse query parameters
     const url = new URL(req.url);
-    const halaqahId = url.searchParams.get('halaqahId');
-    const status = url.searchParams.get('status');
-    
-    // Build filter conditions
-    const where: any = {};
-    
+    const halaqahId = url.searchParams.get("halaqahId");
+    const status = url.searchParams.get("status");
+
+    // Build WHERE clause
+    let whereClause = "WHERE 1=1";
+    const params: any[] = [];
+
     if (halaqahId) {
-      where.halaqahId = halaqahId;
+      whereClause += " AND u.halaqahId = ?";
+      params.push(halaqahId);
     }
-    
+
     if (status) {
-      where.status = status;
+      whereClause += " AND u.status = ?";
+      params.push(status);
     }
 
-    console.log('Fetching musyrif with filter:', where);
-    
-    const musyrifData = await prisma.musyrif.findMany({
-      where,
-      include: {
-        halaqah: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true
-          }
-        }
-      },
-      orderBy: {
-        name: 'asc'
-      }
-    });
-    
-    console.log('Musyrif data found:', musyrifData.length);
-
-    // Transform the data to include parsed JSON fields
-    const musyrif = musyrifData.map(m => {
-      try {
-        // Check if educationData is complete JSON
-        let education = [];
-        if (m.educationData) {
-          try {
-            education = JSON.parse(m.educationData as string);
-          } catch (e) {
-            console.error('Error parsing educationData for musyrif:', m.id, e);
-            // Try to fix truncated JSON
-            if (typeof m.educationData === 'string' && m.educationData.includes('id')) {
-              const match = m.educationData.match(/\[\{.*?\}\]/);
-              if (match) {
-                try {
-                  education = JSON.parse(match[0]);
-                } catch (e2) {
-                  console.error('Failed to fix educationData JSON:', e2);
-                }
-              }
-            }
-          }
-        }
-        
-        // Check if experienceData is complete JSON
-        let experience = [];
-        if (m.experienceData) {
-          try {
-            experience = JSON.parse(m.experienceData as string);
-          } catch (e) {
-            console.error('Error parsing experienceData for musyrif:', m.id, e);
-            // Try to fix truncated JSON
-            if (typeof m.experienceData === 'string' && m.experienceData.includes('id')) {
-              const match = m.experienceData.match(/\[\{.*?\}\]/);
-              if (match) {
-                try {
-                  experience = JSON.parse(match[0]);
-                } catch (e2) {
-                  console.error('Failed to fix experienceData JSON:', e2);
-                }
-              }
-            }
-          }
-        }
-        
-        // Check if certificatesData is complete JSON
-        let certificates = [];
-        if (m.certificatesData) {
-          try {
-            certificates = JSON.parse(m.certificatesData as string);
-          } catch (e) {
-            console.error('Error parsing certificatesData for musyrif:', m.id, e);
-            // Try to fix truncated JSON
-            if (typeof m.certificatesData === 'string' && m.certificatesData.includes('id')) {
-              const match = m.certificatesData.match(/\[\{.*?\}\]/);
-              if (match) {
-                try {
-                  certificates = JSON.parse(match[0]);
-                } catch (e2) {
-                  console.error('Failed to fix certificatesData JSON:', e2);
-                }
-              }
-            }
-          }
-        }
-        
-        return {
-          ...m,
-          education,
-          experience,
-          certificates
-        };
-      } catch (error) {
-        console.error('Error processing data for musyrif:', m.id, error);
-        return {
-          ...m,
-          education: [],
-          experience: [],
-          certificates: []
-        };
-      }
-    });
-
-    return NextResponse.json({ success: true, musyrif });
-  } catch (error) {
-    console.error('Error fetching musyrif:', error);
-    return NextResponse.json(
-      { success: false, message: 'Failed to fetch musyrif' },
-      { status: 500 }
+    // Get musyrif data from users table (users with role MUSYRIF)
+    const [musyrifResult] = await connection.execute(
+      `SELECT
+        u.id,
+        u.name,
+        u.email,
+        u.phone,
+        u.avatar,
+        u.status,
+        u.createdAt,
+        h.name as halaqahName,
+        h.id as halaqahId,
+        m.photo as musyrifPhoto,
+        COUNT(s.id) as totalSantri
+       FROM users u
+       LEFT JOIN musyrif m ON u.id = m.userId
+       LEFT JOIN halaqah h ON u.halaqahId = h.id
+       LEFT JOIN santri s ON h.id = s.halaqahId AND s.status = 'ACTIVE'
+       ${whereClause} AND u.role = 'MUSYRIF'
+       GROUP BY u.id, u.name, u.email, u.phone, u.avatar, u.status, u.createdAt, h.name, h.id, m.photo
+       ORDER BY u.name ASC`,
+      params,
     );
+
+    const musyrif = (musyrifResult as any[]).map((m) => ({
+      id: m.id,
+      name: m.name,
+      email: m.email,
+      phone: m.phone,
+      photo: m.musyrifPhoto || m.avatar, // Use musyrif photo first, fallback to user avatar
+      status: m.status,
+      createdAt: m.createdAt,
+      halaqah: m.halaqahId
+        ? {
+            id: m.halaqahId,
+            name: m.halaqahName,
+          }
+        : null,
+      totalSantri: m.totalSantri || 0,
+      education: [], // Can be extended later
+      experience: [], // Can be extended later
+      certificates: [], // Can be extended later
+    }));
+
+    console.log(`✅ Found ${musyrif.length} musyrif`);
+
+    return NextResponse.json({
+      success: true,
+      musyrif,
+      total: musyrif.length,
+    });
+  } catch (err) {
+    console.error("❌ Error fetching musyrif:", err);
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Terjadi kesalahan pada server",
+        error: err instanceof Error ? err.message : String(err),
+      },
+      { status: 500 },
+    );
+  } finally {
+    if (connection) {
+      await connection.end();
+      console.log("🔌 Database connection closed");
+    }
   }
 }
 
-// POST /api/musyrif - Create a new musyrif
 export async function POST(req: NextRequest) {
   try {
-    // Temporarily disable authentication check for development
-    // const session = await getServerSession(authOptions);
-    
-    // if (!session || session.user.role !== 'ADMIN') {
-    //   return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    // }
-
     const data = await req.json();
-    
-    // Validate required fields
-    if (!data.name || !data.gender || !data.birthPlace || !data.birthDate || !data.address || !data.phone || !data.email) {
+
+    if (!validateMusyrifData(data)) {
       return NextResponse.json(
-        { success: false, message: 'Missing required fields' },
-        { status: 400 }
+        { success: false, message: "Data tidak lengkap" },
+        { status: 400 },
       );
     }
 
-    // Handle user account creation or connection
     let userId = data.userId;
-    
+
     if (data.createAccount && !userId) {
       if (!data.password) {
         return NextResponse.json(
-          { success: false, message: 'Password is required when creating a new account' },
-          { status: 400 }
+          { success: false, message: "Password diperlukan" },
+          { status: 400 },
         );
       }
-      
-      // Check if email already exists
+
       const existingUser = await prisma.user.findUnique({
-        where: { email: data.email }
+        where: { email: data.email },
       });
-      
+
       if (existingUser) {
         return NextResponse.json(
-          { success: false, message: 'Email already in use' },
-          { status: 400 }
+          { success: false, message: "Email sudah terdaftar" },
+          { status: 400 },
         );
       }
-      
-      // Create new user
+
       const newUser = await prisma.user.create({
         data: {
           name: data.name,
           email: data.email,
-          password: data.password, // In a real app, hash this password
-          role: 'MUSYRIF'
-        }
+          password: data.password,
+          role: "MUSYRIF",
+        },
       });
-      
       userId = newUser.id;
     }
 
-    // Create musyrif
     const musyrif = await prisma.musyrif.create({
       data: {
         name: data.name,
@@ -218,41 +158,46 @@ export async function POST(req: NextRequest) {
         joinDate: new Date(data.joinDate),
         status: data.status,
         photo: data.photo,
-        halaqahId: data.halaqahId || null,
+        halaqah: data.halaqahId
+          ? { connect: { id: data.halaqahId } }
+          : undefined,
         userId: userId || null,
-        
-        // Store education, experience, and certificates as JSON
         educationData: data.education ? JSON.stringify(data.education) : null,
-        experienceData: data.experience ? JSON.stringify(data.experience) : null,
-        certificatesData: data.certificates ? JSON.stringify(data.certificates) : null
+        experienceData: data.experience
+          ? JSON.stringify(data.experience)
+          : null,
+        certificatesData: data.certificates
+          ? JSON.stringify(data.certificates)
+          : null,
       },
       include: {
         halaqah: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true
-          }
-        }
-      }
+        user: true,
+      },
     });
 
-    // Transform the data to include parsed JSON fields
-    const transformedMusyrif = {
-      ...musyrif,
-      education: musyrif.educationData ? JSON.parse(musyrif.educationData as string) : [],
-      experience: musyrif.experienceData ? JSON.parse(musyrif.experienceData as string) : [],
-      certificates: musyrif.certificatesData ? JSON.parse(musyrif.certificatesData as string) : []
-    };
-
-    return NextResponse.json({ success: true, musyrif: transformedMusyrif });
-  } catch (error) {
-    console.error('Error creating musyrif:', error);
+    return NextResponse.json({ success: true, musyrif });
+  } catch (err) {
+    console.error("Error creating musyrif:", err);
     return NextResponse.json(
-      { success: false, message: 'Failed to create musyrif' },
-      { status: 500 }
+      {
+        success: false,
+        message: "Terjadi kesalahan pada server",
+        error: err instanceof Error ? err.message : String(err),
+      },
+      { status: 500 },
     );
   }
+}
+
+function validateMusyrifData(data: any): boolean {
+  return !!(
+    data.name &&
+    data.gender &&
+    data.birthPlace &&
+    data.birthDate &&
+    data.address &&
+    data.phone &&
+    data.email
+  );
 }

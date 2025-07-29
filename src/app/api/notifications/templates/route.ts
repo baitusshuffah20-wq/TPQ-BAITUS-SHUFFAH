@@ -1,17 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { NotificationService, NotificationType, NotificationChannel } from '@/lib/notification-service';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import {
+  NotificationService,
+  NotificationType,
+  NotificationChannel,
+} from "@/lib/notification-service";
+import { prisma } from "@/lib/prisma";
 
 // GET /api/notifications/templates - Get notification templates
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type');
-    const isActive = searchParams.get('isActive');
+    const type = searchParams.get("type");
+    const isActive = searchParams.get("isActive");
 
     const where: any = {};
     if (type) where.type = type;
-    if (isActive !== null) where.isActive = isActive === 'true';
+    if (isActive !== null) where.isActive = isActive === "true";
 
     const templates = await prisma.notificationTemplate.findMany({
       where,
@@ -20,22 +24,22 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            email: true
-          }
-        }
+            email: true,
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json({
       success: true,
-      templates
+      templates,
     });
   } catch (error) {
-    console.error('Error getting notification templates:', error);
+    console.error("Error getting notification templates:", error);
     return NextResponse.json(
-      { success: false, message: 'Failed to get notification templates' },
-      { status: 500 }
+      { success: false, message: "Failed to get notification templates" },
+      { status: 500 },
     );
   }
 }
@@ -51,21 +55,24 @@ export async function POST(request: NextRequest) {
       type,
       channels = [NotificationChannel.IN_APP],
       variables,
-      createdBy
+      createdBy,
     } = body;
 
     // Validation
     if (!name || !title || !message || !type || !createdBy) {
       return NextResponse.json(
-        { success: false, message: 'Name, title, message, type, and createdBy are required' },
-        { status: 400 }
+        {
+          success: false,
+          message: "Name, title, message, type, and createdBy are required",
+        },
+        { status: 400 },
       );
     }
 
     if (!Object.values(NotificationType).includes(type)) {
       return NextResponse.json(
-        { success: false, message: 'Invalid notification type' },
-        { status: 400 }
+        { success: false, message: "Invalid notification type" },
+        { status: 400 },
       );
     }
 
@@ -76,19 +83,19 @@ export async function POST(request: NextRequest) {
       type,
       channels,
       variables,
-      createdBy
+      createdBy,
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Notification template created successfully',
-      template
+      message: "Notification template created successfully",
+      template,
     });
   } catch (error) {
-    console.error('Error creating notification template:', error);
+    console.error("Error creating notification template:", error);
     return NextResponse.json(
-      { success: false, message: 'Failed to create notification template' },
-      { status: 500 }
+      { success: false, message: "Failed to create notification template" },
+      { status: 500 },
     );
   }
 }
@@ -97,21 +104,13 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
-      id,
-      name,
-      title,
-      message,
-      type,
-      channels,
-      variables,
-      isActive
-    } = body;
+    const { id, name, title, message, type, channels, variables, isActive } =
+      body;
 
     if (!id) {
       return NextResponse.json(
-        { success: false, message: 'Template ID is required' },
-        { status: 400 }
+        { success: false, message: "Template ID is required" },
+        { status: 400 },
       );
     }
 
@@ -120,25 +119,26 @@ export async function PUT(request: NextRequest) {
     if (title !== undefined) updateData.title = title;
     if (message !== undefined) updateData.message = message;
     if (type !== undefined) updateData.type = type;
-    if (channels !== undefined) updateData.channels = channels.join(',');
-    if (variables !== undefined) updateData.variables = JSON.stringify(variables);
+    if (channels !== undefined) updateData.channels = channels.join(",");
+    if (variables !== undefined)
+      updateData.variables = JSON.stringify(variables);
     if (isActive !== undefined) updateData.isActive = isActive;
 
     const template = await prisma.notificationTemplate.update({
       where: { id },
-      data: updateData
+      data: updateData,
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Notification template updated successfully',
-      template
+      message: "Notification template updated successfully",
+      template,
     });
   } catch (error) {
-    console.error('Error updating notification template:', error);
+    console.error("Error updating notification template:", error);
     return NextResponse.json(
-      { success: false, message: 'Failed to update notification template' },
-      { status: 500 }
+      { success: false, message: "Failed to update notification template" },
+      { status: 500 },
     );
   }
 }
@@ -147,28 +147,28 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    const id = searchParams.get("id");
 
     if (!id) {
       return NextResponse.json(
-        { success: false, message: 'Template ID is required' },
-        { status: 400 }
+        { success: false, message: "Template ID is required" },
+        { status: 400 },
       );
     }
 
     await prisma.notificationTemplate.delete({
-      where: { id }
+      where: { id },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Notification template deleted successfully'
+      message: "Notification template deleted successfully",
     });
   } catch (error) {
-    console.error('Error deleting notification template:', error);
+    console.error("Error deleting notification template:", error);
     return NextResponse.json(
-      { success: false, message: 'Failed to delete notification template' },
-      { status: 500 }
+      { success: false, message: "Failed to delete notification template" },
+      { status: 500 },
     );
   }
 }

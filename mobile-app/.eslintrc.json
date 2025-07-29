@@ -1,0 +1,23 @@
+{
+  "extends": ["expo", "@react-native-community"],
+  "rules": {
+    "@typescript-eslint/no-unused-vars": "warn",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
+    "react-hooks/exhaustive-deps": "warn",
+    "prefer-const": "warn",
+    "no-unused-vars": "warn",
+    "react-native/no-inline-styles": "off",
+    "react-native/no-color-literals": "off"
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 2020,
+    "sourceType": "module"
+  },
+  "plugins": ["@typescript-eslint", "react", "react-native"]
+}

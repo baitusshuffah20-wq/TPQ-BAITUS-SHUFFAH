@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { 
-  BookOpen, 
-  User, 
-  Mail, 
-  Phone, 
+import React, { useState } from "react";
+import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  BookOpen,
+  User,
+  Mail,
+  Phone,
   MapPin,
   Calendar,
   Users,
   ArrowLeft,
   CheckCircle,
   AlertCircle,
-  Upload
-} from 'lucide-react';
+  Upload,
+} from "lucide-react";
 
 interface RegisterForm {
   // Data Santri
@@ -29,17 +29,17 @@ interface RegisterForm {
   santriAddress: string;
   santriPhone: string;
   santriEmail: string;
-  
+
   // Data Wali
   waliName: string;
   waliEmail: string;
   waliPhone: string;
   waliAddress: string;
   waliRelation: string;
-  
+
   // Program
   selectedProgram: string;
-  
+
   // Agreement
   agreement: boolean;
 }
@@ -48,68 +48,70 @@ const RegisterPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<RegisterForm>({
-    santriName: '',
-    santriNis: '',
-    santriGender: '',
-    santriBirthDate: '',
-    santriBirthPlace: '',
-    santriAddress: '',
-    santriPhone: '',
-    santriEmail: '',
-    waliName: '',
-    waliEmail: '',
-    waliPhone: '',
-    waliAddress: '',
-    waliRelation: '',
-    selectedProgram: '',
-    agreement: false
+    santriName: "",
+    santriNis: "",
+    santriGender: "",
+    santriBirthDate: "",
+    santriBirthPlace: "",
+    santriAddress: "",
+    santriPhone: "",
+    santriEmail: "",
+    waliName: "",
+    waliEmail: "",
+    waliPhone: "",
+    waliAddress: "",
+    waliRelation: "",
+    selectedProgram: "",
+    agreement: false,
   });
   const [errors, setErrors] = useState<Partial<RegisterForm>>({});
 
   const steps = [
-    { id: 1, title: 'Data Santri', icon: User },
-    { id: 2, title: 'Data Wali', icon: Users },
-    { id: 3, title: 'Program & Konfirmasi', icon: CheckCircle }
+    { id: 1, title: "Data Santri", icon: User },
+    { id: 2, title: "Data Wali", icon: Users },
+    { id: 3, title: "Program & Konfirmasi", icon: CheckCircle },
   ];
 
   const programs = [
     {
-      id: 'tahfidz-intensif',
-      name: 'Tahfidz Intensif',
-      description: 'Program unggulan untuk menghafal 30 juz',
-      price: 'Rp 500.000/bulan',
-      duration: '2-3 Tahun'
+      id: "tahfidz-intensif",
+      name: "Tahfidz Intensif",
+      description: "Program unggulan untuk menghafal 30 juz",
+      price: "Rp 500.000/bulan",
+      duration: "2-3 Tahun",
     },
     {
-      id: 'tahfidz-reguler',
-      name: 'Tahfidz Reguler',
-      description: 'Program dengan jadwal fleksibel',
-      price: 'Rp 300.000/bulan',
-      duration: '3-4 Tahun'
+      id: "tahfidz-reguler",
+      name: "Tahfidz Reguler",
+      description: "Program dengan jadwal fleksibel",
+      price: "Rp 300.000/bulan",
+      duration: "3-4 Tahun",
     },
     {
-      id: 'tahsin-tajwid',
-      name: 'Tahsin & Tajwid',
-      description: 'Perbaikan bacaan Al-Quran',
-      price: 'Rp 200.000/bulan',
-      duration: '6 Bulan'
-    }
+      id: "tahsin-tajwid",
+      name: "Tahsin & Tajwid",
+      description: "Perbaikan bacaan Al-Quran",
+      price: "Rp 200.000/bulan",
+      duration: "6 Bulan",
+    },
   ];
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name as keyof RegisterForm]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: undefined
+        [name]: undefined,
       }));
     }
   };
@@ -118,20 +120,29 @@ const RegisterPage = () => {
     const newErrors: Partial<RegisterForm> = {};
 
     if (step === 1) {
-      if (!formData.santriName) newErrors.santriName = 'Nama santri harus diisi';
-      if (!formData.santriGender) newErrors.santriGender = 'Jenis kelamin harus dipilih';
-      if (!formData.santriBirthDate) newErrors.santriBirthDate = 'Tanggal lahir harus diisi';
-      if (!formData.santriBirthPlace) newErrors.santriBirthPlace = 'Tempat lahir harus diisi';
-      if (!formData.santriAddress) newErrors.santriAddress = 'Alamat harus diisi';
+      if (!formData.santriName)
+        newErrors.santriName = "Nama santri harus diisi";
+      if (!formData.santriGender)
+        newErrors.santriGender = "Jenis kelamin harus dipilih";
+      if (!formData.santriBirthDate)
+        newErrors.santriBirthDate = "Tanggal lahir harus diisi";
+      if (!formData.santriBirthPlace)
+        newErrors.santriBirthPlace = "Tempat lahir harus diisi";
+      if (!formData.santriAddress)
+        newErrors.santriAddress = "Alamat harus diisi";
     } else if (step === 2) {
-      if (!formData.waliName) newErrors.waliName = 'Nama wali harus diisi';
-      if (!formData.waliEmail) newErrors.waliEmail = 'Email wali harus diisi';
-      if (!formData.waliPhone) newErrors.waliPhone = 'No. HP wali harus diisi';
-      if (!formData.waliAddress) newErrors.waliAddress = 'Alamat wali harus diisi';
-      if (!formData.waliRelation) newErrors.waliRelation = 'Hubungan dengan santri harus dipilih';
+      if (!formData.waliName) newErrors.waliName = "Nama wali harus diisi";
+      if (!formData.waliEmail) newErrors.waliEmail = "Email wali harus diisi";
+      if (!formData.waliPhone) newErrors.waliPhone = "No. HP wali harus diisi";
+      if (!formData.waliAddress)
+        newErrors.waliAddress = "Alamat wali harus diisi";
+      if (!formData.waliRelation)
+        newErrors.waliRelation = "Hubungan dengan santri harus dipilih";
     } else if (step === 3) {
-      if (!formData.selectedProgram) newErrors.selectedProgram = 'Program harus dipilih';
-      if (!formData.agreement) newErrors.agreement = 'Anda harus menyetujui syarat dan ketentuan';
+      if (!formData.selectedProgram)
+        newErrors.selectedProgram = "Program harus dipilih";
+      if (!formData.agreement)
+        newErrors.agreement = "Anda harus menyetujui syarat dan ketentuan";
     }
 
     setErrors(newErrors);
@@ -140,28 +151,28 @@ const RegisterPage = () => {
 
   const nextStep = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, 3));
+      setCurrentStep((prev) => Math.min(prev + 1, 3));
     }
   };
 
   const prevStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
   const handleSubmit = async () => {
     if (!validateStep(3)) return;
 
     setIsLoading(true);
-    
+
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       // Show success message and redirect
-      alert('Pendaftaran berhasil! Silakan cek email untuk konfirmasi.');
+      alert("Pendaftaran berhasil! Silakan cek email untuk konfirmasi.");
       // In real app, redirect to success page or login
     } catch (error) {
-      alert('Terjadi kesalahan. Silakan coba lagi.');
+      alert("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
     }
@@ -183,7 +194,7 @@ const RegisterPage = () => {
                 error={errors.santriName}
                 required
               />
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Jenis Kelamin <span className="text-red-500">*</span>
@@ -199,7 +210,9 @@ const RegisterPage = () => {
                   <option value="FEMALE">Perempuan</option>
                 </select>
                 {errors.santriGender && (
-                  <p className="mt-1 text-sm text-red-600">{errors.santriGender}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.santriGender}
+                  </p>
                 )}
               </div>
             </div>
@@ -215,7 +228,7 @@ const RegisterPage = () => {
                 error={errors.santriBirthPlace}
                 required
               />
-              
+
               <Input
                 label="Tanggal Lahir"
                 type="date"
@@ -249,7 +262,7 @@ const RegisterPage = () => {
                 placeholder="Masukkan no. HP"
                 leftIcon={<Phone className="h-4 w-4" />}
               />
-              
+
               <Input
                 label="Email Santri (Opsional)"
                 type="email"
@@ -277,7 +290,7 @@ const RegisterPage = () => {
                 error={errors.waliName}
                 required
               />
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Hubungan dengan Santri <span className="text-red-500">*</span>
@@ -296,7 +309,9 @@ const RegisterPage = () => {
                   <option value="OTHER">Lainnya</option>
                 </select>
                 {errors.waliRelation && (
-                  <p className="mt-1 text-sm text-red-600">{errors.waliRelation}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.waliRelation}
+                  </p>
                 )}
               </div>
             </div>
@@ -313,7 +328,7 @@ const RegisterPage = () => {
                 error={errors.waliEmail}
                 required
               />
-              
+
               <Input
                 label="No. HP Wali"
                 type="tel"
@@ -353,10 +368,15 @@ const RegisterPage = () => {
                     key={program.id}
                     className={`border rounded-lg p-4 cursor-pointer transition-colors ${
                       formData.selectedProgram === program.id
-                        ? 'border-teal-500 bg-teal-50'
-                        : 'border-gray-300 hover:border-gray-400'
+                        ? "border-teal-500 bg-teal-50"
+                        : "border-gray-300 hover:border-gray-400"
                     }`}
-                    onClick={() => setFormData(prev => ({ ...prev, selectedProgram: program.id }))}
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        selectedProgram: program.id,
+                      }))
+                    }
                   >
                     <div className="flex items-center">
                       <input
@@ -368,8 +388,12 @@ const RegisterPage = () => {
                         className="h-4 w-4 text-teal-600 focus:ring-teal-500"
                       />
                       <div className="ml-3">
-                        <div className="font-medium text-gray-900">{program.name}</div>
-                        <div className="text-sm text-gray-600">{program.description}</div>
+                        <div className="font-medium text-gray-900">
+                          {program.name}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {program.description}
+                        </div>
                         <div className="text-sm text-teal-600 font-medium">
                           {program.price} • {program.duration}
                         </div>
@@ -379,7 +403,9 @@ const RegisterPage = () => {
                 ))}
               </div>
               {errors.selectedProgram && (
-                <p className="mt-1 text-sm text-red-600">{errors.selectedProgram}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.selectedProgram}
+                </p>
               )}
             </div>
 
@@ -394,18 +420,26 @@ const RegisterPage = () => {
                 />
                 <div className="ml-3">
                   <label className="text-sm text-gray-700">
-                    Saya menyetujui{' '}
-                    <Link href="/terms" className="text-teal-600 hover:text-teal-500">
+                    Saya menyetujui{" "}
+                    <Link
+                      href="/terms"
+                      className="text-teal-600 hover:text-teal-500"
+                    >
                       syarat dan ketentuan
-                    </Link>{' '}
-                    serta{' '}
-                    <Link href="/privacy" className="text-teal-600 hover:text-teal-500">
+                    </Link>{" "}
+                    serta{" "}
+                    <Link
+                      href="/privacy"
+                      className="text-teal-600 hover:text-teal-500"
+                    >
                       kebijakan privasi
-                    </Link>{' '}
+                    </Link>{" "}
                     yang berlaku.
                   </label>
                   {errors.agreement && (
-                    <p className="mt-1 text-sm text-red-600">{errors.agreement}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.agreement}
+                    </p>
                   )}
                 </div>
               </div>
@@ -423,7 +457,10 @@ const RegisterPage = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center justify-center mb-6">
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center mb-6"
+          >
             <div className="flex items-center space-x-2">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-teal-gold">
                 <BookOpen className="h-7 w-7 text-white" />
@@ -436,7 +473,7 @@ const RegisterPage = () => {
               </div>
             </div>
           </Link>
-          
+
           <h2 className="text-3xl font-bold text-gray-900">
             Pendaftaran Santri Baru
           </h2>
@@ -452,16 +489,18 @@ const RegisterPage = () => {
               const Icon = step.icon;
               const isActive = currentStep === step.id;
               const isCompleted = currentStep > step.id;
-              
+
               return (
                 <div key={step.id} className="flex items-center">
-                  <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
-                    isCompleted 
-                      ? 'bg-teal-600 border-teal-600 text-white'
-                      : isActive
-                      ? 'border-teal-600 text-teal-600'
-                      : 'border-gray-300 text-gray-400'
-                  }`}>
+                  <div
+                    className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
+                      isCompleted
+                        ? "bg-teal-600 border-teal-600 text-white"
+                        : isActive
+                          ? "border-teal-600 text-teal-600"
+                          : "border-gray-300 text-gray-400"
+                    }`}
+                  >
                     {isCompleted ? (
                       <CheckCircle className="h-5 w-5" />
                     ) : (
@@ -469,16 +508,22 @@ const RegisterPage = () => {
                     )}
                   </div>
                   <div className="ml-3">
-                    <div className={`text-sm font-medium ${
-                      isActive || isCompleted ? 'text-gray-900' : 'text-gray-500'
-                    }`}>
+                    <div
+                      className={`text-sm font-medium ${
+                        isActive || isCompleted
+                          ? "text-gray-900"
+                          : "text-gray-500"
+                      }`}
+                    >
                       {step.title}
                     </div>
                   </div>
                   {index < steps.length - 1 && (
-                    <div className={`flex-1 h-0.5 mx-4 ${
-                      isCompleted ? 'bg-teal-600' : 'bg-gray-300'
-                    }`} />
+                    <div
+                      className={`flex-1 h-0.5 mx-4 ${
+                        isCompleted ? "bg-teal-600" : "bg-gray-300"
+                      }`}
+                    />
                   )}
                 </div>
               );
@@ -507,21 +552,17 @@ const RegisterPage = () => {
                     </Button>
                   )}
                 </div>
-                
+
                 <div className="flex gap-4">
                   <Link href="/">
-                    <Button variant="ghost">
-                      Batal
-                    </Button>
+                    <Button variant="ghost">Batal</Button>
                   </Link>
-                  
+
                   {currentStep < 3 ? (
-                    <Button onClick={nextStep}>
-                      Selanjutnya
-                    </Button>
+                    <Button onClick={nextStep}>Selanjutnya</Button>
                   ) : (
                     <Button onClick={handleSubmit} loading={isLoading}>
-                      {isLoading ? 'Memproses...' : 'Daftar Sekarang'}
+                      {isLoading ? "Memproses..." : "Daftar Sekarang"}
                     </Button>
                   )}
                 </div>
@@ -532,7 +573,10 @@ const RegisterPage = () => {
 
         {/* Back to Home */}
         <div className="text-center mt-8">
-          <Link href="/" className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900">
+          <Link
+            href="/"
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Kembali ke Beranda
           </Link>

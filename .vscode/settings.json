@@ -1,3 +1,10 @@
 {
-    "zencoder.enableRepoIndexing": true
+  "zencoder.enableRepoIndexing": true,
+  "bitoAI.codeCompletion.enableAutoCompletion": false,
+  "zencoder.repoInfo.currentWarningState": true,
+  "blinky.repro.buildCommand": "npm run dev",
+  "blinky.repro.testCommand": "curl localhost:3000",
+  "blinky.repro.expectedInstruction": "periksa problem pada project saya",
+  "blinky.repro.expectedStatus": "",
+  "blinky.repro.expectedBody": ""
 }

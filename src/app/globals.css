@@ -1,53 +1,53 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap");
 @import "tailwindcss";
 
 :root {
-  --background: #F8FAFC;
-  --foreground: #1E293B;
-  --primary: #E6CF00;
-  --primary-foreground: #1E293B;
-  --secondary: #008080;
-  --secondary-foreground: #ffffff;
-  --accent: #00d1c3;
-  --accent-foreground: #1E293B;
-  --muted: #f3f4f6;
-  --muted-foreground: #6b7280;
-  --border: #e5e7eb;
-  --input: #f9fafb;
-  --ring: #E6CF00;
+  --background: 248 250 252;
+  --foreground: 30 41 59;
+  --primary: 0 128 128;
+  --primary-foreground: 255 255 255;
+  --secondary: 230 207 0;
+  --secondary-foreground: 255 255 255;
+  --accent: 0 209 195;
+  --accent-foreground: 30 41 59;
+  --muted: 243 244 246;
+  --muted-foreground: 107 114 128;
+  --border: 229 231 235;
+  --input: 249 250 251;
+  --ring: 0 128 128;
   --radius: 0.5rem;
-  --card: #ffffff;
-  --card-foreground: #1E293B;
-  --popover: #ffffff;
-  --popover-foreground: #1E293B;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
+  --card: 255 255 255;
+  --card-foreground: 30 41 59;
+  --popover: 255 255 255;
+  --popover-foreground: 30 41 59;
+  --destructive: 239 68 68;
+  --destructive-foreground: 255 255 255;
   /* Theme variables */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-arabic: 'Amiri', serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-arabic: "Amiri", serif;
 }
 
-@media(prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --primary: #E6CF00;
-    --primary-foreground: #1E293B;
-    --secondary: #008080;
-    --secondary-foreground: #ffffff;
-    --accent: #00d1c3;
-    --accent-foreground: #ededed;
-    --muted: #1f2937;
-    --muted-foreground: #9ca3af;
-    --border: #374151;
-    --input: #111827;
-    --ring: #E6CF00;
+    --background: 10 10 10;
+    --foreground: 237 237 237;
+    --primary: 0 128 128;
+    --primary-foreground: 255 255 255;
+    --secondary: 230 207 0;
+    --secondary-foreground: 255 255 255;
+    --accent: 0 209 195;
+    --accent-foreground: 237 237 237;
+    --muted: 31 41 55;
+    --muted-foreground: 156 163 175;
+    --border: 55 65 81;
+    --input: 17 24 39;
+    --ring: 0 128 128;
     --card: #18181b;
     --card-foreground: #ededed;
     --popover: #18181b;
@@ -60,32 +60,183 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
   line-height: 1.6;
 }
 
 /* Custom Utility Classes */
 .bg-teal-gold {
-  background: linear-gradient(135deg, #E6CF00 0%, #008080 100%);
+  background: linear-gradient(135deg, #e6cf00 0%, #008080 100%);
 }
 
 .bg-gold-teal {
-  background: linear-gradient(135deg, #E6CF00 0%, #008080 100%);
+  background: linear-gradient(135deg, #e6cf00 0%, #008080 100%);
 }
 
 .bg-islamic-gradient {
-  background: linear-gradient(135deg, #E6CF00 0%, #008080 50%, #00CEE9 100%);
+  background: linear-gradient(135deg, #e6cf00 0%, #008080 50%, #00cee9 100%);
+}
+
+/* Button Overrides - Ensure all buttons are visible */
+button {
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Primary button styling - Teal background with white text */
+button.bg-primary,
+.bg-primary {
+  background-color: #008080 !important;
+  color: white !important;
+  border: 1px solid #006666 !important;
+}
+
+/* Teal button styling */
+button.bg-teal-600,
+.bg-teal-600 {
+  background-color: #008080 !important;
+  color: white !important;
+  border: 1px solid #006666 !important;
+}
+
+/* Hover states for teal buttons */
+button.bg-teal-600:hover,
+.bg-teal-600:hover,
+button.hover\\:bg-teal-700:hover,
+.hover\\:bg-teal-700:hover {
+  background-color: #006666 !important;
+  color: white !important;
+}
+
+/* Ensure white buttons are visible */
+button.bg-white {
+  border: 2px solid rgba(0, 0, 0, 0.2) !important;
+  color: #333 !important;
+  background-color: white !important;
+}
+
+/* Ensure text is visible on all buttons */
+button.text-white,
+.text-white {
+  color: white !important;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Force visibility for primary buttons */
+[class*="bg-primary"],
+[class*="bg-teal"] {
+  background-color: #008080 !important;
+  color: white !important;
+}
+
+button.text-gray-800 {
+  color: #1f2937 !important;
+  text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Force specific colors for common button classes */
+button.bg-teal-50 {
+  background-color: #e6fffa !important;
+  border-color: #14b8a6 !important;
+  color: #0f766e !important;
+}
+
+button.bg-blue-50 {
+  background-color: #eff6ff !important;
+  border-color: #3b82f6 !important;
+  color: #1d4ed8 !important;
+}
+
+button.bg-green-50 {
+  background-color: #f0fdf4 !important;
+  border-color: #22c55e !important;
+  color: #15803d !important;
+}
+
+button.bg-purple-50 {
+  background-color: #faf5ff !important;
+  border-color: #a855f7 !important;
+  color: #7e22ce !important;
+}
+
+button.bg-yellow-50 {
+  background-color: #fefce8 !important;
+  border-color: #eab308 !important;
+  color: #a16207 !important;
+}
+
+button.bg-red-50 {
+  background-color: #fef2f2 !important;
+  border-color: #ef4444 !important;
+  color: #b91c1c !important;
+}
+
+/* Force specific colors for button variants */
+button.bg-teal-600,
+button.bg-teal-700 {
+  background-color: #0d9488 !important;
+  border-color: #0f766e !important;
+  color: white !important;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+button.bg-yellow-400,
+button.bg-yellow-500 {
+  background-color: #eab308 !important;
+  border-color: #a16207 !important;
+  color: #1f2937 !important;
+  text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.5) !important;
+}
+
+button.bg-red-500,
+button.bg-red-600 {
+  background-color: #ef4444 !important;
+  border-color: #b91c1c !important;
+  color: white !important;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+button.bg-blue-500,
+button.bg-blue-600 {
+  background-color: #3b82f6 !important;
+  border-color: #1d4ed8 !important;
+  color: white !important;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+button.bg-cyan-500,
+button.bg-cyan-600 {
+  background-color: #06b6d4 !important;
+  border-color: #0e7490 !important;
+  color: white !important;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Outline buttons */
+button.border-teal-600,
+button.border-teal-700 {
+  border: 2px solid #0d9488 !important;
+  color: #0d9488 !important;
+  background-color: white !important;
+}
+
+/* Ghost buttons */
+button.bg-transparent {
+  background-color: white !important;
+  border: 2px solid #d1d5db !important;
+  color: #4b5563 !important;
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #E6CF00 0%, #008080 100%);
+  background: linear-gradient(135deg, #e6cf00 0%, #008080 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .text-arabic {
-  font-family: 'Amiri', serif;
+  font-family: "Amiri", serif;
   direction: rtl;
   text-align: right;
 }
@@ -116,7 +267,7 @@ body {
 
 .btn-secondary {
   background: #e4fd00;
-  color: white;
+  color: #333333; /* Mengubah warna teks menjadi gelap */
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 500;
@@ -126,15 +277,75 @@ body {
 }
 
 .btn-secondary:hover {
-  background: #006666;
+  background: #c9df00;
+  color: #333333; /* Memastikan warna teks tetap gelap saat hover */
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px 0 rgba(0, 128, 128, 0.3);
+  box-shadow: 0 4px 14px 0 rgba(228, 253, 0, 0.3);
+}
+
+.btn-accent {
+  background: #00d1c3;
+  color: #333333;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-accent:hover {
+  background: #00b8ab;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px 0 rgba(0, 209, 195, 0.3);
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.3);
+}
+
+.btn-info {
+  background: #3b82f6;
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-info:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.3);
 }
 
 .islamic-pattern {
   background-image:
-    radial-gradient(circle at 25px 25px, rgba(230, 207, 0, 0.05) 2px, transparent 2px),
-    radial-gradient(circle at 75px 75px, rgba(0, 128, 128, 0.05) 2px, transparent 2px);
+    radial-gradient(
+      circle at 25px 25px,
+      rgba(230, 207, 0, 0.05) 2px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 75px 75px,
+      rgba(0, 128, 128, 0.05) 2px,
+      transparent 2px
+    );
   background-size: 100px 100px;
 }
 
@@ -143,8 +354,12 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .animate-slide-up {

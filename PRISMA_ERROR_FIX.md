@@ -1,7 +1,9 @@
 # Mengatasi Error EPERM pada Prisma
 
 ## Masalah
+
 Error yang terjadi:
+
 ```
 EPERM: operation not permitted, rename '[path]\node_modules\.prisma\client\query_engine-windows.dll.node.tmp...' -> '[path]\node_modules\.prisma\client\query_engine-windows.dll.node'
 ```
@@ -11,11 +13,13 @@ Ini terjadi karena file Prisma sedang digunakan oleh proses lain dan tidak dapat
 ## Solusi
 
 ### 1. Tutup Semua Aplikasi yang Berjalan
+
 - Hentikan semua instance aplikasi yang berjalan dengan menekan `Ctrl+C` di terminal
 - Tutup semua terminal atau command prompt yang menjalankan aplikasi
 - Tutup editor kode (VS Code) jika perlu
 
 ### 2. Bersihkan Cache Prisma
+
 Jalankan perintah berikut secara berurutan:
 
 ```bash
@@ -30,6 +34,7 @@ npm install @prisma/client mysql2
 ```
 
 ### 3. Regenerasi Prisma Client
+
 Setelah semua aplikasi ditutup dan cache dibersihkan, jalankan:
 
 ```bash
@@ -37,6 +42,7 @@ npx prisma generate
 ```
 
 ### 4. Jika Masih Bermasalah
+
 Jika masih mengalami masalah, coba langkah-langkah berikut:
 
 1. **Restart Komputer**
@@ -52,10 +58,12 @@ Jika masih mengalami masalah, coba langkah-langkah berikut:
    - Akhiri proses tersebut
 
 ### 5. Alternatif Solusi
+
 Jika langkah-langkah di atas tidak berhasil, Anda dapat mencoba pendekatan alternatif:
 
 1. **Gunakan Prisma Migrate**
    Alih-alih `prisma db push`, gunakan:
+
    ```bash
    npx prisma migrate dev --name init
    ```

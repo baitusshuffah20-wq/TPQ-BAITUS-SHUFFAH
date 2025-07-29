@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Mic, 
-  MicOff, 
-  Play, 
-  Pause, 
-  Square, 
-  Download, 
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Mic,
+  MicOff,
+  Play,
+  Pause,
+  Square,
+  Download,
   Upload,
   Trash2,
   Volume2,
   VolumeX,
-  RotateCcw
-} from 'lucide-react';
-import Button from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+  RotateCcw,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface VoiceRecorderProps {
   onRecordingComplete?: (audioBlob: Blob, duration: number) => void;
@@ -30,18 +30,18 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   onRecordingComplete,
   onUpload,
   maxDuration = 300, // 5 minutes default
-  className = '',
-  title = 'Perekam Suara',
-  description = 'Rekam hafalan atau audio lainnya'
+  className = "",
+  title = "Perekam Suara",
+  description = "Rekam hafalan atau audio lainnya",
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string>('');
+  const [audioUrl, setAudioUrl] = useState<string>("");
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
 
@@ -49,7 +49,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
     return () => {
@@ -58,7 +58,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         clearInterval(timerRef.current);
       }
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current.getTracks().forEach((track) => track.stop());
       }
       if (audioUrl) {
         URL.revokeObjectURL(audioUrl);
@@ -68,20 +68,22 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
   const requestMicrophonePermission = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
-        } 
+          autoGainControl: true,
+        },
       });
       setHasPermission(true);
-      setError('');
+      setError("");
       return stream;
     } catch (error) {
-      console.error('Microphone permission denied:', error);
+      console.error("Microphone permission denied:", error);
       setHasPermission(false);
-      setError('Akses mikrofon ditolak. Silakan berikan izin untuk merekam audio.');
+      setError(
+        "Akses mikrofon ditolak. Silakan berikan izin untuk merekam audio.",
+      );
       return null;
     }
   };
@@ -94,7 +96,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     chunksRef.current = [];
 
     const mediaRecorder = new MediaRecorder(stream, {
-      mimeType: 'audio/webm;codecs=opus'
+      mimeType: "audio/webm;codecs=opus",
     });
 
     mediaRecorderRef.current = mediaRecorder;
@@ -106,9 +108,9 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     };
 
     mediaRecorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+      const blob = new Blob(chunksRef.current, { type: "audio/webm" });
       setAudioBlob(blob);
-      
+
       // Create audio URL for playback
       const url = URL.createObjectURL(blob);
       setAudioUrl(url);
@@ -118,7 +120,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       }
 
       // Stop all tracks
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
     };
 
     mediaRecorder.start();
@@ -128,7 +130,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
     // Start timer
     timerRef.current = setInterval(() => {
-      setRecordingTime(prev => {
+      setRecordingTime((prev) => {
         const newTime = prev + 1;
         if (newTime >= maxDuration) {
           stopRecording();
@@ -146,7 +148,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         setIsPaused(false);
         // Resume timer
         timerRef.current = setInterval(() => {
-          setRecordingTime(prev => {
+          setRecordingTime((prev) => {
             const newTime = prev + 1;
             if (newTime >= maxDuration) {
               stopRecording();
@@ -171,7 +173,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       setIsPaused(false);
-      
+
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
@@ -195,18 +197,18 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     if (audioUrl) {
       URL.revokeObjectURL(audioUrl);
     }
-    setAudioUrl('');
+    setAudioUrl("");
     setRecordingTime(0);
     setIsPlaying(false);
-    setError('');
+    setError("");
   };
 
   const downloadAudio = () => {
     if (audioBlob) {
       const url = URL.createObjectURL(audioBlob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `recording_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`;
+      a.download = `recording_${new Date().toISOString().slice(0, 19).replace(/:/g, "-")}.webm`;
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -214,23 +216,23 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.type.startsWith('audio/')) {
+    if (file && file.type.startsWith("audio/")) {
       const url = URL.createObjectURL(file);
       setAudioUrl(url);
       setAudioBlob(file);
-      
+
       if (onUpload) {
         onUpload(file);
       }
     } else {
-      setError('Silakan pilih file audio yang valid');
+      setError("Silakan pilih file audio yang valid");
     }
   };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   const toggleMute = () => {
@@ -254,7 +256,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         <CardTitle>{title}</CardTitle>
         <p className="text-sm text-gray-600">{description}</p>
       </CardHeader>
-      
+
       <CardContent className="space-y-6">
         {/* Recording Controls */}
         <div className="text-center">
@@ -279,10 +281,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
               </Button>
             ) : (
               <>
-                <Button
-                  onClick={pauseRecording}
-                  variant="outline"
-                >
+                <Button onClick={pauseRecording} variant="outline">
                   {isPaused ? (
                     <>
                       <Play className="h-5 w-5 mr-2" />
@@ -295,11 +294,8 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
                     </>
                   )}
                 </Button>
-                
-                <Button
-                  onClick={stopRecording}
-                  variant="outline"
-                >
+
+                <Button onClick={stopRecording} variant="outline">
                   <Square className="h-5 w-5 mr-2" />
                   Berhenti
                 </Button>
@@ -312,7 +308,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
             <div className="flex items-center justify-center space-x-2 text-red-600">
               <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
               <span className="text-sm font-medium">
-                {isPaused ? 'Dijeda' : 'Merekam...'}
+                {isPaused ? "Dijeda" : "Merekam..."}
               </span>
             </div>
           )}
@@ -323,26 +319,18 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
           <div className="space-y-4">
             <div className="border-t pt-4">
               <h4 className="font-medium text-gray-900 mb-3">Playback</h4>
-              
+
               <div className="flex items-center space-x-4 mb-4">
-                <Button
-                  onClick={playAudio}
-                  variant="outline"
-                  size="sm"
-                >
+                <Button onClick={playAudio} variant="outline" size="sm">
                   {isPlaying ? (
                     <Pause className="h-4 w-4 mr-2" />
                   ) : (
                     <Play className="h-4 w-4 mr-2" />
                   )}
-                  {isPlaying ? 'Pause' : 'Play'}
+                  {isPlaying ? "Pause" : "Play"}
                 </Button>
 
-                <Button
-                  onClick={toggleMute}
-                  variant="ghost"
-                  size="sm"
-                >
+                <Button onClick={toggleMute} variant="ghost" size="sm">
                   {isMuted ? (
                     <VolumeX className="h-4 w-4" />
                   ) : (
@@ -377,24 +365,16 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
             {/* Action Buttons */}
             <div className="flex justify-center space-x-2">
-              <Button
-                onClick={downloadAudio}
-                variant="outline"
-                size="sm"
-              >
+              <Button onClick={downloadAudio} variant="outline" size="sm">
                 <Download className="h-4 w-4 mr-2" />
                 Download
               </Button>
-              
-              <Button
-                onClick={resetRecording}
-                variant="outline"
-                size="sm"
-              >
+
+              <Button onClick={resetRecording} variant="outline" size="sm">
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Reset
               </Button>
-              
+
               <Button
                 onClick={() => setAudioBlob(null)}
                 variant="outline"
@@ -444,7 +424,9 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
           <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <div className="text-sm text-yellow-700">
               <p className="font-medium mb-1">Izin Mikrofon Diperlukan</p>
-              <p>Silakan berikan izin akses mikrofon untuk dapat merekam audio.</p>
+              <p>
+                Silakan berikan izin akses mikrofon untuk dapat merekam audio.
+              </p>
             </div>
           </div>
         )}

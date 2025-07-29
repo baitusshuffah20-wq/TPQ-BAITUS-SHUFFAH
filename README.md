@@ -83,11 +83,13 @@ npm install
 ```
 
 3. **Run development server**
+
 ```bash
 npm run dev
 ```
 
 4. **Open browser**
+
 ```
 http://localhost:3000
 ```
@@ -95,6 +97,7 @@ http://localhost:3000
 ## 🎯 **Fitur yang Sudah Selesai**
 
 ### 🏠 **Frontend & UI**
+
 - ✅ Homepage dengan hero section yang memukau
 - ✅ Responsive design untuk semua device
 - ✅ Islamic design system (teal, gold, white)
@@ -103,12 +106,14 @@ http://localhost:3000
 - ✅ Arabic typography support
 
 ### 🔐 **Authentication & Authorization**
+
 - ✅ Login system dengan role-based access
 - ✅ Registration form multi-step
 - ✅ Mock authentication untuk demo
 - ✅ Protected routes untuk dashboard
 
 ### 📊 **Dashboard System**
+
 - ✅ **Admin Dashboard**: Overview lengkap sistem
 - ✅ **Musyrif Dashboard**: Kelola santri dan hafalan
 - ✅ **Wali Dashboard**: Pantau progress anak
@@ -116,24 +121,28 @@ http://localhost:3000
 - ✅ Statistics cards dan charts
 
 ### 👥 **Manajemen Data**
+
 - ✅ **Santri Management**: CRUD santri dengan detail lengkap
 - ✅ **Hafalan Tracking**: Input, review, dan grading hafalan
 - ✅ **Payment Management**: Kelola SPP dan biaya lainnya
 - ✅ **Donation Management**: Sistem donasi multi-kategori
 
 ### 💳 **Payment Integration**
+
 - ✅ **Midtrans Integration**: SPP dan donasi
 - ✅ **Multiple Payment Methods**: Bank transfer, e-wallet, QRIS
 - ✅ **Success/Error Pages**: Konfirmasi pembayaran
 - ✅ **Webhook Handler**: Auto-update status pembayaran
 
 ### 🗄️ **Database & API**
+
 - ✅ **Prisma Schema**: Model lengkap untuk semua entitas
 - ✅ **API Routes**: Payment creation dan webhook
 - ✅ **Mock Data**: Data demo untuk testing
 - ✅ **Type Safety**: Full TypeScript support
 
 ### 🔔 **Real-time Notifications**
+
 - ✅ **Toast Notifications**: Real-time alerts dengan react-hot-toast
 - ✅ **Notification Center**: Dropdown dengan history notifikasi
 - ✅ **Auto-generated Notifications**: Simulasi notifikasi otomatis
@@ -141,6 +150,7 @@ http://localhost:3000
 - ✅ **Persistent Storage**: Notifikasi tersimpan di localStorage
 
 ### 📁 **File Upload System**
+
 - ✅ **Cloudinary Integration**: Upload gambar dan dokumen
 - ✅ **Drag & Drop Interface**: UI yang user-friendly
 - ✅ **File Validation**: Size dan type validation
@@ -148,6 +158,7 @@ http://localhost:3000
 - ✅ **Multiple File Support**: Batch upload capability
 
 ### 📱 **QR Code System**
+
 - ✅ **QR Generator**: Generate QR untuk absensi dan data lain
 - ✅ **QR Scanner**: Scan QR dengan kamera device
 - ✅ **Attendance Integration**: QR-based attendance system
@@ -155,6 +166,7 @@ http://localhost:3000
 - ✅ **Export & Share**: Download dan share QR codes
 
 ### 🎤 **Voice Recording System**
+
 - ✅ **Audio Recording**: Record hafalan dengan microphone
 - ✅ **Playback Controls**: Play, pause, volume control
 - ✅ **File Upload**: Upload existing audio files
@@ -162,6 +174,7 @@ http://localhost:3000
 - ✅ **Integration**: Terintegrasi dengan hafalan management
 
 ### 📊 **Analytics Dashboard**
+
 - ✅ **Advanced Charts**: Line, bar, pie, area charts dengan Recharts
 - ✅ **Performance Metrics**: KPIs dan trend analysis
 - ✅ **Real-time Data**: Live data visualization
@@ -169,6 +182,7 @@ http://localhost:3000
 - ✅ **Interactive Filters**: Time range dan category filters
 
 ### 🤖 **AI & Machine Learning Features**
+
 - ✅ **Progress Prediction**: AI prediksi waktu penyelesaian hafalan
 - ✅ **Smart Recommendations**: Rekomendasi cerdas berdasarkan performa
 - ✅ **Performance Analysis**: Analisis pola pembelajaran santri
@@ -177,6 +191,7 @@ http://localhost:3000
 - ✅ **Linear Regression**: Algoritma prediksi berbasis data historis
 
 ### 📋 **Advanced Reporting System**
+
 - ✅ **PDF Generation**: Export laporan ke PDF dengan jsPDF
 - ✅ **Multiple Templates**: 8+ template laporan siap pakai
 - ✅ **Custom Reports**: Student, class, financial, analytics reports
@@ -190,18 +205,21 @@ http://localhost:3000
 Untuk testing, gunakan akun demo berikut:
 
 ### Admin
+
 - **Email**: admin@rumahtahfidz.com
 - **Password**: admin123
 - **Access**: Full system management
 - **Dashboard**: `/dashboard/admin`
 
 ### Musyrif/Guru
+
 - **Email**: ustadz.abdullah@rumahtahfidz.com
 - **Password**: musyrif123
 - **Access**: Student & hafalan management
 - **Dashboard**: `/dashboard/musyrif`
 
 ### Wali Santri
+
 - **Email**: bapak.ahmad@gmail.com
 - **Password**: wali123
 - **Access**: View child progress
@@ -210,24 +228,29 @@ Untuk testing, gunakan akun demo berikut:
 ## 💳 **Testing Payment & Donation**
 
 ### Midtrans Sandbox Testing
+
 Untuk testing payment dengan Midtrans sandbox, gunakan:
 
 **Credit Card Test:**
+
 - Card Number: `4811 1111 1111 1114`
 - CVV: `123`
 - Exp Date: `01/25`
 
 **Virtual Account Test:**
+
 - Pilih bank yang tersedia (BCA, Mandiri, BNI, BRI)
 - Gunakan nomor VA yang digenerate
 - Simulasi pembayaran di Midtrans simulator
 
 **E-Wallet Test:**
+
 - GoPay: Gunakan nomor HP test `081234567890`
 - DANA/OVO: Ikuti flow yang tersedia
 - ShopeePay: Gunakan akun test
 
 ### Testing Flow
+
 1. **Homepage** → Klik "Donasi Sekarang" di section donasi
 2. **Pilih kategori** donasi dan masukkan nominal
 3. **Isi data donatur** (bisa anonim)
@@ -236,6 +259,7 @@ Untuk testing payment dengan Midtrans sandbox, gunakan:
 6. **Success page** akan muncul setelah pembayaran berhasil
 
 ### Payment Features
+
 - ✅ **Real-time payment processing**
 - ✅ **Multiple payment methods**
 - ✅ **Automatic status updates via webhook**
@@ -286,6 +310,7 @@ npm run db:studio    # Open Prisma Studio
 ## 🎯 Roadmap
 
 ### Phase 1 - Foundation ✅
+
 - [x] Homepage & landing page
 - [x] Authentication system
 - [x] Registration form
@@ -293,6 +318,7 @@ npm run db:studio    # Open Prisma Studio
 - [x] Responsive design
 
 ### Phase 2 - Core Features ✅
+
 - [x] Dashboard untuk setiap role (Admin, Musyrif, Wali)
 - [x] Database schema (Prisma + PostgreSQL)
 - [x] Student management system
@@ -302,6 +328,7 @@ npm run db:studio    # Open Prisma Studio
 - [x] Mock authentication system
 
 ### Phase 3 - Advanced Features ✅
+
 - [x] Payment integration (Midtrans) - SPP & Donations
 - [x] Success/Error pages for payments
 - [x] Real-time notifications system
@@ -313,6 +340,7 @@ npm run db:studio    # Open Prisma Studio
 - [x] Mobile app (React Native)
 
 ### Phase 4 - Analytics & AI ✅
+
 - [x] Analytics dashboard with advanced charts
 - [x] Performance metrics and KPIs
 - [x] Real-time data visualization
@@ -326,6 +354,7 @@ npm run db:studio    # Open Prisma Studio
 - [x] Class performance clustering
 
 ### Phase 5 - Mobile Application ✅
+
 - [x] React Native mobile app with Expo
 - [x] Cross-platform (iOS, Android, Web)
 - [x] Material Design 3 UI components
@@ -371,6 +400,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🎯 **PENCAPAIAN LUAR BIASA - UPDATE TERBARU!**
 
 ### 🤖 **AI & Machine Learning Features**
+
 - ✅ **Progress Prediction Engine**: AI prediksi waktu penyelesaian hafalan dengan Linear Regression
 - ✅ **Smart Recommendations**: Rekomendasi cerdas berdasarkan analisis performa
 - ✅ **Performance Pattern Analysis**: Analisis pola pembelajaran individual dan kelas
@@ -379,6 +409,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ **Class Analytics**: Clustering dan analisis performance keseluruhan kelas
 
 ### 📋 **Advanced Reporting System**
+
 - ✅ **Professional PDF Generation**: Export laporan ke PDF dengan layout profesional
 - ✅ **8+ Report Templates**: Student progress, class summary, financial, analytics
 - ✅ **Automated Chart Integration**: Include interactive charts dalam PDF
@@ -387,6 +418,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ **Scheduled Reports**: Penjadwalan laporan otomatis (coming soon)
 
 ### 📱 **Mobile Application Features**
+
 - ✅ **Cross-Platform Mobile App**: React Native dengan Expo untuk iOS, Android, dan Web
 - ✅ **Material Design 3**: UI components modern dengan Islamic theme
 - ✅ **Secure Authentication**: JWT dengan biometric support
@@ -397,6 +429,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ **Push Notifications**: Real-time alerts dan reminders
 
 ### 🚀 **Statistik Pencapaian Spektakuler:**
+
 - **100+ React Components** (Web + Mobile) yang reusable dan advanced
 - **15+ Database Models** yang comprehensive
 - **25+ API Routes** untuk backend functionality
@@ -414,6 +447,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Cross-Platform Mobile** dengan React Native
 
 ### 🏆 **Keunggulan Kompetitif Revolusioner:**
+
 1. **🤖 AI-Powered Intelligence**: Prediksi dan rekomendasi berbasis machine learning
 2. **📱 Cross-Platform Mobile**: React Native app untuk iOS, Android, dan Web
 3. **📋 Professional Reporting**: PDF generation dengan layout enterprise-grade

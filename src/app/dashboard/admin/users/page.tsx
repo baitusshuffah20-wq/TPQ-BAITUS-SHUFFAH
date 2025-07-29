@@ -1,31 +1,31 @@
-'use client';
+﻿"use client";
 
-import React, { useState, useEffect } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Badge } from '@/components/ui/badge';
-import UserForm from '@/components/forms/UserForm';
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  Edit, 
+import React, { useState, useEffect } from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import UserForm from "@/components/forms/UserForm";
+import {
+  Users,
+  Plus,
+  Search,
+  Edit,
   Trash2,
   Eye,
   Filter,
   Download,
-  MoreVertical
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  MoreVertical,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface User {
   id: string;
   email: string;
   name: string;
   phone: string;
-  role: 'ADMIN' | 'MUSYRIF' | 'WALI' | 'SANTRI';
+  role: "ADMIN" | "MUSYRIF" | "WALI" | "SANTRI";
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -34,9 +34,9 @@ interface User {
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('ALL');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [formLoading, setFormLoading] = useState(false);
@@ -48,16 +48,16 @@ export default function UsersPage() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/users');
+      const response = await fetch("/api/users");
       if (response.ok) {
         const data = await response.json();
         setUsers(data.users || []);
       } else {
-        toast.error('Gagal memuat data users');
+        toast.error("Gagal memuat data users");
       }
     } catch (error) {
-      console.error('Error loading users:', error);
-      toast.error('Gagal memuat data users');
+      console.error("Error loading users:", error);
+      toast.error("Gagal memuat data users");
     } finally {
       setLoading(false);
     }
@@ -66,23 +66,23 @@ export default function UsersPage() {
   const handleCreateUser = async (userData: any) => {
     try {
       setFormLoading(true);
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
       });
 
       if (response.ok) {
-        toast.success('User berhasil dibuat');
+        toast.success("User berhasil dibuat");
         setShowForm(false);
         loadUsers();
       } else {
         const error = await response.json();
-        toast.error(error.message || 'Gagal membuat user');
+        toast.error(error.message || "Gagal membuat user");
       }
     } catch (error) {
-      console.error('Error creating user:', error);
-      toast.error('Gagal membuat user');
+      console.error("Error creating user:", error);
+      toast.error("Gagal membuat user");
     } finally {
       setFormLoading(false);
     }
@@ -92,67 +92,74 @@ export default function UsersPage() {
     try {
       setFormLoading(true);
       const response = await fetch(`/api/users/${editingUser?.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
       });
 
       if (response.ok) {
-        toast.success('User berhasil diupdate');
+        toast.success("User berhasil diupdate");
         setEditingUser(null);
         setShowForm(false);
         loadUsers();
       } else {
         const error = await response.json();
-        toast.error(error.message || 'Gagal mengupdate user');
+        toast.error(error.message || "Gagal mengupdate user");
       }
     } catch (error) {
-      console.error('Error updating user:', error);
-      toast.error('Gagal mengupdate user');
+      console.error("Error updating user:", error);
+      toast.error("Gagal mengupdate user");
     } finally {
       setFormLoading(false);
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus user ini?')) return;
+    if (!confirm("Apakah Anda yakin ingin menghapus user ini?")) return;
 
     try {
       const response = await fetch(`/api/users/${userId}`, {
-        method: 'DELETE'
+        method: "DELETE",
       });
 
       if (response.ok) {
-        toast.success('User berhasil dihapus');
+        toast.success("User berhasil dihapus");
         loadUsers();
       } else {
         const error = await response.json();
-        toast.error(error.message || 'Gagal menghapus user');
+        toast.error(error.message || "Gagal menghapus user");
       }
     } catch (error) {
-      console.error('Error deleting user:', error);
-      toast.error('Gagal menghapus user');
+      console.error("Error deleting user:", error);
+      toast.error("Gagal menghapus user");
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'ALL' || user.role === roleFilter;
-    const matchesStatus = statusFilter === 'ALL' || 
-                         (statusFilter === 'ACTIVE' && user.isActive) ||
-                         (statusFilter === 'INACTIVE' && !user.isActive);
-    
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = roleFilter === "ALL" || user.role === roleFilter;
+    const matchesStatus =
+      statusFilter === "ALL" ||
+      (statusFilter === "ACTIVE" && user.isActive) ||
+      (statusFilter === "INACTIVE" && !user.isActive);
+
     return matchesSearch && matchesRole && matchesStatus;
   });
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'ADMIN': return 'destructive';
-      case 'MUSYRIF': return 'warning';
-      case 'WALI': return 'success';
-      case 'SANTRI': return 'secondary';
-      default: return 'secondary';
+      case "ADMIN":
+        return "destructive";
+      case "MUSYRIF":
+        return "warning";
+      case "WALI":
+        return "success";
+      case "SANTRI":
+        return "secondary";
+      default:
+        return "secondary";
     }
   };
 
@@ -182,7 +189,9 @@ export default function UsersPage() {
           <div className="flex items-center gap-3">
             <Users className="h-8 w-8 text-blue-600" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Manajemen Users</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Manajemen Users
+              </h1>
               <p className="text-gray-600">Kelola data pengguna sistem</p>
             </div>
           </div>
@@ -213,7 +222,7 @@ export default function UsersPage() {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Role
@@ -247,7 +256,10 @@ export default function UsersPage() {
               </div>
 
               <div className="flex items-end">
-                <Button variant="outline" className="w-full flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  className="w-full flex items-center gap-2"
+                >
                   <Download className="h-4 w-4" />
                   Export
                 </Button>
@@ -270,29 +282,52 @@ export default function UsersPage() {
             ) : filteredUsers.length === 0 ? (
               <div className="text-center py-8">
                 <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Tidak ada users</h3>
-                <p className="text-gray-600">Belum ada data users atau tidak sesuai filter</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Tidak ada users
+                </h3>
+                <p className="text-gray-600">
+                  Belum ada data users atau tidak sesuai filter
+                </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">User</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Role</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Dibuat</th>
-                      <th className="text-right py-3 px-4 font-medium text-gray-900">Aksi</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                        User
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                        Role
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                        Status
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                        Dibuat
+                      </th>
+                      <th className="text-right py-3 px-4 font-medium text-gray-900">
+                        Aksi
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredUsers.map((user) => (
-                      <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <tr
+                        key={user.id}
+                        className="border-b border-gray-100 hover:bg-gray-50"
+                      >
                         <td className="py-4 px-4">
                           <div>
-                            <p className="font-medium text-gray-900">{user.name}</p>
-                            <p className="text-sm text-gray-600">{user.email}</p>
-                            <p className="text-sm text-gray-500">{user.phone}</p>
+                            <p className="font-medium text-gray-900">
+                              {user.name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {user.email}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {user.phone}
+                            </p>
                           </div>
                         </td>
                         <td className="py-4 px-4">
@@ -301,13 +336,17 @@ export default function UsersPage() {
                           </Badge>
                         </td>
                         <td className="py-4 px-4">
-                          <Badge variant={user.isActive ? 'success' : 'secondary'}>
-                            {user.isActive ? 'Aktif' : 'Tidak Aktif'}
+                          <Badge
+                            variant={user.isActive ? "success" : "secondary"}
+                          >
+                            {user.isActive ? "Aktif" : "Tidak Aktif"}
                           </Badge>
                         </td>
                         <td className="py-4 px-4">
                           <p className="text-sm text-gray-600">
-                            {new Date(user.createdAt).toLocaleDateString('id-ID')}
+                            {new Date(user.createdAt).toLocaleDateString(
+                              "id-ID",
+                            )}
                           </p>
                         </td>
                         <td className="py-4 px-4">

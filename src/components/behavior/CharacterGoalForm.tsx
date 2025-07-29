@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Target,
   Plus,
@@ -19,16 +19,16 @@ import {
   Clock,
   User,
   FileText,
-  Trash2
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  Trash2,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 import {
   CharacterGoal,
   BehaviorCategory,
   getBehaviorCategoryColor,
   getBehaviorCategoryText,
-  formatBehaviorDate
-} from '@/lib/behavior-data';
+  formatBehaviorDate,
+} from "@/lib/behavior-data";
 
 interface CharacterGoalFormProps {
   isOpen: boolean;
@@ -41,162 +41,207 @@ export default function CharacterGoalForm({
   isOpen,
   onClose,
   onSave,
-  editData
+  editData,
 }: CharacterGoalFormProps) {
   const [formData, setFormData] = useState<Partial<CharacterGoal>>({
-    santriId: editData?.santriId || '',
-    santriName: editData?.santriName || '',
-    title: editData?.title || '',
-    description: editData?.description || '',
-    category: editData?.category || 'AKHLAQ',
-    targetBehaviors: editData?.targetBehaviors || [''],
-    targetDate: editData?.targetDate || '',
-    startDate: editData?.startDate || new Date().toISOString().split('T')[0],
-    status: editData?.status || 'ACTIVE',
+    santriId: editData?.santriId || "",
+    santriName: editData?.santriName || "",
+    title: editData?.title || "",
+    description: editData?.description || "",
+    category: editData?.category || "AKHLAQ",
+    targetBehaviors: editData?.targetBehaviors || [""],
+    targetDate: editData?.targetDate || "",
+    startDate: editData?.startDate || new Date().toISOString().split("T")[0],
+    status: editData?.status || "ACTIVE",
     progress: editData?.progress || 0,
     milestones: editData?.milestones || [
       {
         id: `milestone_${Date.now()}`,
-        title: '',
-        description: '',
-        targetDate: '',
-        isCompleted: false
-      }
+        title: "",
+        description: "",
+        targetDate: "",
+        isCompleted: false,
+      },
     ],
     parentInvolved: editData?.parentInvolved || false,
-    musyrifNotes: editData?.musyrifNotes || '',
-    parentFeedback: editData?.parentFeedback || ''
+    musyrifNotes: editData?.musyrifNotes || "",
+    parentFeedback: editData?.parentFeedback || "",
   });
 
   // Mock data for santri
   const mockSantri = [
-    { id: 'santri_1', name: 'Ahmad Fauzi', nis: 'TPQ001', halaqahId: 'halaqah_1', halaqahName: 'Halaqah Al-Fatihah' },
-    { id: 'santri_2', name: 'Siti Aisyah', nis: 'TPQ002', halaqahId: 'halaqah_1', halaqahName: 'Halaqah Al-Fatihah' },
-    { id: 'santri_3', name: 'Muhammad Rizki', nis: 'TPQ003', halaqahId: 'halaqah_2', halaqahName: 'Halaqah Al-Baqarah' },
-    { id: 'santri_4', name: 'Fatimah Zahra', nis: 'TPQ004', halaqahId: 'halaqah_1', halaqahName: 'Halaqah Al-Fatihah' },
-    { id: 'santri_5', name: 'Abdullah Rahman', nis: 'TPQ005', halaqahId: 'halaqah_2', halaqahName: 'Halaqah Al-Baqarah' }
+    {
+      id: "santri_1",
+      name: "Ahmad Fauzi",
+      nis: "TPQ001",
+      halaqahId: "halaqah_1",
+      halaqahName: "Halaqah Al-Fatihah",
+    },
+    {
+      id: "santri_2",
+      name: "Siti Aisyah",
+      nis: "TPQ002",
+      halaqahId: "halaqah_1",
+      halaqahName: "Halaqah Al-Fatihah",
+    },
+    {
+      id: "santri_3",
+      name: "Muhammad Rizki",
+      nis: "TPQ003",
+      halaqahId: "halaqah_2",
+      halaqahName: "Halaqah Al-Baqarah",
+    },
+    {
+      id: "santri_4",
+      name: "Fatimah Zahra",
+      nis: "TPQ004",
+      halaqahId: "halaqah_1",
+      halaqahName: "Halaqah Al-Fatihah",
+    },
+    {
+      id: "santri_5",
+      name: "Abdullah Rahman",
+      nis: "TPQ005",
+      halaqahId: "halaqah_2",
+      halaqahName: "Halaqah Al-Baqarah",
+    },
   ];
 
   const handleSantriChange = (santriId: string) => {
-    const santri = mockSantri.find(s => s.id === santriId);
+    const santri = mockSantri.find((s) => s.id === santriId);
     if (santri) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         santriId: santri.id,
-        santriName: santri.name
+        santriName: santri.name,
       }));
     }
   };
 
   const addTargetBehavior = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      targetBehaviors: [...(prev.targetBehaviors || []), '']
+      targetBehaviors: [...(prev.targetBehaviors || []), ""],
     }));
   };
 
   const removeTargetBehavior = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      targetBehaviors: prev.targetBehaviors?.filter((_, i) => i !== index) || []
+      targetBehaviors:
+        prev.targetBehaviors?.filter((_, i) => i !== index) || [],
     }));
   };
 
   const updateTargetBehavior = (index: number, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      targetBehaviors: prev.targetBehaviors?.map((behavior, i) => 
-        i === index ? value : behavior
-      ) || []
+      targetBehaviors:
+        prev.targetBehaviors?.map((behavior, i) =>
+          i === index ? value : behavior,
+        ) || [],
     }));
   };
 
   const addMilestone = () => {
     const newMilestone = {
       id: `milestone_${Date.now()}`,
-      title: '',
-      description: '',
-      targetDate: '',
-      isCompleted: false
+      title: "",
+      description: "",
+      targetDate: "",
+      isCompleted: false,
     };
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      milestones: [...(prev.milestones || []), newMilestone]
+      milestones: [...(prev.milestones || []), newMilestone],
     }));
   };
 
   const removeMilestone = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      milestones: prev.milestones?.filter((_, i) => i !== index) || []
+      milestones: prev.milestones?.filter((_, i) => i !== index) || [],
     }));
   };
 
   const updateMilestone = (index: number, field: string, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      milestones: prev.milestones?.map((milestone, i) => 
-        i === index ? { ...milestone, [field]: value } : milestone
-      ) || []
+      milestones:
+        prev.milestones?.map((milestone, i) =>
+          i === index ? { ...milestone, [field]: value } : milestone,
+        ) || [],
     }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.santriId || !formData.title || !formData.description || !formData.targetDate) {
-      toast.error('Mohon lengkapi semua field yang wajib diisi');
+
+    if (
+      !formData.santriId ||
+      !formData.title ||
+      !formData.description ||
+      !formData.targetDate
+    ) {
+      toast.error("Mohon lengkapi semua field yang wajib diisi");
       return;
     }
 
-    if (!formData.targetBehaviors?.some(behavior => behavior.trim())) {
-      toast.error('Mohon tambahkan minimal satu target perilaku');
+    if (!formData.targetBehaviors?.some((behavior) => behavior.trim())) {
+      toast.error("Mohon tambahkan minimal satu target perilaku");
       return;
     }
 
-    if (!formData.milestones?.some(milestone => milestone.title.trim())) {
-      toast.error('Mohon tambahkan minimal satu milestone');
+    if (!formData.milestones?.some((milestone) => milestone.title.trim())) {
+      toast.error("Mohon tambahkan minimal satu milestone");
       return;
     }
 
     const goalData: Partial<CharacterGoal> = {
       ...formData,
-      targetBehaviors: formData.targetBehaviors?.filter(behavior => behavior.trim()) || [],
-      milestones: formData.milestones?.filter(milestone => milestone.title.trim()) || [],
-      createdBy: 'current_user_id', // Should be from auth context
+      targetBehaviors:
+        formData.targetBehaviors?.filter((behavior) => behavior.trim()) || [],
+      milestones:
+        formData.milestones?.filter((milestone) => milestone.title.trim()) ||
+        [],
+      createdBy: "current_user_id", // Should be from auth context
       createdAt: editData ? editData.createdAt : new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     onSave(goalData);
-    toast.success(editData ? 'Goal karakter berhasil diperbarui!' : 'Goal karakter berhasil dibuat!');
+    toast.success(
+      editData
+        ? "Goal karakter berhasil diperbarui!"
+        : "Goal karakter berhasil dibuat!",
+    );
     onClose();
   };
 
   const handleReset = () => {
     setFormData({
-      santriId: '',
-      santriName: '',
-      title: '',
-      description: '',
-      category: 'AKHLAQ',
-      targetBehaviors: [''],
-      targetDate: '',
-      startDate: new Date().toISOString().split('T')[0],
-      status: 'ACTIVE',
+      santriId: "",
+      santriName: "",
+      title: "",
+      description: "",
+      category: "AKHLAQ",
+      targetBehaviors: [""],
+      targetDate: "",
+      startDate: new Date().toISOString().split("T")[0],
+      status: "ACTIVE",
       progress: 0,
       milestones: [
         {
           id: `milestone_${Date.now()}`,
-          title: '',
-          description: '',
-          targetDate: '',
-          isCompleted: false
-        }
+          title: "",
+          description: "",
+          targetDate: "",
+          isCompleted: false,
+        },
       ],
       parentInvolved: false,
-      musyrifNotes: '',
-      parentFeedback: ''
+      musyrifNotes: "",
+      parentFeedback: "",
     });
   };
 
@@ -210,7 +255,9 @@ export default function CharacterGoalForm({
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center space-x-2">
                 <Target className="h-5 w-5 text-teal-600" />
-                <span>{editData ? 'Edit Goal Karakter' : 'Buat Goal Karakter Baru'}</span>
+                <span>
+                  {editData ? "Edit Goal Karakter" : "Buat Goal Karakter Baru"}
+                </span>
               </CardTitle>
               <button
                 type="button"
@@ -236,7 +283,7 @@ export default function CharacterGoalForm({
                   required
                 >
                   <option value="">Pilih Santri</option>
-                  {mockSantri.map(santri => (
+                  {mockSantri.map((santri) => (
                     <option key={santri.id} value={santri.id}>
                       {santri.name} ({santri.nis})
                     </option>
@@ -250,7 +297,12 @@ export default function CharacterGoalForm({
                 </label>
                 <select
                   value={formData.category}
-                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as BehaviorCategory }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      category: e.target.value as BehaviorCategory,
+                    }))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   required
                 >
@@ -272,7 +324,9 @@ export default function CharacterGoalForm({
               <input
                 type="text"
                 value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, title: e.target.value }))
+                }
                 placeholder="Contoh: Meningkatkan Kedisiplinan Waktu"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 required
@@ -286,7 +340,12 @@ export default function CharacterGoalForm({
               </label>
               <textarea
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
                 placeholder="Jelaskan secara detail goal yang ingin dicapai..."
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
@@ -303,7 +362,12 @@ export default function CharacterGoalForm({
                 <input
                   type="date"
                   value={formData.startDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      startDate: e.target.value,
+                    }))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   required
                 />
@@ -316,7 +380,12 @@ export default function CharacterGoalForm({
                 <input
                   type="date"
                   value={formData.targetDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, targetDate: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      targetDate: e.target.value,
+                    }))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   required
                 />
@@ -345,21 +414,24 @@ export default function CharacterGoalForm({
                     <input
                       type="text"
                       value={behavior}
-                      onChange={(e) => updateTargetBehavior(index, e.target.value)}
+                      onChange={(e) =>
+                        updateTargetBehavior(index, e.target.value)
+                      }
                       placeholder={`Target perilaku ${index + 1}`}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
-                    {formData.targetBehaviors && formData.targetBehaviors.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeTargetBehavior(index)}
-                        className="text-red-600 border-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
+                    {formData.targetBehaviors &&
+                      formData.targetBehaviors.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeTargetBehavior(index)}
+                          className="text-red-600 border-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                   </div>
                 ))}
               </div>
@@ -383,47 +455,65 @@ export default function CharacterGoalForm({
               </div>
               <div className="space-y-4">
                 {formData.milestones?.map((milestone, index) => (
-                  <div key={milestone.id} className="p-4 border border-gray-200 rounded-lg">
+                  <div
+                    key={milestone.id}
+                    className="p-4 border border-gray-200 rounded-lg"
+                  >
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-sm font-medium text-gray-700">Milestone {index + 1}</h4>
-                      {formData.milestones && formData.milestones.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeMilestone(index)}
-                          className="text-red-600 border-red-600 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
+                      <h4 className="text-sm font-medium text-gray-700">
+                        Milestone {index + 1}
+                      </h4>
+                      {formData.milestones &&
+                        formData.milestones.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeMilestone(index)}
+                            className="text-red-600 border-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Judul</label>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Judul
+                        </label>
                         <input
                           type="text"
                           value={milestone.title}
-                          onChange={(e) => updateMilestone(index, 'title', e.target.value)}
+                          onChange={(e) =>
+                            updateMilestone(index, "title", e.target.value)
+                          }
                           placeholder="Judul milestone"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Target Tanggal</label>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Target Tanggal
+                        </label>
                         <input
                           type="date"
                           value={milestone.targetDate}
-                          onChange={(e) => updateMilestone(index, 'targetDate', e.target.value)}
+                          onChange={(e) =>
+                            updateMilestone(index, "targetDate", e.target.value)
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
                         />
                       </div>
                     </div>
                     <div className="mt-3">
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Deskripsi</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Deskripsi
+                      </label>
                       <textarea
                         value={milestone.description}
-                        onChange={(e) => updateMilestone(index, 'description', e.target.value)}
+                        onChange={(e) =>
+                          updateMilestone(index, "description", e.target.value)
+                        }
                         placeholder="Deskripsi milestone"
                         rows={2}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
@@ -440,10 +530,18 @@ export default function CharacterGoalForm({
                 type="checkbox"
                 id="parentInvolved"
                 checked={formData.parentInvolved}
-                onChange={(e) => setFormData(prev => ({ ...prev, parentInvolved: e.target.checked }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    parentInvolved: e.target.checked,
+                  }))
+                }
                 className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
               />
-              <label htmlFor="parentInvolved" className="text-sm font-medium text-gray-700">
+              <label
+                htmlFor="parentInvolved"
+                className="text-sm font-medium text-gray-700"
+              >
                 Libatkan orang tua dalam goal ini
               </label>
             </div>
@@ -455,7 +553,12 @@ export default function CharacterGoalForm({
               </label>
               <textarea
                 value={formData.musyrifNotes}
-                onChange={(e) => setFormData(prev => ({ ...prev, musyrifNotes: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    musyrifNotes: e.target.value,
+                  }))
+                }
                 placeholder="Catatan dan strategi dari musyrif..."
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
@@ -465,24 +568,16 @@ export default function CharacterGoalForm({
 
           {/* Footer */}
           <div className="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleReset}
-            >
+            <Button type="button" variant="outline" onClick={handleReset}>
               Reset Form
             </Button>
             <div className="flex space-x-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-              >
+              <Button type="button" variant="outline" onClick={onClose}>
                 Batal
               </Button>
               <Button type="submit">
                 <Save className="h-4 w-4 mr-2" />
-                {editData ? 'Update Goal' : 'Buat Goal'}
+                {editData ? "Update Goal" : "Buat Goal"}
               </Button>
             </div>
           </div>

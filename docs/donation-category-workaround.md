@@ -33,8 +33,8 @@ const donationCreateData = {
 ```typescript
 // Parsing category info from type field
 const parseCategory = (typeField: string) => {
-  if (typeField.includes(':')) {
-    const [categoryId, categoryName] = typeField.split(':');
+  if (typeField.includes(":")) {
+    const [categoryId, categoryName] = typeField.split(":");
     return { categoryId, categoryName };
   }
   return { categoryId: typeField, categoryName: typeField };

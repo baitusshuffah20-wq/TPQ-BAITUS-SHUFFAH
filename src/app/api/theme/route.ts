@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-import { createAuditLog } from '@/lib/audit-log';
-import { z } from 'zod';
+import { createAuditLog } from "@/lib/audit-log";
+import { z } from "zod";
 
 // Schema for theme validation
 const themeSchema = z.object({
@@ -31,7 +31,7 @@ const themeSchema = z.object({
   layout: z.object({
     borderRadius: z.string(),
     containerWidth: z.string(),
-    sidebarStyle: z.enum(['default', 'compact', 'expanded']),
+    sidebarStyle: z.enum(["default", "compact", "expanded"]),
   }),
   logo: z.object({
     main: z.string(),
@@ -44,59 +44,59 @@ const themeSchema = z.object({
 
 // Default theme
 const defaultTheme = {
-  id: 'default',
-  name: 'Default Theme',
+  id: "default",
+  name: "Default Theme",
   colors: {
-    primary: '#008080',
-    secondary: '#4B5563',
-    accent: '#F59E0B',
-    background: '#F9FAFB',
-    text: '#1F2937',
-    success: '#10B981',
-    warning: '#F59E0B',
-    error: '#EF4444',
+    primary: "#008080",
+    secondary: "#4B5563",
+    accent: "#F59E0B",
+    background: "#F9FAFB",
+    text: "#1F2937",
+    success: "#10B981",
+    warning: "#F59E0B",
+    error: "#EF4444",
   },
   buttons: {
-    primary: 'bg-teal-600 hover:bg-teal-700 text-white',
-    secondary: 'bg-gray-600 hover:bg-gray-700 text-white',
-    accent: 'bg-amber-500 hover:bg-amber-600 text-white',
-    danger: 'bg-red-600 hover:bg-red-700 text-white',
-    info: 'bg-blue-600 hover:bg-blue-700 text-white',
+    primary: "bg-teal-600 hover:bg-teal-700 text-white",
+    secondary: "bg-gray-600 hover:bg-gray-700 text-white",
+    accent: "bg-amber-500 hover:bg-amber-600 text-white",
+    danger: "bg-red-600 hover:bg-red-700 text-white",
+    info: "bg-blue-600 hover:bg-blue-700 text-white",
   },
   fonts: {
-    heading: 'Inter',
-    body: 'Inter',
-    arabic: 'Amiri',
+    heading: "Inter",
+    body: "Inter",
+    arabic: "Amiri",
   },
   layout: {
-    borderRadius: '0.375rem',
-    containerWidth: '1280px',
-    sidebarStyle: 'default',
+    borderRadius: "0.375rem",
+    containerWidth: "1280px",
+    sidebarStyle: "default",
   },
   logo: {
-    main: '/logo.png',
-    alt: '/logo-alt.png',
-    favicon: '/favicon.ico',
+    main: "/logo.png",
+    alt: "/logo-alt.png",
+    favicon: "/favicon.ico",
   },
   isActive: true,
   createdAt: new Date(),
   updatedAt: new Date(),
-  userId: 'system',
+  userId: "system",
 };
 
 // GET handler - Get all themes or the active theme
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
-    const activeOnly = url.searchParams.get('active') === 'true';
-    
+    const activeOnly = url.searchParams.get("active") === "true";
+
     try {
       if (activeOnly) {
         // Get only the active theme
         const activeTheme = await prisma.theme.findFirst({
           where: { isActive: true },
         });
-        
+
         return NextResponse.json({
           success: true,
           theme: activeTheme || defaultTheme,
@@ -104,25 +104,46 @@ export async function GET(request: NextRequest) {
       } else {
         // Get all themes
         const themes = await prisma.theme.findMany({
-          orderBy: { updatedAt: 'desc' },
+          orderBy: { updatedAt: "desc" },
         });
-        
+
         return NextResponse.json({
           success: true,
-          themes: themes.length > 0 ? themes.map((theme) => ({
-            ...theme,
-            colors: typeof theme.colors === 'string' ? JSON.parse(theme.colors) : theme.colors,
-            buttons: typeof theme.buttons === 'string' ? JSON.parse(theme.buttons as string) : theme.buttons,
-            fonts: typeof theme.fonts === 'string' ? JSON.parse(theme.fonts as string) : theme.fonts,
-            layout: typeof theme.layout === 'string' ? JSON.parse(theme.layout as string) : theme.layout,
-            logo: typeof theme.logo === 'string' ? JSON.parse(theme.logo as string) : theme.logo,
-          })) : [defaultTheme],
+          themes:
+            themes.length > 0
+              ? themes.map((theme) => ({
+                  ...theme,
+                  colors:
+                    typeof theme.colors === "string"
+                      ? JSON.parse(theme.colors)
+                      : theme.colors,
+                  buttons:
+                    typeof theme.buttons === "string"
+                      ? JSON.parse(theme.buttons as string)
+                      : theme.buttons,
+                  fonts:
+                    typeof theme.fonts === "string"
+                      ? JSON.parse(theme.fonts as string)
+                      : theme.fonts,
+                  layout:
+                    typeof theme.layout === "string"
+                      ? JSON.parse(theme.layout as string)
+                      : theme.layout,
+                  logo:
+                    typeof theme.logo === "string"
+                      ? JSON.parse(theme.logo as string)
+                      : theme.logo,
+                }))
+              : [defaultTheme],
         });
       }
     } catch (dbError) {
       // If there's a database error (like table not existing), return the default theme
-      console.warn('Database error when fetching themes, using default theme:', dbError);
-      
+      console.warn(
+        "Database error when fetching themes, using default theme:",
+        dbError,
+      );
+
       if (activeOnly) {
         return NextResponse.json({
           success: true,
@@ -136,14 +157,14 @@ export async function GET(request: NextRequest) {
       }
     }
   } catch (error) {
-    console.error('Error fetching themes:', error);
+    console.error("Error fetching themes:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch themes',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: "Failed to fetch themes",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -152,38 +173,39 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Get auth token from cookies or request headers
-    const authToken = request.cookies.get('auth_token')?.value || 
-                      request.headers.get('Authorization')?.replace('Bearer ', '');
-    
+    const authToken =
+      request.cookies.get("auth_token")?.value ||
+      request.headers.get("Authorization")?.replace("Bearer ", "");
+
     // For demo purposes, check if auth_user cookie exists
-    const userCookie = request.cookies.get('auth_user')?.value;
-    let userId = 'unknown';
-    
+    const userCookie = request.cookies.get("auth_user")?.value;
+    let userId = "unknown";
+
     if (!authToken || !userCookie) {
-      console.log('No auth token or user cookie found');
+      console.log("No auth token or user cookie found");
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
-    
+
     try {
       // Parse user data from cookie
       const userData = JSON.parse(decodeURIComponent(userCookie));
-      userId = userData.id || 'unknown';
-      
+      userId = userData.id || "unknown";
+
       // Check if user is admin
-      if (userData.role !== 'ADMIN') {
+      if (userData.role !== "ADMIN") {
         return NextResponse.json(
           { success: false, error: "Only administrators can manage themes" },
-          { status: 403 }
+          { status: 403 },
         );
       }
     } catch (error) {
-      console.error('Error parsing user data:', error);
+      console.error("Error parsing user data:", error);
       return NextResponse.json(
         { success: false, error: "Invalid user data" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -194,12 +216,14 @@ export async function POST(request: NextRequest) {
 
     // Try to check if userId exists in the User table
     try {
-      const userExists = await prisma.user.findUnique({ where: { id: userId } });
+      const userExists = await prisma.user.findUnique({
+        where: { id: userId },
+      });
       if (!userExists) {
-        console.warn('User not found in database, using userId as is');
+        console.warn("User not found in database, using userId as is");
       }
     } catch (dbError) {
-      console.warn('Error checking user in database:', dbError);
+      console.warn("Error checking user in database:", dbError);
       // Continue anyway, as we're in development/demo mode
     }
 
@@ -216,10 +240,10 @@ export async function POST(request: NextRequest) {
           logo: JSON.stringify(validatedData.logo),
           isActive: false,
           userId: userId,
-        }
+        },
       });
     } catch (dbError) {
-      console.error('Error creating theme in database:', dbError);
+      console.error("Error creating theme in database:", dbError);
       // Return a mock theme for development purposes
       newTheme = {
         id: `mock_${Date.now()}`,
@@ -249,39 +273,41 @@ export async function POST(request: NextRequest) {
     // Try to log the theme creation
     try {
       await createAuditLog({
-        action: 'CREATE',
-        entity: 'Theme',
+        action: "CREATE",
+        entity: "Theme",
         entityId: newTheme.id,
         userId: userId,
-        newData: JSON.stringify(themeResponse)
+        newData: JSON.stringify(themeResponse),
       });
     } catch (logError) {
-      console.warn('Error creating audit log:', logError);
+      console.warn("Error creating audit log:", logError);
       // Continue anyway, as audit logs are not critical
     }
 
     return NextResponse.json({
       success: true,
-      theme: themeResponse
+      theme: themeResponse,
     });
   } catch (error) {
-    console.error('Error creating theme:', error);
-    let errorMsg = 'Failed to create theme';
+    console.error("Error creating theme:", error);
+    let errorMsg = "Failed to create theme";
     if (error instanceof z.ZodError) {
-      errorMsg = 'Invalid theme data format: ' + error.errors.map(e => e.message).join(', ');
+      errorMsg =
+        "Invalid theme data format: " +
+        error.errors.map((e) => e.message).join(", ");
       return NextResponse.json(
         { success: false, error: errorMsg },
-        { status: 400 }
+        { status: 400 },
       );
     }
     if (error instanceof Error) {
       errorMsg = error.message;
-    } else if (typeof error === 'string') {
+    } else if (typeof error === "string") {
       errorMsg = error;
     }
     return NextResponse.json(
       { success: false, error: errorMsg },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

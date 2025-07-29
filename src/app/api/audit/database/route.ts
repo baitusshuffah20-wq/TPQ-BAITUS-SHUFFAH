@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 Starting database audit...');
+    console.log("🔍 Starting database audit...");
 
     // Check all tables and their data
     const [
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       payments,
       donations,
       news,
-      notifications
+      notifications,
     ] = await Promise.all([
       prisma.user.findMany({
         select: {
@@ -24,8 +24,8 @@ export async function GET(request: NextRequest) {
           name: true,
           role: true,
           isActive: true,
-          createdAt: true
-        }
+          createdAt: true,
+        },
       }),
       prisma.santri.findMany({
         select: {
@@ -36,20 +36,20 @@ export async function GET(request: NextRequest) {
           wali: {
             select: {
               name: true,
-              email: true
-            }
+              email: true,
+            },
           },
           halaqah: {
             select: {
               name: true,
               musyrif: {
                 select: {
-                  name: true
-                }
-              }
-            }
-          }
-        }
+                  name: true,
+                },
+              },
+            },
+          },
+        },
       }),
       prisma.halaqah.findMany({
         select: {
@@ -62,15 +62,15 @@ export async function GET(request: NextRequest) {
           musyrif: {
             select: {
               name: true,
-              email: true
-            }
+              email: true,
+            },
           },
           _count: {
             select: {
-              santri: true
-            }
-          }
-        }
+              santri: true,
+            },
+          },
+        },
       }),
       prisma.hafalan.findMany({
         select: {
@@ -85,19 +85,19 @@ export async function GET(request: NextRequest) {
           santri: {
             select: {
               name: true,
-              nis: true
-            }
+              nis: true,
+            },
           },
           musyrif: {
             select: {
-              name: true
-            }
-          }
+              name: true,
+            },
+          },
         },
         orderBy: {
-          recordedAt: 'desc'
+          recordedAt: "desc",
         },
-        take: 10
+        take: 10,
       }),
       prisma.attendance.findMany({
         select: {
@@ -109,24 +109,24 @@ export async function GET(request: NextRequest) {
           santri: {
             select: {
               name: true,
-              nis: true
-            }
+              nis: true,
+            },
           },
           halaqah: {
             select: {
-              name: true
-            }
+              name: true,
+            },
           },
           musyrif: {
             select: {
-              name: true
-            }
-          }
+              name: true,
+            },
+          },
         },
         orderBy: {
-          date: 'desc'
+          date: "desc",
         },
-        take: 10
+        take: 10,
       }),
       prisma.payment.findMany({
         select: {
@@ -139,14 +139,14 @@ export async function GET(request: NextRequest) {
           santri: {
             select: {
               name: true,
-              nis: true
-            }
-          }
+              nis: true,
+            },
+          },
         },
         orderBy: {
-          createdAt: 'desc'
+          createdAt: "desc",
         },
-        take: 10
+        take: 10,
       }),
       prisma.donation.findMany({
         select: {
@@ -155,12 +155,12 @@ export async function GET(request: NextRequest) {
           amount: true,
           type: true,
           status: true,
-          createdAt: true
+          createdAt: true,
         },
         orderBy: {
-          createdAt: 'desc'
+          createdAt: "desc",
         },
-        take: 5
+        take: 5,
       }),
       prisma.news.findMany({
         select: {
@@ -170,12 +170,12 @@ export async function GET(request: NextRequest) {
           status: true,
           featured: true,
           views: true,
-          publishedAt: true
+          publishedAt: true,
         },
         orderBy: {
-          createdAt: 'desc'
+          createdAt: "desc",
         },
-        take: 5
+        take: 5,
       }),
       prisma.notification.findMany({
         select: {
@@ -187,15 +187,15 @@ export async function GET(request: NextRequest) {
           user: {
             select: {
               name: true,
-              role: true
-            }
-          }
+              role: true,
+            },
+          },
         },
         orderBy: {
-          createdAt: 'desc'
+          createdAt: "desc",
         },
-        take: 5
-      })
+        take: 5,
+      }),
     ]);
 
     // Calculate statistics
@@ -203,101 +203,122 @@ export async function GET(request: NextRequest) {
       users: {
         total: users.length,
         byRole: {
-          ADMIN: users.filter(u => u.role === 'ADMIN').length,
-          MUSYRIF: users.filter(u => u.role === 'MUSYRIF').length,
-          WALI: users.filter(u => u.role === 'WALI').length,
-          SANTRI: users.filter(u => u.role === 'SANTRI').length
+          ADMIN: users.filter((u) => u.role === "ADMIN").length,
+          MUSYRIF: users.filter((u) => u.role === "MUSYRIF").length,
+          WALI: users.filter((u) => u.role === "WALI").length,
+          SANTRI: users.filter((u) => u.role === "SANTRI").length,
         },
-        active: users.filter(u => u.isActive).length
+        active: users.filter((u) => u.isActive).length,
       },
       santri: {
         total: santri.length,
         byStatus: {
-          ACTIVE: santri.filter(s => s.status === 'ACTIVE').length,
-          INACTIVE: santri.filter(s => s.status === 'INACTIVE').length,
-          GRADUATED: santri.filter(s => s.status === 'GRADUATED').length
+          ACTIVE: santri.filter((s) => s.status === "ACTIVE").length,
+          INACTIVE: santri.filter((s) => s.status === "INACTIVE").length,
+          GRADUATED: santri.filter((s) => s.status === "GRADUATED").length,
         },
-        withHalaqah: santri.filter(s => s.halaqah).length,
-        withWali: santri.filter(s => s.wali).length
+        withHalaqah: santri.filter((s) => s.halaqah).length,
+        withWali: santri.filter((s) => s.wali).length,
       },
       halaqah: {
         total: halaqah.length,
-        active: halaqah.filter(h => h.status === 'ACTIVE').length,
+        active: halaqah.filter((h) => h.status === "ACTIVE").length,
         totalCapacity: halaqah.reduce((sum, h) => sum + h.maxCapacity, 0),
-        currentOccupancy: halaqah.reduce((sum, h) => sum + h.currentCapacity, 0)
+        currentOccupancy: halaqah.reduce(
+          (sum, h) => sum + h.currentCapacity,
+          0,
+        ),
       },
       hafalan: {
         total: hafalan.length,
         byStatus: {
-          PENDING: hafalan.filter(h => h.status === 'PENDING').length,
-          APPROVED: hafalan.filter(h => h.status === 'APPROVED').length,
-          NEEDS_IMPROVEMENT: hafalan.filter(h => h.status === 'NEEDS_IMPROVEMENT').length
+          PENDING: hafalan.filter((h) => h.status === "PENDING").length,
+          APPROVED: hafalan.filter((h) => h.status === "APPROVED").length,
+          NEEDS_IMPROVEMENT: hafalan.filter(
+            (h) => h.status === "NEEDS_IMPROVEMENT",
+          ).length,
         },
         byType: {
-          SETORAN: hafalan.filter(h => h.type === 'SETORAN').length,
-          MURAJAAH: hafalan.filter(h => h.type === 'MURAJAAH').length,
-          TASMI: hafalan.filter(h => h.type === 'TASMI').length
+          SETORAN: hafalan.filter((h) => h.type === "SETORAN").length,
+          MURAJAAH: hafalan.filter((h) => h.type === "MURAJAAH").length,
+          TASMI: hafalan.filter((h) => h.type === "TASMI").length,
         },
-        averageGrade: hafalan.filter(h => h.grade !== null).length > 0
-          ? Math.round(hafalan.filter(h => h.grade !== null).reduce((sum, h) => sum + (h.grade || 0), 0) / hafalan.filter(h => h.grade !== null).length)
-          : 0
+        averageGrade:
+          hafalan.filter((h) => h.grade !== null).length > 0
+            ? Math.round(
+                hafalan
+                  .filter((h) => h.grade !== null)
+                  .reduce((sum, h) => sum + (h.grade || 0), 0) /
+                  hafalan.filter((h) => h.grade !== null).length,
+              )
+            : 0,
       },
       attendance: {
         total: attendance.length,
         byStatus: {
-          PRESENT: attendance.filter(a => a.status === 'PRESENT').length,
-          ABSENT: attendance.filter(a => a.status === 'ABSENT').length,
-          LATE: attendance.filter(a => a.status === 'LATE').length,
-          EXCUSED: attendance.filter(a => a.status === 'EXCUSED').length
+          PRESENT: attendance.filter((a) => a.status === "PRESENT").length,
+          ABSENT: attendance.filter((a) => a.status === "ABSENT").length,
+          LATE: attendance.filter((a) => a.status === "LATE").length,
+          EXCUSED: attendance.filter((a) => a.status === "EXCUSED").length,
         },
-        attendanceRate: attendance.length > 0
-          ? Math.round((attendance.filter(a => a.status === 'PRESENT').length / attendance.length) * 100)
-          : 0
+        attendanceRate:
+          attendance.length > 0
+            ? Math.round(
+                (attendance.filter((a) => a.status === "PRESENT").length /
+                  attendance.length) *
+                  100,
+              )
+            : 0,
       },
       payments: {
         total: payments.length,
         byStatus: {
-          PENDING: payments.filter(p => p.status === 'PENDING').length,
-          PAID: payments.filter(p => p.status === 'PAID').length,
-          OVERDUE: payments.filter(p => p.status === 'OVERDUE').length
+          PENDING: payments.filter((p) => p.status === "PENDING").length,
+          PAID: payments.filter((p) => p.status === "PAID").length,
+          OVERDUE: payments.filter((p) => p.status === "OVERDUE").length,
         },
         totalAmount: payments.reduce((sum, p) => sum + p.amount, 0),
-        paidAmount: payments.filter(p => p.status === 'PAID').reduce((sum, p) => sum + p.amount, 0)
+        paidAmount: payments
+          .filter((p) => p.status === "PAID")
+          .reduce((sum, p) => sum + p.amount, 0),
       },
       donations: {
         total: donations.length,
         totalAmount: donations.reduce((sum, d) => sum + d.amount, 0),
         byStatus: {
-          PENDING: donations.filter(d => d.status === 'PENDING').length,
-          PAID: donations.filter(d => d.status === 'PAID').length
-        }
+          PENDING: donations.filter((d) => d.status === "PENDING").length,
+          PAID: donations.filter((d) => d.status === "PAID").length,
+        },
       },
       news: {
         total: news.length,
-        published: news.filter(n => n.status === 'PUBLISHED').length,
-        featured: news.filter(n => n.featured).length,
-        totalViews: news.reduce((sum, n) => sum + n.views, 0)
+        published: news.filter((n) => n.status === "PUBLISHED").length,
+        featured: news.filter((n) => n.featured).length,
+        totalViews: news.reduce((sum, n) => sum + n.views, 0),
       },
       notifications: {
         total: notifications.length,
-        unread: notifications.filter(n => !n.isRead).length,
-        byType: notifications.reduce((acc, n) => {
-          acc[n.type] = (acc[n.type] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>)
-      }
+        unread: notifications.filter((n) => !n.isRead).length,
+        byType: notifications.reduce(
+          (acc, n) => {
+            acc[n.type] = (acc[n.type] || 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>,
+        ),
+      },
     };
 
     // Check data relationships
     const relationships = {
-      santriWithWali: santri.filter(s => s.wali).length,
-      santriWithHalaqah: santri.filter(s => s.halaqah).length,
-      hafalanWithSantri: hafalan.filter(h => h.santri).length,
-      hafalanWithMusyrif: hafalan.filter(h => h.musyrif).length,
-      attendanceWithSantri: attendance.filter(a => a.santri).length,
-      attendanceWithHalaqah: attendance.filter(a => a.halaqah).length,
-      paymentsWithSantri: payments.filter(p => p.santri).length,
-      notificationsWithUser: notifications.filter(n => n.user).length
+      santriWithWali: santri.filter((s) => s.wali).length,
+      santriWithHalaqah: santri.filter((s) => s.halaqah).length,
+      hafalanWithSantri: hafalan.filter((h) => h.santri).length,
+      hafalanWithMusyrif: hafalan.filter((h) => h.musyrif).length,
+      attendanceWithSantri: attendance.filter((a) => a.santri).length,
+      attendanceWithHalaqah: attendance.filter((a) => a.halaqah).length,
+      paymentsWithSantri: payments.filter((p) => p.santri).length,
+      notificationsWithUser: notifications.filter((n) => n.user).length,
     };
 
     // Sample data for verification
@@ -310,43 +331,51 @@ export async function GET(request: NextRequest) {
       payments: payments.slice(0, 3),
       donations: donations.slice(0, 2),
       news: news.slice(0, 2),
-      notifications: notifications.slice(0, 3)
+      notifications: notifications.slice(0, 3),
     };
 
-    console.log('✅ Database audit completed');
+    console.log("✅ Database audit completed");
 
     return NextResponse.json({
       success: true,
-      message: 'Database audit completed successfully',
+      message: "Database audit completed successfully",
       timestamp: new Date().toISOString(),
       stats,
       relationships,
       sampleData,
       summary: {
         totalTables: 9,
-        tablesWithData: Object.values(stats).filter(stat => 
-          typeof stat === 'object' && 'total' in stat && stat.total > 0
+        tablesWithData: Object.values(stats).filter(
+          (stat) =>
+            typeof stat === "object" && "total" in stat && stat.total > 0,
         ).length,
-        totalRecords: Object.values(stats).reduce((sum, stat) => 
-          typeof stat === 'object' && 'total' in stat ? sum + stat.total : sum, 0
+        totalRecords: Object.values(stats).reduce(
+          (sum, stat) =>
+            typeof stat === "object" && "total" in stat
+              ? sum + stat.total
+              : sum,
+          0,
         ),
         dataIntegrity: {
-          score: Math.round((Object.values(relationships).filter(count => count > 0).length / Object.keys(relationships).length) * 100),
-          details: relationships
-        }
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ Database audit error:', error);
-    return NextResponse.json(
-      { 
-        success: false,
-        error: 'Database audit failed',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+          score: Math.round(
+            (Object.values(relationships).filter((count) => count > 0).length /
+              Object.keys(relationships).length) *
+              100,
+          ),
+          details: relationships,
+        },
       },
-      { status: 500 }
+    });
+  } catch (error) {
+    console.error("❌ Database audit error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Database audit failed",
+        details: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      },
+      { status: 500 },
     );
   }
 }

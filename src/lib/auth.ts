@@ -1,22 +1,22 @@
-import { NextAuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
+import { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 // import { PrismaAdapter } from '@next-auth/prisma-adapter';
 // import { prisma } from './prisma';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from "bcryptjs";
 
 // Define UserRole type
-export type UserRole = 'ADMIN' | 'MUSYRIF' | 'WALI';
+export type UserRole = "ADMIN" | "MUSYRIF" | "WALI";
 
 export const authOptions: NextAuthOptions = {
   // adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
-      name: 'credentials',
+      name: "credentials",
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' }
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
-      async authorize(credentials, req) {
+      async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
@@ -24,40 +24,44 @@ export const authOptions: NextAuthOptions = {
         // Mock user data for testing
         const mockUsers = [
           {
-            id: '1',
-            email: 'admin@rumahtahfidz.com',
-            password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-            name: 'Administrator',
-            role: 'ADMIN' as UserRole,
-            avatar: undefined
+            id: "1",
+            email: "admin@rumahtahfidz.com",
+            password:
+              "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", // password
+            name: "Administrator",
+            role: "ADMIN" as UserRole,
+            avatar: undefined,
           },
           {
-            id: '2',
-            email: 'musyrif@rumahtahfidz.com',
-            password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-            name: 'Ustadz Abdullah',
-            role: 'MUSYRIF' as UserRole,
-            avatar: undefined
+            id: "2",
+            email: "musyrif@rumahtahfidz.com",
+            password:
+              "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", // password
+            name: "Ustadz Abdullah",
+            role: "MUSYRIF" as UserRole,
+            avatar: undefined,
           },
           {
-            id: '3',
-            email: 'wali@rumahtahfidz.com',
-            password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-            name: 'Bapak Ahmad',
-            role: 'WALI' as UserRole,
-            avatar: undefined
-          }
+            id: "3",
+            email: "wali@rumahtahfidz.com",
+            password:
+              "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", // password
+            name: "Bapak Ahmad",
+            role: "WALI" as UserRole,
+            avatar: undefined,
+          },
         ];
 
-        const user = mockUsers.find(u => u.email === credentials.email);
+        const user = mockUsers.find((u) => u.email === credentials.email);
 
         if (!user) {
           return null;
         }
 
         // For demo purposes, accept 'password' as password
-        const isPasswordValid = credentials.password === 'password' ||
-          await bcrypt.compare(credentials.password, user.password);
+        const isPasswordValid =
+          credentials.password === "password" ||
+          (await bcrypt.compare(credentials.password, user.password));
 
         if (!isPasswordValid) {
           return null;
@@ -70,11 +74,11 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           avatar: user.avatar,
         };
-      }
-    })
+      },
+    }),
   ],
   session: {
-    strategy: 'jwt'
+    strategy: "jwt",
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -91,17 +95,17 @@ export const authOptions: NextAuthOptions = {
         session.user.avatar = token.avatar as string;
       }
       return session;
-    }
+    },
   },
   pages: {
-    signIn: '/login',
-    error: '/login'
+    signIn: "/login",
+    error: "/login",
   },
-  secret: process.env.NEXTAUTH_SECRET
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
 // Extend the built-in session types
-declare module 'next-auth' {
+declare module "next-auth" {
   interface User {
     id: string;
     email: string;
@@ -121,7 +125,7 @@ declare module 'next-auth' {
   }
 }
 
-declare module 'next-auth/jwt' {
+declare module "next-auth/jwt" {
   interface JWT {
     role: UserRole;
     avatar?: string;

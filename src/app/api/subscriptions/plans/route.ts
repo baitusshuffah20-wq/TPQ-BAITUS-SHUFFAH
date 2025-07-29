@@ -1,39 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 // GET /api/subscriptions/plans - Get subscription plans
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const isActive = searchParams.get('isActive');
-    const billingCycle = searchParams.get('billingCycle');
+    const isActive = searchParams.get("isActive");
+    const billingCycle = searchParams.get("billingCycle");
 
     // Build where clause
     const whereClause: any = {};
-    if (isActive !== null) whereClause.isActive = isActive === 'true';
+    if (isActive !== null) whereClause.isActive = isActive === "true";
     if (billingCycle) whereClause.billingCycle = billingCycle;
 
     const plans = await prisma.subscriptionPlan.findMany({
       where: whereClause,
-      orderBy: [
-        { sortOrder: 'asc' },
-        { amount: 'asc' }
-      ]
+      orderBy: [{ sortOrder: "asc" }, { amount: "asc" }],
     });
 
     return NextResponse.json({
       success: true,
-      data: plans
+      data: plans,
     });
   } catch (error) {
-    console.error('Error getting subscription plans:', error);
+    console.error("Error getting subscription plans:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to get subscription plans',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to get subscription plans",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -46,29 +43,32 @@ export async function POST(request: NextRequest) {
       name,
       description,
       amount,
-      currency = 'IDR',
+      currency = "IDR",
       billingCycle,
       trialDays = 0,
       features,
       isActive = true,
       sortOrder = 0,
-      metadata
+      metadata,
     } = body;
 
     // Validation
     if (!name || !amount || !billingCycle) {
       return NextResponse.json(
-        { success: false, message: 'Name, amount, and billing cycle are required' },
-        { status: 400 }
+        {
+          success: false,
+          message: "Name, amount, and billing cycle are required",
+        },
+        { status: 400 },
       );
     }
 
     // Validate billing cycle
-    const validCycles = ['MONTHLY', 'QUARTERLY', 'YEARLY'];
+    const validCycles = ["MONTHLY", "QUARTERLY", "YEARLY"];
     if (!validCycles.includes(billingCycle)) {
       return NextResponse.json(
-        { success: false, message: 'Invalid billing cycle' },
-        { status: 400 }
+        { success: false, message: "Invalid billing cycle" },
+        { status: 400 },
       );
     }
 
@@ -83,24 +83,24 @@ export async function POST(request: NextRequest) {
         features: features ? JSON.stringify(features) : null,
         isActive,
         sortOrder,
-        metadata: metadata ? JSON.stringify(metadata) : null
-      }
+        metadata: metadata ? JSON.stringify(metadata) : null,
+      },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Subscription plan created successfully',
-      data: plan
+      message: "Subscription plan created successfully",
+      data: plan,
     });
   } catch (error) {
-    console.error('Error creating subscription plan:', error);
+    console.error("Error creating subscription plan:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to create subscription plan',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to create subscription plan",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -113,8 +113,8 @@ export async function PUT(request: NextRequest) {
 
     if (!id) {
       return NextResponse.json(
-        { success: false, message: 'Plan ID is required' },
-        { status: 400 }
+        { success: false, message: "Plan ID is required" },
+        { status: 400 },
       );
     }
 
@@ -128,23 +128,23 @@ export async function PUT(request: NextRequest) {
 
     const plan = await prisma.subscriptionPlan.update({
       where: { id },
-      data: updateData
+      data: updateData,
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Subscription plan updated successfully',
-      data: plan
+      message: "Subscription plan updated successfully",
+      data: plan,
     });
   } catch (error) {
-    console.error('Error updating subscription plan:', error);
+    console.error("Error updating subscription plan:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to update subscription plan',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to update subscription plan",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -153,44 +153,47 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    const id = searchParams.get("id");
 
     if (!id) {
       return NextResponse.json(
-        { success: false, message: 'Plan ID is required' },
-        { status: 400 }
+        { success: false, message: "Plan ID is required" },
+        { status: 400 },
       );
     }
 
     // Check if plan is being used
     const subscriptionCount = await prisma.subscription.count({
-      where: { planType: id }
+      where: { planType: id },
     });
 
     if (subscriptionCount > 0) {
       return NextResponse.json(
-        { success: false, message: 'Cannot delete plan that is being used by subscriptions' },
-        { status: 400 }
+        {
+          success: false,
+          message: "Cannot delete plan that is being used by subscriptions",
+        },
+        { status: 400 },
       );
     }
 
     await prisma.subscriptionPlan.delete({
-      where: { id }
+      where: { id },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Subscription plan deleted successfully'
+      message: "Subscription plan deleted successfully",
     });
   } catch (error) {
-    console.error('Error deleting subscription plan:', error);
+    console.error("Error deleting subscription plan:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to delete subscription plan',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to delete subscription plan",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,32 +1,32 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const status = searchParams.get('status');
-    const template = searchParams.get('template');
-    const recipient = searchParams.get('recipient');
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const status = searchParams.get("status");
+    const template = searchParams.get("template");
+    const recipient = searchParams.get("recipient");
 
     const skip = (page - 1) * limit;
 
     // Build where clause
     const where: any = {};
-    
+
     if (status) {
       where.status = status;
     }
-    
+
     if (template) {
       where.template = template;
     }
-    
+
     if (recipient) {
       where.recipient = {
         contains: recipient,
-        mode: 'insensitive'
+        mode: "insensitive",
       };
     }
 
@@ -35,12 +35,12 @@ export async function GET(request: NextRequest) {
       prisma.emailLog.findMany({
         where,
         orderBy: {
-          sentAt: 'desc'
+          sentAt: "desc",
         },
         skip,
-        take: limit
+        take: limit,
       }),
-      prisma.emailLog.count({ where })
+      prisma.emailLog.count({ where }),
     ]);
 
     return NextResponse.json({
@@ -49,15 +49,14 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
-      }
+        totalPages: Math.ceil(total / limit),
+      },
     });
-
   } catch (error) {
-    console.error('Error fetching email logs:', error);
+    console.error("Error fetching email logs:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
@@ -65,8 +64,8 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const days = parseInt(searchParams.get('days') || '30');
-    
+    const days = parseInt(searchParams.get("days") || "30");
+
     // Delete logs older than specified days
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
@@ -74,21 +73,20 @@ export async function DELETE(request: NextRequest) {
     const result = await prisma.emailLog.deleteMany({
       where: {
         sentAt: {
-          lt: cutoffDate
-        }
-      }
+          lt: cutoffDate,
+        },
+      },
     });
 
     return NextResponse.json({
       message: `Deleted ${result.count} old email logs`,
-      deletedCount: result.count
+      deletedCount: result.count,
     });
-
   } catch (error) {
-    console.error('Error deleting email logs:', error);
+    console.error("Error deleting email logs:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }

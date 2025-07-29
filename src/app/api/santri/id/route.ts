@@ -1,42 +1,43 @@
-import { NextRequest, NextResponse } from 'next/server';
-import mysql from 'mysql2/promise';
+import { NextRequest, NextResponse } from "next/server";
+import mysql from "mysql2/promise";
 
 // Database connection configuration
 const dbConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: 'admin123',
-  database: 'tpq_baitus_shuffah_new'
+  host: "localhost",
+  user: "root",
+  password: "admin123",
+  database: "db_tpq",
 };
 
 // GET /api/santri/[id] - Get santri by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   let connection: mysql.Connection | null = null;
 
   try {
     const id = params.id;
-    console.log(GET /api/santri/);
+    console.log("GET /api/santri/");
 
     // Create connection
     connection = await mysql.createConnection(dbConfig);
 
     // Get santri with related data
     const [santriRows] = await connection.execute(
-      SELECT s.*, u.name as waliName, u.email as waliEmail, u.phone as waliPhone,
+      `SELECT s.*, u.name as waliName, u.email as waliEmail, u.phone as waliPhone,
              h.name as halaqahName, h.level as halaqahLevel
       FROM santri s
       LEFT JOIN users u ON s.waliId = u.id
       LEFT JOIN halaqah h ON s.halaqahId = h.id
-      WHERE s.id = ?
-    , [id]);
+      WHERE s.id = ?`,
+      [id],
+    );
 
     if ((santriRows as any[]).length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Santri tidak ditemukan' },
-        { status: 404 }
+        { success: false, message: "Santri tidak ditemukan" },
+        { status: 404 },
       );
     }
 
@@ -44,30 +45,33 @@ export async function GET(
 
     // Get hafalan records
     const [hafalanRows] = await connection.execute(
-      SELECT id, surahId, surahName, ayahStart, ayahEnd, type, status, grade, recordedAt
+      `SELECT id, surahId, surahName, ayahStart, ayahEnd, type, status, grade, recordedAt
       FROM hafalan
       WHERE santriId = ?
       ORDER BY recordedAt DESC
-      LIMIT 10
-    , [id]);
+      LIMIT 10`,
+      [id],
+    );
 
     // Get attendance records
     const [attendanceRows] = await connection.execute(
-      SELECT id, date, status, checkInTime, checkOutTime, notes
+      `SELECT id, date, status, checkInTime, checkOutTime, notes
       FROM attendance
       WHERE santriId = ?
       ORDER BY date DESC
-      LIMIT 10
-    , [id]);
+      LIMIT 10`,
+      [id],
+    );
 
     // Get payment records
     const [paymentRows] = await connection.execute(
-      SELECT id, type, amount, dueDate, paidDate, status, method
+      `SELECT id, type, amount, dueDate, paidDate, status, method
       FROM payments
       WHERE santriId = ?
       ORDER BY dueDate DESC
-      LIMIT 10
-    , [id]);
+      LIMIT 10`,
+      [id],
+    );
 
     // Format response
     const santri = {
@@ -84,36 +88,39 @@ export async function GET(
       status: santriData.status,
       enrollmentDate: santriData.enrollmentDate,
       graduationDate: santriData.graduationDate,
-      wali: santriData.waliId ? {
-        id: santriData.waliId,
-        name: santriData.waliName,
-        email: santriData.waliEmail,
-        phone: santriData.waliPhone
-      } : null,
-      halaqah: santriData.halaqahId ? {
-        id: santriData.halaqahId,
-        name: santriData.halaqahName,
-        level: santriData.halaqahLevel
-      } : null,
+      wali: santriData.waliId
+        ? {
+            id: santriData.waliId,
+            name: santriData.waliName,
+            email: santriData.waliEmail,
+            phone: santriData.waliPhone,
+          }
+        : null,
+      halaqah: santriData.halaqahId
+        ? {
+            id: santriData.halaqahId,
+            name: santriData.halaqahName,
+            level: santriData.halaqahLevel,
+          }
+        : null,
       hafalan: hafalanRows as any[],
       attendance: attendanceRows as any[],
-      payments: paymentRows as any[]
+      payments: paymentRows as any[],
     };
 
     return NextResponse.json({
       success: true,
-      santri
+      santri,
     });
-
   } catch (error) {
-    console.error(Error fetching santri :, error);
+    console.error("Error fetching santri:", error);
     return NextResponse.json(
       {
         success: false,
-        message: 'Gagal mengambil data santri',
-        error: String(error)
+        message: "Gagal mengambil data santri",
+        error: String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   } finally {
     if (connection) {
@@ -125,7 +132,7 @@ export async function GET(
 // PUT /api/santri/[id] - Update santri
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   let connection: mysql.Connection | null = null;
 
@@ -146,16 +153,25 @@ export async function PUT(
       waliId,
       halaqahId,
       enrollmentDate,
-      graduationDate
+      graduationDate,
     } = body;
 
-    console.log(PUT /api/santri/, body);
+    console.log("PUT /api/santri/", body);
 
     // Validation
-    if (!nis || !name || !birthDate || !birthPlace || !gender || !address || !waliId || !enrollmentDate) {
+    if (
+      !nis ||
+      !name ||
+      !birthDate ||
+      !birthPlace ||
+      !gender ||
+      !address ||
+      !waliId ||
+      !enrollmentDate
+    ) {
       return NextResponse.json(
-        { success: false, message: 'Field wajib tidak boleh kosong' },
-        { status: 400 }
+        { success: false, message: "Field wajib tidak boleh kosong" },
+        { status: 400 },
       );
     }
 
@@ -164,54 +180,54 @@ export async function PUT(
 
     // Check if santri exists
     const [existingSantriRows] = await connection.execute(
-      'SELECT * FROM santri WHERE id = ?',
-      [id]
+      "SELECT * FROM santri WHERE id = ?",
+      [id],
     );
 
     if ((existingSantriRows as any[]).length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Santri tidak ditemukan' },
-        { status: 404 }
+        { success: false, message: "Santri tidak ditemukan" },
+        { status: 404 },
       );
     }
 
     // Check if NIS already exists (for another santri)
     const [nisRows] = await connection.execute(
-      'SELECT * FROM santri WHERE nis = ? AND id != ?',
-      [nis, id]
+      "SELECT * FROM santri WHERE nis = ? AND id != ?",
+      [nis, id],
     );
 
     if ((nisRows as any[]).length > 0) {
       return NextResponse.json(
-        { success: false, message: 'NIS sudah digunakan oleh santri lain' },
-        { status: 400 }
+        { success: false, message: "NIS sudah digunakan oleh santri lain" },
+        { status: 400 },
       );
     }
 
     // Check if wali exists
     const [waliRows] = await connection.execute(
       'SELECT * FROM users WHERE id = ? AND role = "WALI"',
-      [waliId]
+      [waliId],
     );
 
     if ((waliRows as any[]).length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Wali tidak ditemukan' },
-        { status: 400 }
+        { success: false, message: "Wali tidak ditemukan" },
+        { status: 400 },
       );
     }
 
     // Check if halaqah exists (if provided)
     if (halaqahId) {
       const [halaqahRows] = await connection.execute(
-        'SELECT * FROM halaqah WHERE id = ?',
-        [halaqahId]
+        "SELECT * FROM halaqah WHERE id = ?",
+        [halaqahId],
       );
 
       if ((halaqahRows as any[]).length === 0) {
         return NextResponse.json(
-          { success: false, message: 'Halaqah tidak ditemukan' },
-          { status: 400 }
+          { success: false, message: "Halaqah tidak ditemukan" },
+          { status: 400 },
         );
       }
     }
@@ -222,7 +238,7 @@ export async function PUT(
     const graduationDateObj = graduationDate ? new Date(graduationDate) : null;
 
     await connection.execute(
-      UPDATE santri SET
+      `UPDATE santri SET
         nis = ?,
         name = ?,
         birthDate = ?,
@@ -238,48 +254,49 @@ export async function PUT(
         enrollmentDate = ?,
         graduationDate = ?,
         updatedAt = NOW()
-      WHERE id = ?
-    , [
-      nis,
-      name,
-      birthDateObj,
-      birthPlace,
-      gender,
-      address,
-      phone || null,
-      email || null,
-      photo || null,
-      status,
-      waliId,
-      halaqahId || null,
-      enrollmentDateObj,
-      graduationDateObj,
-      id
-    ]);
+      WHERE id = ?`,
+      [
+        nis,
+        name,
+        birthDateObj,
+        birthPlace,
+        gender,
+        address,
+        phone || null,
+        email || null,
+        photo || null,
+        status,
+        waliId,
+        halaqahId || null,
+        enrollmentDateObj,
+        graduationDateObj,
+        id,
+      ],
+    );
 
     // Get the updated santri with related data
     const [santriRows] = await connection.execute(
-      SELECT s.*, u.name as waliName, u.email as waliEmail, u.phone as waliPhone,
+      `SELECT s.*, u.name as waliName, u.email as waliEmail, u.phone as waliPhone,
              h.name as halaqahName, h.level as halaqahLevel
       FROM santri s
       LEFT JOIN users u ON s.waliId = u.id
       LEFT JOIN halaqah h ON s.halaqahId = h.id
-      WHERE s.id = ?
-    , [id]);
+      WHERE s.id = ?`,
+      [id],
+    );
 
     const santri = (santriRows as any[])[0];
 
     return NextResponse.json({
       success: true,
-      message: 'Santri berhasil diperbarui',
-      santri
+      message: "Santri berhasil diperbarui",
+      santri,
     });
-
   } catch (error) {
-    console.error(Error updating santri :, error);
+    console.error("Error updating santri:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal memperbarui santri' },
-      { status: 500 }
+      { success: false, message: "Gagal memperbarui santri" },
+      { status: 500 },
     );
   } finally {
     if (connection) {
@@ -291,43 +308,42 @@ export async function PUT(
 // DELETE /api/santri/[id] - Delete santri
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   let connection: mysql.Connection | null = null;
 
   try {
     const id = params.id;
-    console.log(DELETE /api/santri/);
+    console.log("DELETE /api/santri/");
 
     // Create connection
     connection = await mysql.createConnection(dbConfig);
 
     // Check if santri exists
     const [existingSantriRows] = await connection.execute(
-      'SELECT * FROM santri WHERE id = ?',
-      [id]
+      "SELECT * FROM santri WHERE id = ?",
+      [id],
     );
 
     if ((existingSantriRows as any[]).length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Santri tidak ditemukan' },
-        { status: 404 }
+        { success: false, message: "Santri tidak ditemukan" },
+        { status: 404 },
       );
     }
 
     // Delete santri
-    await connection.execute('DELETE FROM santri WHERE id = ?', [id]);
+    await connection.execute("DELETE FROM santri WHERE id = ?", [id]);
 
     return NextResponse.json({
       success: true,
-      message: 'Santri berhasil dihapus'
+      message: "Santri berhasil dihapus",
     });
-
   } catch (error) {
-    console.error(Error deleting santri :, error);
+    console.error("Error deleting santri:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal menghapus santri' },
-      { status: 500 }
+      { success: false, message: "Gagal menghapus santri" },
+      { status: 500 },
     );
   } finally {
     if (connection) {

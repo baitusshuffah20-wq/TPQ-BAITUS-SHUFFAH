@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { 
-  Calendar, 
-  User, 
-  ArrowRight, 
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Calendar,
+  User,
+  ArrowRight,
   Eye,
   MessageCircle,
   Share2,
   Clock,
-  Loader
-} from 'lucide-react';
-import { formatDate, getRelativeTime } from '@/lib/utils';
+  Loader,
+} from "lucide-react";
+import { formatDate, getRelativeTime } from "@/lib/utils";
 
 interface NewsItem {
   id: string;
@@ -33,10 +33,16 @@ const NewsSection = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState('Semua');
-  
-  const categories = ['Semua', 'PRESTASI', 'PENGUMUMAN', 'KEGIATAN', 'FASILITAS'];
-  
+  const [selectedCategory, setSelectedCategory] = useState("Semua");
+
+  const categories = [
+    "Semua",
+    "PRESTASI",
+    "PENGUMUMAN",
+    "KEGIATAN",
+    "FASILITAS",
+  ];
+
   // Format category for display
   const formatCategory = (category: string) => {
     return category.charAt(0) + category.slice(1).toLowerCase();
@@ -46,20 +52,21 @@ const NewsSection = () => {
     const fetchNews = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch news based on selected category
-        const categoryParam = selectedCategory !== 'Semua' ? `&category=${selectedCategory}` : '';
+        const categoryParam =
+          selectedCategory !== "Semua" ? `&category=${selectedCategory}` : "";
         const response = await fetch(`/api/news?limit=6${categoryParam}`);
         const data = await response.json();
-        
+
         if (data.success) {
           setNews(data.news);
         } else {
-          throw new Error('Failed to fetch news');
+          throw new Error("Failed to fetch news");
         }
       } catch (err) {
-        console.error('Error fetching news:', err);
-        setError('Failed to load news');
+        console.error("Error fetching news:", err);
+        setError("Failed to load news");
       } finally {
         setLoading(false);
       }
@@ -69,13 +76,14 @@ const NewsSection = () => {
   }, [selectedCategory]);
 
   // Filter news based on category
-  const filteredNews = selectedCategory === 'Semua' 
-    ? news 
-    : news.filter(item => item.category === selectedCategory);
+  const filteredNews =
+    selectedCategory === "Semua"
+      ? news
+      : news.filter((item) => item.category === selectedCategory);
 
   // Find featured news and regular news
-  const featuredNews = news.find(item => item.featured);
-  const regularNews = news.filter(item => !item.featured);
+  const featuredNews = news.find((item) => item.featured);
+  const regularNews = news.filter((item) => !item.featured);
 
   return (
     <section className="py-20 bg-white">
@@ -86,7 +94,7 @@ const NewsSection = () => {
             Berita & Pengumuman
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Ikuti perkembangan terbaru, prestasi santri, dan berbagai kegiatan 
+            Ikuti perkembangan terbaru, prestasi santri, dan berbagai kegiatan
             di Rumah Tahfidz Baitus Shuffah
           </p>
         </div>
@@ -99,11 +107,11 @@ const NewsSection = () => {
               onClick={() => setSelectedCategory(category)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 selectedCategory === category
-                  ? 'bg-teal-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? "bg-teal-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              {category === 'Semua' ? category : formatCategory(category)}
+              {category === "Semua" ? category : formatCategory(category)}
             </button>
           ))}
         </div>
@@ -123,7 +131,9 @@ const NewsSection = () => {
           <div className="text-center py-10">
             <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
               <p className="text-red-600 mb-2">{error}</p>
-              <p className="text-gray-600 text-sm">Silakan coba muat ulang halaman</p>
+              <p className="text-gray-600 text-sm">
+                Silakan coba muat ulang halaman
+              </p>
             </div>
           </div>
         )}
@@ -132,7 +142,7 @@ const NewsSection = () => {
         {!loading && !error && (
           <>
             {/* Featured News */}
-            {featuredNews && selectedCategory === 'Semua' && (
+            {featuredNews && selectedCategory === "Semua" && (
               <div className="mb-16">
                 <Card className="overflow-hidden shadow-xl hover:shadow-2xl transition-shadow">
                   <div className="grid grid-cols-1 lg:grid-cols-2">
@@ -191,10 +201,17 @@ const NewsSection = () => {
             )}
 
             {/* News Grid */}
-            {(selectedCategory === 'Semua' ? regularNews : filteredNews).length > 0 ? (
+            {(selectedCategory === "Semua" ? regularNews : filteredNews)
+              .length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-                {(selectedCategory === 'Semua' ? regularNews : filteredNews).map((item) => (
-                  <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow hover-lift">
+                {(selectedCategory === "Semua"
+                  ? regularNews
+                  : filteredNews
+                ).map((item) => (
+                  <Card
+                    key={item.id}
+                    className="overflow-hidden hover:shadow-lg transition-shadow hover-lift"
+                  >
                     {/* Image */}
                     <div className="relative h-48 bg-gray-200">
                       <div className="absolute top-4 left-4">
@@ -251,7 +268,9 @@ const NewsSection = () => {
               </div>
             ) : (
               <div className="text-center py-10">
-                <p className="text-gray-600">Tidak ada berita yang tersedia untuk kategori ini.</p>
+                <p className="text-gray-600">
+                  Tidak ada berita yang tersedia untuk kategori ini.
+                </p>
               </div>
             )}
 

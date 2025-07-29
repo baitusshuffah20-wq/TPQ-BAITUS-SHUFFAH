@@ -1,17 +1,46 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { toast } from 'react-hot-toast';
-import { formatDistanceToNow } from 'date-fns';
-import { id } from 'date-fns/locale';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { toast } from "react-hot-toast";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface NotificationData {
+  santriId?: string;
+  amount?: number;
+  surah?: string;
+  halaqahId?: string;
+  eventDate?: string;
+  donor?: string;
+  [key: string]: unknown;
+}
 
 interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'INFO' | 'WARNING' | 'SUCCESS' | 'ERROR' | 'PAYMENT_DUE' | 'ATTENDANCE' | 'HAFALAN' | 'ANNOUNCEMENT';
+  type:
+    | "INFO"
+    | "WARNING"
+    | "SUCCESS"
+    | "ERROR"
+    | "PAYMENT_DUE"
+    | "ATTENDANCE"
+    | "HAFALAN"
+    | "ANNOUNCEMENT";
   isRead: boolean;
-  data?: any;
+  data?: NotificationData;
   createdAt: string;
   userId: string;
 }
@@ -19,19 +48,25 @@ interface Notification {
 interface NotificationContextType {
   notifications: Notification[];
   unreadCount: number;
-  addNotification: (notification: Omit<Notification, 'id' | 'isRead' | 'createdAt'>) => void;
+  addNotification: (
+    notification: Omit<Notification, "id" | "isRead" | "createdAt">,
+  ) => void;
   markAsRead: (notificationId: string) => void;
   markAllAsRead: () => void;
   deleteNotification: (notificationId: string) => void;
   clearAll: () => void;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+const NotificationContext = createContext<NotificationContextType | undefined>(
+  undefined,
+);
 
 export const useNotifications = () => {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error('useNotifications must be used within a NotificationProvider');
+    throw new Error(
+      "useNotifications must be used within a NotificationProvider",
+    );
   }
   return context;
 };
@@ -40,13 +75,15 @@ interface NotificationProviderProps {
   children: ReactNode;
 }
 
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
+export const NotificationProvider: React.FC<NotificationProviderProps> = ({
+  children,
+}) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     // Get user from localStorage
-    const userData = localStorage.getItem('user');
+    const userData = localStorage.getItem("user");
     if (userData) {
       setUser(JSON.parse(userData));
     }
@@ -54,51 +91,56 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   useEffect(() => {
     // Load notifications from localStorage
-    const savedNotifications = localStorage.getItem('notifications');
+    const savedNotifications = localStorage.getItem("notifications");
     if (savedNotifications) {
       setNotifications(JSON.parse(savedNotifications));
     }
 
     // Simulate real-time notifications for demo
     const interval = setInterval(() => {
-      if (user && Math.random() > 0.7) { // 30% chance every 30 seconds
+      if (user && Math.random() > 0.7) {
+        // 30% chance every 30 seconds
         const mockNotifications = [
           {
-            title: 'Pembayaran SPP Diterima',
-            message: 'Pembayaran SPP Ahmad Fauzi telah berhasil diproses',
-            type: 'SUCCESS' as const,
-            data: { santriId: '1', amount: 500000 }
+            title: "Pembayaran SPP Diterima",
+            message: "Pembayaran SPP Ahmad Fauzi telah berhasil diproses",
+            type: "SUCCESS" as const,
+            data: { santriId: "1", amount: 500000 },
           },
           {
-            title: 'Hafalan Baru Menunggu Review',
-            message: 'Siti Aisyah telah mengumpulkan hafalan Al-Baqarah 1-20',
-            type: 'HAFALAN' as const,
-            data: { santriId: '2', surah: 'Al-Baqarah' }
+            title: "Hafalan Baru Menunggu Review",
+            message: "Siti Aisyah telah mengumpulkan hafalan Al-Baqarah 1-20",
+            type: "HAFALAN" as const,
+            data: { santriId: "2", surah: "Al-Baqarah" },
           },
           {
-            title: 'Donasi Baru Diterima',
-            message: 'Donasi sebesar Rp 1.000.000 dari Bapak Ahmad',
-            type: 'SUCCESS' as const,
-            data: { amount: 1000000, donor: 'Bapak Ahmad' }
+            title: "Donasi Baru Diterima",
+            message: "Donasi sebesar Rp 1.000.000 dari Bapak Ahmad",
+            type: "SUCCESS" as const,
+            data: { amount: 1000000, donor: "Bapak Ahmad" },
           },
           {
-            title: 'Reminder Absensi',
-            message: 'Jangan lupa melakukan absensi untuk halaqah hari ini',
-            type: 'WARNING' as const,
-            data: { halaqahId: '1' }
+            title: "Reminder Absensi",
+            message: "Jangan lupa melakukan absensi untuk halaqah hari ini",
+            type: "WARNING" as const,
+            data: { halaqahId: "1" },
           },
           {
-            title: 'Pengumuman Penting',
-            message: 'Wisuda hafidz akan dilaksanakan pada tanggal 20 Februari 2024',
-            type: 'ANNOUNCEMENT' as const,
-            data: { eventDate: '2024-02-20' }
-          }
+            title: "Pengumuman Penting",
+            message:
+              "Wisuda hafidz akan dilaksanakan pada tanggal 20 Februari 2024",
+            type: "ANNOUNCEMENT" as const,
+            data: { eventDate: "2024-02-20" },
+          },
         ];
 
-        const randomNotification = mockNotifications[Math.floor(Math.random() * mockNotifications.length)];
+        const randomNotification =
+          mockNotifications[
+            Math.floor(Math.random() * mockNotifications.length)
+          ];
         addNotification({
           ...randomNotification,
-          userId: user.id
+          userId: user.id,
         });
       }
     }, 30000); // Every 30 seconds
@@ -106,78 +148,80 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     return () => clearInterval(interval);
   }, [user]);
 
-  const addNotification = (notification: Omit<Notification, 'id' | 'isRead' | 'createdAt'>) => {
+  const addNotification = (
+    notification: Omit<Notification, "id" | "isRead" | "createdAt">,
+  ) => {
     const newNotification: Notification = {
       ...notification,
       id: Date.now().toString(),
       isRead: false,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
-    setNotifications(prev => {
+    setNotifications((prev) => {
       const updated = [newNotification, ...prev].slice(0, 50); // Keep only last 50 notifications
-      localStorage.setItem('notifications', JSON.stringify(updated));
+      localStorage.setItem("notifications", JSON.stringify(updated));
       return updated;
     });
 
     // Show toast notification
     const toastMessage = `${notification.title}: ${notification.message}`;
     switch (notification.type) {
-      case 'SUCCESS':
+      case "SUCCESS":
         toast.success(toastMessage, { duration: 4000 });
         break;
-      case 'ERROR':
+      case "ERROR":
         toast.error(toastMessage, { duration: 5000 });
         break;
-      case 'WARNING':
-        toast(toastMessage, { 
-          icon: '⚠️',
+      case "WARNING":
+        toast(toastMessage, {
+          icon: "⚠️",
           duration: 4000,
           style: {
-            background: '#FEF3C7',
-            color: '#92400E'
-          }
+            background: "#FEF3C7",
+            color: "#92400E",
+          },
         });
         break;
-      case 'INFO':
-      case 'ANNOUNCEMENT':
-        toast(toastMessage, { 
-          icon: 'ℹ️',
+      case "INFO":
+      case "ANNOUNCEMENT":
+        toast(toastMessage, {
+          icon: "ℹ️",
           duration: 4000,
           style: {
-            background: '#DBEAFE',
-            color: '#1E40AF'
-          }
+            background: "#DBEAFE",
+            color: "#1E40AF",
+          },
         });
         break;
-      case 'HAFALAN':
-        toast(toastMessage, { 
-          icon: '📖',
+      case "HAFALAN":
+        toast(toastMessage, {
+          icon: "📖",
           duration: 4000,
           style: {
-            background: '#D1FAE5',
-            color: '#065F46'
-          }
+            background: "#D1FAE5",
+            color: "#065F46",
+          },
         });
         break;
-      case 'PAYMENT_DUE':
-        toast(toastMessage, { 
-          icon: '💳',
+      case "PAYMENT_DUE":
+        toast(toastMessage, {
+          icon: "💳",
           duration: 5000,
           style: {
-            background: '#FEE2E2',
-            color: '#991B1B'
-          }
+            background: "#FEE2E2",
+            color: "#991B1B",
+          },
         });
         break;
-      case 'ATTENDANCE':
-        toast(toastMessage, { 
-          icon: '📅',
+      case "ATTENDANCE":
+        toast(toastMessage, {
+          icon: "📅",
           duration: 4000,
           style: {
-            background: '#F3E8FF',
-            color: '#6B21A8'
-          }
+            background: "#F3E8FF",
+            color: "#6B21A8",
+          },
         });
         break;
       default:
@@ -186,39 +230,44 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   };
 
   const markAsRead = (notificationId: string) => {
-    setNotifications(prev => {
-      const updated = prev.map(notification =>
+    setNotifications((prev) => {
+      const updated = prev.map((notification) =>
         notification.id === notificationId
           ? { ...notification, isRead: true }
-          : notification
+          : notification,
       );
-      localStorage.setItem('notifications', JSON.stringify(updated));
+      localStorage.setItem("notifications", JSON.stringify(updated));
       return updated;
     });
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev => {
-      const updated = prev.map(notification => ({ ...notification, isRead: true }));
-      localStorage.setItem('notifications', JSON.stringify(updated));
+    setNotifications((prev) => {
+      const updated = prev.map((notification) => ({
+        ...notification,
+        isRead: true,
+      }));
+      localStorage.setItem("notifications", JSON.stringify(updated));
       return updated;
     });
   };
 
   const deleteNotification = (notificationId: string) => {
-    setNotifications(prev => {
-      const updated = prev.filter(notification => notification.id !== notificationId);
-      localStorage.setItem('notifications', JSON.stringify(updated));
+    setNotifications((prev) => {
+      const updated = prev.filter(
+        (notification) => notification.id !== notificationId,
+      );
+      localStorage.setItem("notifications", JSON.stringify(updated));
       return updated;
     });
   };
 
   const clearAll = () => {
     setNotifications([]);
-    localStorage.removeItem('notifications');
+    localStorage.removeItem("notifications");
   };
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const value: NotificationContextType = {
     notifications,
@@ -227,7 +276,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     markAsRead,
     markAllAsRead,
     deleteNotification,
-    clearAll
+    clearAll,
   };
 
   return (

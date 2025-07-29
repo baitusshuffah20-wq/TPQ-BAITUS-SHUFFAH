@@ -1,43 +1,46 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { CartService } from '@/lib/cart-service';
+import { NextRequest, NextResponse } from "next/server";
+import { CartService } from "@/lib/cart-service";
 
 // GET /api/cart/items - Get available items for cart
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const category = searchParams.get('category'); // 'spp', 'donation', 'all'
+    const userId = searchParams.get("userId");
+    const category = searchParams.get("category"); // 'spp', 'donation', 'all'
 
     if (!userId) {
       return NextResponse.json(
-        { success: false, message: 'User ID is required' },
-        { status: 400 }
+        { success: false, message: "User ID is required" },
+        { status: 400 },
       );
     }
 
     const availableItems = await CartService.getAvailableItems(userId);
-    
+
     // Filter by category if specified
-    const filteredItems = category && category !== 'all' 
-      ? availableItems.filter(item => item.category.toLowerCase() === category.toLowerCase())
-      : availableItems;
+    const filteredItems =
+      category && category !== "all"
+        ? availableItems.filter(
+            (item) => item.category.toLowerCase() === category.toLowerCase(),
+          )
+        : availableItems;
 
     return NextResponse.json({
       success: true,
       data: {
         items: filteredItems,
-        categories: ['SPP', 'Donasi']
-      }
+        categories: ["SPP", "Donasi"],
+      },
     });
   } catch (error) {
-    console.error('Error getting available items:', error);
+    console.error("Error getting available items:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to get available items',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to get available items",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -50,8 +53,8 @@ export async function POST(request: NextRequest) {
 
     if (!cartId || !studentId) {
       return NextResponse.json(
-        { success: false, message: 'Cart ID and Student ID are required' },
-        { status: 400 }
+        { success: false, message: "Cart ID and Student ID are required" },
+        { status: 400 },
       );
     }
 
@@ -59,18 +62,18 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'SPP added to cart successfully',
-      data: cartItem
+      message: "SPP added to cart successfully",
+      data: cartItem,
     });
   } catch (error) {
-    console.error('Error adding SPP to cart:', error);
+    console.error("Error adding SPP to cart:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to add SPP to cart',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to add SPP to cart",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

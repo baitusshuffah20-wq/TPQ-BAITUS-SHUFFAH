@@ -1,5 +1,5 @@
 // src/lib/audit-log.ts
-import { prisma } from '@/lib/prisma';
+import { prisma } from "@/lib/prisma";
 
 interface AuditLogData {
   action: string;
@@ -22,10 +22,10 @@ export async function createAuditLog(data: AuditLogData) {
         newData: data.newData,
       },
     });
-    
+
     return auditLog;
   } catch (error) {
-    console.error('Error creating audit log:', error);
+    console.error("Error creating audit log:", error);
     // Don't throw error to prevent breaking the main operation
     return null;
   }

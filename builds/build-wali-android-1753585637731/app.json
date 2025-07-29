@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Wali Santri",
+    "slug": "tpq-wali",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#eca825"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tpq.wali",
+      "buildNumber": "1"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#eca825"
+      },
+      "package": "com.tpq.wali",
+      "versionCode": 1
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "appType": "wali",
+      "features": {
+        "dashboard": true,
+        "progress": true,
+        "payment": true,
+        "messages": true,
+        "profile": true,
+        "attendance": true,
+        "schedule": true,
+        "achievements": true,
+        "donations": true,
+        "events": true
+      },
+      "theme": {
+        "primaryColor": "#eca825",
+        "secondaryColor": "#ffd700",
+        "template": "modern"
+      }
+    }
+  }
+}

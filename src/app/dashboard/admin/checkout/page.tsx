@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import CheckoutPage from '@/app/checkout/page';
+import React from "react";
+import CheckoutPage from "@/app/checkout/page";
 
 export default function AdminCheckoutPage() {
   return <CheckoutPage />;

@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { useAuth } from '@/components/providers/AuthProvider';
+import React, { useState } from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/components/providers/AuthProvider";
+import UserAvatar from "@/components/ui/UserAvatar";
 import {
   User,
   Mail,
@@ -18,8 +19,8 @@ import {
   Save,
   Eye,
   EyeOff,
-  Upload
-} from 'lucide-react';
+  Upload,
+} from "lucide-react";
 
 const AdminProfilePage = () => {
   const { user, updateUser } = useAuth();
@@ -27,33 +28,33 @@ const AdminProfilePage = () => {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    address: '',
-    bio: '',
-    joinDate: '2024-01-01',
-    lastLogin: new Date().toISOString()
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    address: "",
+    bio: "",
+    joinDate: "2024-01-01",
+    lastLogin: new Date().toISOString(),
   });
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const handleProfileChange = (field: string, value: string) => {
-    setProfileData(prev => ({
+    setProfileData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handlePasswordChange = (field: string, value: string) => {
-    setPasswordData(prev => ({
+    setPasswordData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -74,34 +75,34 @@ const AdminProfilePage = () => {
       // Here you would typically call an API
       updateUser(profileData);
       setIsEditing(false);
-      alert('Profile berhasil diperbarui!');
+      alert("Profile berhasil diperbarui!");
     } catch (error) {
-      alert('Gagal memperbarui profile');
+      alert("Gagal memperbarui profile");
     }
   };
 
   const handleChangePassword = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('Password baru dan konfirmasi password tidak cocok');
+      alert("Password baru dan konfirmasi password tidak cocok");
       return;
     }
-    
+
     if (passwordData.newPassword.length < 6) {
-      alert('Password minimal 6 karakter');
+      alert("Password minimal 6 karakter");
       return;
     }
 
     try {
       // Here you would typically call an API
-      alert('Password berhasil diubah!');
+      alert("Password berhasil diubah!");
       setIsChangingPassword(false);
       setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
       });
     } catch (error) {
-      alert('Gagal mengubah password');
+      alert("Gagal mengubah password");
     }
   };
 
@@ -109,12 +110,44 @@ const AdminProfilePage = () => {
     if (!avatarFile) return;
 
     try {
-      // Here you would typically upload to server
-      alert('Avatar berhasil diupload!');
-      setAvatarFile(null);
-      setAvatarPreview(null);
+      const formData = new FormData();
+      formData.append("file", avatarFile);
+      formData.append("folder", "avatars");
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update user avatar in database
+        const updateResponse = await fetch(`/api/users/${user?.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            avatar: result.url,
+          }),
+        });
+
+        if (updateResponse.ok) {
+          alert("Avatar berhasil diupload!");
+          setAvatarFile(null);
+          setAvatarPreview(null);
+          // Refresh user data
+          window.location.reload();
+        } else {
+          throw new Error("Gagal update avatar di database");
+        }
+      } else {
+        throw new Error(result.error || "Gagal upload avatar");
+      }
     } catch (error) {
-      alert('Gagal upload avatar');
+      console.error("Upload error:", error);
+      alert("Gagal upload avatar: " + (error as Error).message);
     }
   };
 
@@ -125,7 +158,9 @@ const AdminProfilePage = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Profil Saya</h1>
-            <p className="text-gray-600">Kelola informasi profil dan pengaturan akun Anda</p>
+            <p className="text-gray-600">
+              Kelola informasi profil dan pengaturan akun Anda
+            </p>
           </div>
           <div className="mt-4 sm:mt-0 flex space-x-2">
             {!isEditing ? (
@@ -155,17 +190,12 @@ const AdminProfilePage = () => {
                 <div className="text-center">
                   {/* Avatar */}
                   <div className="relative inline-block">
-                    <div className="w-32 h-32 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-                      {avatarPreview ? (
-                        <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
-                      ) : user?.avatar ? (
-                        <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-4xl font-bold text-teal-600">
-                          {user?.name?.charAt(0) || 'U'}
-                        </span>
-                      )}
-                    </div>
+                    <UserAvatar
+                      name={user?.name || "User"}
+                      photo={avatarPreview || user?.avatar}
+                      size="2xl"
+                      className="mx-auto mb-4"
+                    />
                     {isEditing && (
                       <label className="absolute bottom-0 right-0 bg-teal-600 text-white p-2 rounded-full cursor-pointer hover:bg-teal-700 transition-colors">
                         <Camera className="h-4 w-4" />
@@ -188,22 +218,30 @@ const AdminProfilePage = () => {
                     </div>
                   )}
 
-                  <h2 className="text-xl font-bold text-gray-900">{user?.name}</h2>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {user?.name}
+                  </h2>
                   <p className="text-gray-600">{user?.email}</p>
                   <div className="flex items-center justify-center mt-2">
                     <Shield className="h-4 w-4 text-teal-600 mr-1" />
-                    <span className="text-sm font-medium text-teal-600">{user?.role}</span>
+                    <span className="text-sm font-medium text-teal-600">
+                      {user?.role}
+                    </span>
                   </div>
                 </div>
 
                 <div className="mt-6 space-y-4">
                   <div className="flex items-center text-sm text-gray-600">
                     <Calendar className="h-4 w-4 mr-2" />
-                    Bergabung: {new Date(profileData.joinDate).toLocaleDateString('id-ID')}
+                    Bergabung:{" "}
+                    {new Date(profileData.joinDate).toLocaleDateString("id-ID")}
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <Eye className="h-4 w-4 mr-2" />
-                    Login terakhir: {new Date(profileData.lastLogin).toLocaleDateString('id-ID')}
+                    Login terakhir:{" "}
+                    {new Date(profileData.lastLogin).toLocaleDateString(
+                      "id-ID",
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -216,8 +254,8 @@ const AdminProfilePage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full justify-start"
                     onClick={() => setIsChangingPassword(true)}
                   >
@@ -250,7 +288,9 @@ const AdminProfilePage = () => {
                         type="text"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                         value={profileData.name}
-                        onChange={(e) => handleProfileChange('name', e.target.value)}
+                        onChange={(e) =>
+                          handleProfileChange("name", e.target.value)
+                        }
                       />
                     ) : (
                       <p className="text-gray-900">{profileData.name}</p>
@@ -266,7 +306,9 @@ const AdminProfilePage = () => {
                         type="email"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                         value={profileData.email}
-                        onChange={(e) => handleProfileChange('email', e.target.value)}
+                        onChange={(e) =>
+                          handleProfileChange("email", e.target.value)
+                        }
                       />
                     ) : (
                       <p className="text-gray-900">{profileData.email}</p>
@@ -282,10 +324,14 @@ const AdminProfilePage = () => {
                         type="tel"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                         value={profileData.phone}
-                        onChange={(e) => handleProfileChange('phone', e.target.value)}
+                        onChange={(e) =>
+                          handleProfileChange("phone", e.target.value)
+                        }
                       />
                     ) : (
-                      <p className="text-gray-900">{profileData.phone || 'Belum diisi'}</p>
+                      <p className="text-gray-900">
+                        {profileData.phone || "Belum diisi"}
+                      </p>
                     )}
                   </div>
 
@@ -305,10 +351,14 @@ const AdminProfilePage = () => {
                         type="text"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                         value={profileData.address}
-                        onChange={(e) => handleProfileChange('address', e.target.value)}
+                        onChange={(e) =>
+                          handleProfileChange("address", e.target.value)
+                        }
                       />
                     ) : (
-                      <p className="text-gray-900">{profileData.address || 'Belum diisi'}</p>
+                      <p className="text-gray-900">
+                        {profileData.address || "Belum diisi"}
+                      </p>
                     )}
                   </div>
 
@@ -321,11 +371,15 @@ const AdminProfilePage = () => {
                         rows={3}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                         value={profileData.bio}
-                        onChange={(e) => handleProfileChange('bio', e.target.value)}
+                        onChange={(e) =>
+                          handleProfileChange("bio", e.target.value)
+                        }
                         placeholder="Ceritakan sedikit tentang diri Anda..."
                       />
                     ) : (
-                      <p className="text-gray-900">{profileData.bio || 'Belum diisi'}</p>
+                      <p className="text-gray-900">
+                        {profileData.bio || "Belum diisi"}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -349,17 +403,26 @@ const AdminProfilePage = () => {
                     </label>
                     <div className="relative">
                       <input
-                        type={showPassword ? 'text' : 'password'}
+                        type={showPassword ? "text" : "password"}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                         value={passwordData.currentPassword}
-                        onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
+                        onChange={(e) =>
+                          handlePasswordChange(
+                            "currentPassword",
+                            e.target.value,
+                          )
+                        }
                       />
                       <button
                         type="button"
                         className="absolute inset-y-0 right-0 pr-3 flex items-center"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -369,10 +432,12 @@ const AdminProfilePage = () => {
                       Password Baru
                     </label>
                     <input
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={passwordData.newPassword}
-                      onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
+                      onChange={(e) =>
+                        handlePasswordChange("newPassword", e.target.value)
+                      }
                     />
                   </div>
 
@@ -381,25 +446,24 @@ const AdminProfilePage = () => {
                       Konfirmasi Password Baru
                     </label>
                     <input
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       value={passwordData.confirmPassword}
-                      onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
+                      onChange={(e) =>
+                        handlePasswordChange("confirmPassword", e.target.value)
+                      }
                     />
                   </div>
 
                   <div className="flex space-x-2 pt-4">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="flex-1"
                       onClick={() => setIsChangingPassword(false)}
                     >
                       Batal
                     </Button>
-                    <Button 
-                      className="flex-1"
-                      onClick={handleChangePassword}
-                    >
+                    <Button className="flex-1" onClick={handleChangePassword}>
                       Ubah Password
                     </Button>
                   </div>

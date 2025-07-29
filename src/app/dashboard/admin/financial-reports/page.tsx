@@ -1,13 +1,13 @@
-'use client';
+﻿"use client";
 
-import React, { useState, useEffect } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  FileText, 
+import React, { useState, useEffect } from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  FileText,
   Download,
   Calendar,
   TrendingUp,
@@ -21,10 +21,10 @@ import {
   Eye,
   AlertTriangle,
   CheckCircle,
-  Clock
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import { ExportUtils } from '@/lib/export-utils';
+  Clock,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
+import { ExportUtils } from "@/lib/export-utils";
 
 interface ReportData {
   period: {
@@ -56,11 +56,15 @@ interface ReportData {
 export default function FinancialReportsPage() {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'summary' | 'spp' | 'transactions' | 'outstanding'>('summary');
+  const [activeTab, setActiveTab] = useState<
+    "summary" | "spp" | "transactions" | "outstanding"
+  >("summary");
   const [filters, setFilters] = useState({
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
-    reportType: 'summary'
+    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      .toISOString()
+      .split("T")[0],
+    endDate: new Date().toISOString().split("T")[0],
+    reportType: "summary",
   });
 
   useEffect(() => {
@@ -73,7 +77,7 @@ export default function FinancialReportsPage() {
       const params = new URLSearchParams({
         reportType: filters.reportType,
         startDate: filters.startDate,
-        endDate: filters.endDate
+        endDate: filters.endDate,
       });
 
       const response = await fetch(`/api/financial/reports?${params}`);
@@ -81,82 +85,84 @@ export default function FinancialReportsPage() {
         const data = await response.json();
         setReportData(data.report);
       } else {
-        toast.error('Gagal memuat data laporan');
+        toast.error("Gagal memuat data laporan");
       }
     } catch (error) {
-      console.error('Error loading report data:', error);
-      toast.error('Gagal memuat data laporan');
+      console.error("Error loading report data:", error);
+      toast.error("Gagal memuat data laporan");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleFilterChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
     });
   };
 
-  const exportReport = async (format: 'csv' | 'html' | 'print') => {
+  const exportReport = async (format: "csv" | "html" | "print") => {
     try {
       if (!reportData) {
-        toast.error('Tidak ada data untuk diekspor');
+        toast.error("Tidak ada data untuk diekspor");
         return;
       }
 
       const exportData = {
-        title: 'Laporan Keuangan TPQ Baitus Shuffah',
+        title: "Laporan Keuangan TPQ Baitus Shuffah",
         period: reportData.period,
         summary: reportData.summary,
         spp: reportData.spp,
         accounts: reportData.accounts,
-        transactionsByCategory: reportData.transactionsByCategory
+        transactionsByCategory: reportData.transactionsByCategory,
       };
 
       const filename = `laporan-keuangan-${filters.startDate}-${filters.endDate}`;
 
       switch (format) {
-        case 'csv':
+        case "csv":
           ExportUtils.downloadCSV(exportData, filename);
-          toast.success('Laporan berhasil diekspor ke CSV');
+          toast.success("Laporan berhasil diekspor ke CSV");
           break;
-        case 'html':
+        case "html":
           ExportUtils.downloadHTML(exportData, filename);
-          toast.success('Laporan berhasil diekspor ke HTML');
+          toast.success("Laporan berhasil diekspor ke HTML");
           break;
-        case 'print':
+        case "print":
           ExportUtils.printReport(exportData);
-          toast.success('Membuka jendela print...');
+          toast.success("Membuka jendela print...");
           break;
         default:
-          toast.error('Format export tidak valid');
+          toast.error("Format export tidak valid");
       }
     } catch (error) {
-      console.error('Error exporting report:', error);
-      toast.error('Gagal mengekspor laporan');
+      console.error("Error exporting report:", error);
+      toast.error("Gagal mengekspor laporan");
     }
   };
 
   const tabs = [
-    { id: 'summary', name: 'Ringkasan', icon: BarChart3 },
-    { id: 'spp', name: 'Laporan SPP', icon: DollarSign },
-    { id: 'transactions', name: 'Transaksi', icon: FileText },
-    { id: 'outstanding', name: 'Tunggakan', icon: AlertTriangle }
+    { id: "summary", name: "Ringkasan", icon: BarChart3 },
+    { id: "spp", name: "Laporan SPP", icon: DollarSign },
+    { id: "transactions", name: "Transaksi", icon: FileText },
+    { id: "outstanding", name: "Tunggakan", icon: AlertTriangle },
   ];
 
   if (loading) {
@@ -164,7 +170,9 @@ export default function FinancialReportsPage() {
       <DashboardLayout>
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">Laporan Keuangan</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Laporan Keuangan
+            </h1>
           </div>
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -183,7 +191,7 @@ export default function FinancialReportsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Laporan Keuangan</h1>
           <div className="flex gap-3">
             <Button
-              onClick={() => exportReport('csv')}
+              onClick={() => exportReport("csv")}
               variant="outline"
               className="flex items-center gap-2"
             >
@@ -191,7 +199,7 @@ export default function FinancialReportsPage() {
               Export CSV
             </Button>
             <Button
-              onClick={() => exportReport('html')}
+              onClick={() => exportReport("html")}
               variant="outline"
               className="flex items-center gap-2"
             >
@@ -199,7 +207,7 @@ export default function FinancialReportsPage() {
               Export HTML
             </Button>
             <Button
-              onClick={() => exportReport('print')}
+              onClick={() => exportReport("print")}
               variant="outline"
               className="flex items-center gap-2"
             >
@@ -283,7 +291,8 @@ export default function FinancialReportsPage() {
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-blue-600" />
               <span className="font-medium text-blue-900">
-                Periode Laporan: {formatDate(reportData.period.startDate)} - {formatDate(reportData.period.endDate)}
+                Periode Laporan: {formatDate(reportData.period.startDate)} -{" "}
+                {formatDate(reportData.period.endDate)}
               </span>
             </div>
           </div>
@@ -296,7 +305,9 @@ export default function FinancialReportsPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Pemasukan</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Total Pemasukan
+                    </p>
                     <p className="text-2xl font-bold text-green-600">
                       {formatCurrency(reportData.summary.totalIncome)}
                     </p>
@@ -312,7 +323,9 @@ export default function FinancialReportsPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Pengeluaran</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Total Pengeluaran
+                    </p>
                     <p className="text-2xl font-bold text-red-600">
                       {formatCurrency(reportData.summary.totalExpense)}
                     </p>
@@ -328,13 +341,21 @@ export default function FinancialReportsPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Pendapatan Bersih</p>
-                    <p className={`text-2xl font-bold ${reportData.summary.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className="text-sm font-medium text-gray-600">
+                      Pendapatan Bersih
+                    </p>
+                    <p
+                      className={`text-2xl font-bold ${reportData.summary.netIncome >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
                       {formatCurrency(reportData.summary.netIncome)}
                     </p>
                   </div>
-                  <div className={`p-3 rounded-full ${reportData.summary.netIncome >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
-                    <DollarSign className={`h-6 w-6 ${reportData.summary.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                  <div
+                    className={`p-3 rounded-full ${reportData.summary.netIncome >= 0 ? "bg-green-100" : "bg-red-100"}`}
+                  >
+                    <DollarSign
+                      className={`h-6 w-6 ${reportData.summary.netIncome >= 0 ? "text-green-600" : "text-red-600"}`}
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -344,7 +365,9 @@ export default function FinancialReportsPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Saldo</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Total Saldo
+                    </p>
                     <p className="text-2xl font-bold text-blue-600">
                       {formatCurrency(reportData.summary.totalBalance)}
                     </p>
@@ -416,13 +439,20 @@ export default function FinancialReportsPage() {
             <CardContent>
               <div className="space-y-4">
                 {reportData.accounts.map((account) => (
-                  <div key={account.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div
+                    key={account.id}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
                     <div>
-                      <p className="font-medium text-gray-900">{account.name}</p>
+                      <p className="font-medium text-gray-900">
+                        {account.name}
+                      </p>
                       <p className="text-sm text-gray-600">{account.type}</p>
                     </div>
                     <div className="text-right">
-                      <p className={`text-lg font-bold ${account.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <p
+                        className={`text-lg font-bold ${account.balance >= 0 ? "text-green-600" : "text-red-600"}`}
+                      >
                         {formatCurrency(account.balance)}
                       </p>
                     </div>
@@ -434,41 +464,49 @@ export default function FinancialReportsPage() {
         )}
 
         {/* Category Breakdown */}
-        {reportData && Object.keys(reportData.transactionsByCategory).length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <PieChart className="h-5 w-5 text-purple-600" />
-                Transaksi per Kategori
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Object.entries(reportData.transactionsByCategory).map(([category, data]) => (
-                  <div key={category} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <p className="font-medium text-gray-900">{category}</p>
-                    </div>
-                    <div className="flex gap-6 text-right">
-                      <div>
-                        <p className="text-sm text-gray-600">Pemasukan</p>
-                        <p className="text-lg font-bold text-green-600">
-                          {formatCurrency(data.income)}
-                        </p>
+        {reportData &&
+          Object.keys(reportData.transactionsByCategory).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PieChart className="h-5 w-5 text-purple-600" />
+                  Transaksi per Kategori
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Object.entries(reportData.transactionsByCategory).map(
+                    ([category, data]) => (
+                      <div
+                        key={category}
+                        className="flex items-center justify-between p-4 border rounded-lg"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {category}
+                          </p>
+                        </div>
+                        <div className="flex gap-6 text-right">
+                          <div>
+                            <p className="text-sm text-gray-600">Pemasukan</p>
+                            <p className="text-lg font-bold text-green-600">
+                              {formatCurrency(data.income)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Pengeluaran</p>
+                            <p className="text-lg font-bold text-red-600">
+                              {formatCurrency(data.expense)}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Pengeluaran</p>
-                        <p className="text-lg font-bold text-red-600">
-                          {formatCurrency(data.expense)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                    ),
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
       </div>
     </DashboardLayout>
   );

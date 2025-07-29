@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "TPQ Wali",
+    "slug": "tpq-wali",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "/uploads/mobile-assets/wali/icon-1753595281806.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "/uploads/mobile-assets/wali/splashScreen-1753595287584.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#eca825"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tpq.wali",
+      "buildNumber": "1"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "/uploads/mobile-assets/wali/icon-1753595281806.png",
+        "backgroundColor": "#eca825"
+      },
+      "package": "com.tpq.wali",
+      "versionCode": 1
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "appType": "wali",
+      "features": {
+        "dashboard": true,
+        "progress": true,
+        "payment": true,
+        "messages": true,
+        "profile": true,
+        "attendance": true,
+        "schedule": true,
+        "achievements": true,
+        "donations": true,
+        "events": true
+      },
+      "theme": {
+        "primaryColor": "#eca825",
+        "secondaryColor": "#ffd700",
+        "template": "modern"
+      }
+    }
+  }
+}

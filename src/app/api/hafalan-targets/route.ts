@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import mysql from 'mysql2/promise';
+import { NextRequest, NextResponse } from "next/server";
+import mysql from "mysql2/promise";
 
 // Database connection configuration
 const dbConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: 'admin123',
-  database: 'tpq_baitus_shuffah_new'
+  host: "localhost",
+  user: "root",
+  password: "admin123",
+  database: "db_tpq",
 };
 
 // Helper function to determine the correct table name
@@ -16,40 +16,48 @@ async function getTableName(connection: mysql.Connection): Promise<string> {
     try {
       await connection.query(`USE ${dbConfig.database}`);
     } catch (dbError) {
-      console.log(`Database ${dbConfig.database} does not exist, creating it...`);
-      await connection.query(`CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`);
+      console.log(
+        `Database ${dbConfig.database} does not exist, creating it...`,
+      );
+      await connection.query(
+        `CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`,
+      );
       await connection.query(`USE ${dbConfig.database}`);
     }
 
     // Try to query hafalan_targets
     try {
-      await connection.execute('SELECT 1 FROM hafalan_targets LIMIT 1');
-      console.log('Table hafalan_targets exists');
-      return 'hafalan_targets';
+      await connection.execute("SELECT 1 FROM hafalan_targets LIMIT 1");
+      console.log("Table hafalan_targets exists");
+      return "hafalan_targets";
     } catch (error) {
-      console.log('Table hafalan_targets does not exist, checking alternatives...');
+      console.log(
+        "Table hafalan_targets does not exist, checking alternatives...",
+      );
     }
 
     // Try to query hafalan_target
     try {
-      await connection.execute('SELECT 1 FROM hafalan_target LIMIT 1');
-      console.log('Table hafalan_target exists');
-      return 'hafalan_target';
+      await connection.execute("SELECT 1 FROM hafalan_target LIMIT 1");
+      console.log("Table hafalan_target exists");
+      return "hafalan_target";
     } catch (error) {
-      console.log('Table hafalan_target does not exist, checking alternatives...');
+      console.log(
+        "Table hafalan_target does not exist, checking alternatives...",
+      );
     }
 
     // Try to query HafalanTarget
     try {
-      await connection.execute('SELECT 1 FROM HafalanTarget LIMIT 1');
-      console.log('Table HafalanTarget exists');
-      return 'HafalanTarget';
+      await connection.execute("SELECT 1 FROM HafalanTarget LIMIT 1");
+      console.log("Table HafalanTarget exists");
+      return "HafalanTarget";
     } catch (error) {
-      console.log('No existing target table found, creating new one...');
+      console.log("No existing target table found, creating new one...");
     }
 
     // Create the table if it doesn't exist
-    console.log('Creating table hafalan_targets...');
+    console.log("Creating table hafalan_targets...");
     await connection.execute(`
       CREATE TABLE hafalan_targets (
         id VARCHAR(50) PRIMARY KEY,
@@ -78,10 +86,10 @@ async function getTableName(connection: mysql.Connection): Promise<string> {
         INDEX (targetDate)
       )
     `);
-    console.log('Table hafalan_targets created successfully');
-    return 'hafalan_targets';
+    console.log("Table hafalan_targets created successfully");
+    return "hafalan_targets";
   } catch (error) {
-    console.error('Error in getTableName:', error);
+    console.error("Error in getTableName:", error);
     throw error;
   }
 }
@@ -92,20 +100,26 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const santriId = searchParams.get('santriId');
-    const status = searchParams.get('status');
-    const priority = searchParams.get('priority');
-    const targetType = searchParams.get('targetType');
-    const search = searchParams.get('search');
+    const santriId = searchParams.get("santriId");
+    const status = searchParams.get("status");
+    const priority = searchParams.get("priority");
+    const targetType = searchParams.get("targetType");
+    const search = searchParams.get("search");
 
-    console.log('GET /api/hafalan-targets - Query params:', { santriId, status, priority, targetType, search });  
+    console.log("GET /api/hafalan-targets - Query params:", {
+      santriId,
+      status,
+      priority,
+      targetType,
+      search,
+    });
 
     // Create connection
     connection = await mysql.createConnection(dbConfig);
 
     // Ensure connection is not null
     if (!connection) {
-      throw new Error('Failed to create database connection');
+      throw new Error("Failed to create database connection");
     }
 
     // Get the correct table name
@@ -115,25 +129,25 @@ export async function GET(request: NextRequest) {
     // Check if santri table exists
     let santriTableExists = true;
     try {
-      await connection.execute('SELECT 1 FROM santri LIMIT 1');
-      console.log('Table santri exists');
+      await connection.execute("SELECT 1 FROM santri LIMIT 1");
+      console.log("Table santri exists");
     } catch (error) {
-      console.log('Table santri does not exist, using simplified query');
+      console.log("Table santri does not exist, using simplified query");
       santriTableExists = false;
     }
 
     // Check if halaqah table exists
     let halaqahTableExists = true;
     try {
-      await connection.execute('SELECT 1 FROM halaqah LIMIT 1');
-      console.log('Table halaqah exists');
+      await connection.execute("SELECT 1 FROM halaqah LIMIT 1");
+      console.log("Table halaqah exists");
     } catch (error) {
-      console.log('Table halaqah does not exist, using simplified query');
+      console.log("Table halaqah does not exist, using simplified query");
       halaqahTableExists = false;
     }
 
     // Build query based on available tables
-    let query = '';
+    let query = "";
 
     if (santriTableExists && halaqahTableExists) {
       query = `
@@ -183,17 +197,17 @@ export async function GET(request: NextRequest) {
       params.push(santriId);
     }
 
-    if (status && status !== 'all') {
+    if (status && status !== "all") {
       query += ` AND ht.status = ?`;
       params.push(status);
     }
 
-    if (priority && priority !== 'all') {
+    if (priority && priority !== "all") {
       query += ` AND ht.priority = ?`;
       params.push(priority);
     }
 
-    if (targetType && targetType !== 'all') {
+    if (targetType && targetType !== "all") {
       query += ` AND ht.targetType = ?`;
       params.push(targetType);
     }
@@ -206,19 +220,19 @@ export async function GET(request: NextRequest) {
 
     query += ` ORDER BY ht.updatedAt DESC`;
 
-    console.log('Executing query:', query);
-    console.log('With params:', params);
+    console.log("Executing query:", query);
+    console.log("With params:", params);
 
     // Execute query
     const [rows] = await connection.execute(query, params);
     console.log(`Found ${(rows as any[]).length} target records`);
 
     // Format data
-    const targets = (rows as any[]).map(row => {
+    const targets = (rows as any[]).map((row) => {
       const formattedTarget: any = {
         id: row.id,
         santriId: row.santriId,
-        santriName: row.santriName || 'Santri',
+        santriName: row.santriName || "Santri",
         surahId: row.surahId,
         surahName: row.surahName,
         targetType: row.targetType,
@@ -235,8 +249,16 @@ export async function GET(request: NextRequest) {
         priority: row.priority,
         description: row.description,
         notes: row.notes,
-        reminders: row.reminders ? (typeof row.reminders === 'string' ? JSON.parse(row.reminders) : row.reminders) : null,
-        milestones: row.milestones ? (typeof row.milestones === 'string' ? JSON.parse(row.milestones) : row.milestones) : null
+        reminders: row.reminders
+          ? typeof row.reminders === "string"
+            ? JSON.parse(row.reminders)
+            : row.reminders
+          : null,
+        milestones: row.milestones
+          ? typeof row.milestones === "string"
+            ? JSON.parse(row.milestones)
+            : row.milestones
+          : null,
       };
 
       // Add santri info if available
@@ -250,7 +272,7 @@ export async function GET(request: NextRequest) {
         formattedTarget.halaqah = {
           id: row.halaqahId,
           name: row.halaqahName,
-          level: row.halaqahLevel
+          level: row.halaqahLevel,
         };
       }
 
@@ -262,18 +284,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       targets,
-      total: targets.length
+      total: targets.length,
     });
-
   } catch (error) {
-    console.error('Error fetching hafalan targets:', error);
+    console.error("Error fetching hafalan targets:", error);
     return NextResponse.json(
       {
         success: false,
-        message: 'Gagal mengambil data target hafalan',
-        error: String(error)
+        message: "Gagal mengambil data target hafalan",
+        error: String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   } finally {
     if (connection) {
@@ -300,16 +321,16 @@ export async function POST(request: NextRequest) {
       priority,
       description,
       notes,
-      reminders
+      reminders,
     } = body;
 
-    console.log('POST /api/hafalan-targets - Request body:', body);
+    console.log("POST /api/hafalan-targets - Request body:", body);
 
     // Validation
     if (!santriId || !surahId || !targetType || !targetAyahs || !targetDate) {
       return NextResponse.json(
-        { success: false, message: 'Field wajib tidak boleh kosong' },
-        { status: 400 }
+        { success: false, message: "Field wajib tidak boleh kosong" },
+        { status: 400 },
       );
     }
 
@@ -318,7 +339,7 @@ export async function POST(request: NextRequest) {
 
     // Ensure connection is not null
     if (!connection) {
-      throw new Error('Failed to create database connection');
+      throw new Error("Failed to create database connection");
     }
 
     // Get the correct table name
@@ -326,37 +347,43 @@ export async function POST(request: NextRequest) {
     console.log(`Using table name: ${tableName}`);
 
     // Check if santri exists
-    let santriExists = true;
+    const santriExists = true;
     let santriName_db = santriName;
     try {
       const [santriRows] = await connection.execute(
-        'SELECT name FROM santri WHERE id = ?',
-        [santriId]
+        "SELECT name FROM santri WHERE id = ?",
+        [santriId],
       );
 
       if ((santriRows as any[]).length === 0) {
-        console.log(`Santri with ID ${santriId} not found in database, using provided name`);
+        console.log(
+          `Santri with ID ${santriId} not found in database, using provided name`,
+        );
       } else {
         santriName_db = (santriRows as any[])[0].name;
         console.log(`Found santri name in database: ${santriName_db}`);
       }
     } catch (error) {
-      console.log('Error checking santri or santri table does not exist, using provided name');
+      console.log(
+        "Error checking santri or santri table does not exist, using provided name",
+      );
     }
 
     // Create target
     const targetId = `target_${Date.now()}`;
     const targetDateObj = new Date(targetDate);
     const startDateObj = startDate ? new Date(startDate) : new Date();
-    const remindersJson = reminders ? JSON.stringify(reminders) : JSON.stringify({
-      enabled: true,
-      frequency: 'WEEKLY'
-    });
+    const remindersJson = reminders
+      ? JSON.stringify(reminders)
+      : JSON.stringify({
+          enabled: true,
+          frequency: "WEEKLY",
+        });
     const milestonesJson = JSON.stringify([
-      { percentage: 25, reward: 'Sticker Bintang' },
-      { percentage: 50, reward: 'Sertifikat Progress' },
-      { percentage: 75, reward: 'Hadiah Kecil' },
-      { percentage: 100, reward: 'Sertifikat Completion' }
+      { percentage: 25, reward: "Sticker Bintang" },
+      { percentage: 50, reward: "Sertifikat Progress" },
+      { percentage: 75, reward: "Hadiah Kecil" },
+      { percentage: 100, reward: "Sertifikat Completion" },
     ]);
 
     await connection.execute(
@@ -364,39 +391,40 @@ export async function POST(request: NextRequest) {
         id, santriId, santriName, surahId, surahName, targetType, targetAyahs, completedAyahs,
         targetDate, startDate, createdBy, createdByName, status, progress, priority,
         description, notes, reminders, milestones
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    , [
-      targetId,
-      santriId,
-      santriName_db,
-      surahId,
-      surahName,
-      targetType,
-      targetAyahs,
-      0, // completedAyahs
-      targetDateObj,
-      startDateObj,
-      'admin', // createdBy
-      'Admin TPQ', // createdByName
-      'ACTIVE', // status
-      0, // progress
-      priority || 'MEDIUM',
-      description || '',
-      notes || '',
-      remindersJson,
-      milestonesJson
-    ]);
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        targetId,
+        santriId,
+        santriName_db,
+        surahId,
+        surahName,
+        targetType,
+        targetAyahs,
+        0, // completedAyahs
+        targetDateObj,
+        startDateObj,
+        "admin", // createdBy
+        "Admin TPQ", // createdByName
+        "ACTIVE", // status
+        0, // progress
+        priority || "MEDIUM",
+        description || "",
+        notes || "",
+        remindersJson,
+        milestonesJson,
+      ],
+    );
 
     // Get the created target
     const [targetRows] = await connection.execute(
       `SELECT * FROM ${tableName} WHERE id = ?`,
-      [targetId]
+      [targetId],
     );
 
     if ((targetRows as any[]).length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Gagal membuat target hafalan' },
-        { status: 500 }
+        { success: false, message: "Gagal membuat target hafalan" },
+        { status: 500 },
       );
     }
 
@@ -405,27 +433,30 @@ export async function POST(request: NextRequest) {
     // Format response
     const formattedTarget = {
       ...createdTarget,
-      reminders: createdTarget.reminders ? JSON.parse(createdTarget.reminders) : null,
-      milestones: createdTarget.milestones ? JSON.parse(createdTarget.milestones) : null
+      reminders: createdTarget.reminders
+        ? JSON.parse(createdTarget.reminders)
+        : null,
+      milestones: createdTarget.milestones
+        ? JSON.parse(createdTarget.milestones)
+        : null,
     };
 
-    console.log('Returning created target:', formattedTarget);
+    console.log("Returning created target:", formattedTarget);
 
     return NextResponse.json({
       success: true,
-      message: 'Target hafalan berhasil dibuat',
-      target: formattedTarget
+      message: "Target hafalan berhasil dibuat",
+      target: formattedTarget,
     });
-
   } catch (error) {
-    console.error('Error creating hafalan target:', error);
+    console.error("Error creating hafalan target:", error);
     return NextResponse.json(
       {
         success: false,
-        message: 'Gagal membuat target hafalan',
-        error: String(error)
+        message: "Gagal membuat target hafalan",
+        error: String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   } finally {
     if (connection) {

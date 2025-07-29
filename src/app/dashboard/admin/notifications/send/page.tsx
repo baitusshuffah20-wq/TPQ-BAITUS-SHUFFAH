@@ -1,13 +1,13 @@
-'use client';
+﻿"use client";
 
-import React, { useState, useEffect } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Send, 
+import React, { useState, useEffect } from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Send,
   Users,
   MessageSquare,
   Mail,
@@ -17,9 +17,9 @@ import {
   User,
   FileText,
   AlertTriangle,
-  CheckCircle
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  CheckCircle,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface NotificationTemplate {
   id: string;
@@ -43,17 +43,17 @@ export default function SendNotificationPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    method: 'template', // 'template' or 'direct'
-    templateId: '',
-    title: '',
-    message: '',
-    type: 'SYSTEM_ANNOUNCEMENT',
-    priority: 'NORMAL',
-    channels: ['IN_APP'],
-    recipientType: 'specific', // 'specific', 'all_users', 'all_wali', 'all_musyrif'
+    method: "template", // 'template' or 'direct'
+    templateId: "",
+    title: "",
+    message: "",
+    type: "SYSTEM_ANNOUNCEMENT",
+    priority: "NORMAL",
+    channels: ["IN_APP"],
+    recipientType: "specific", // 'specific', 'all_users', 'all_wali', 'all_musyrif'
     recipientIds: [] as string[],
     variables: {} as Record<string, string>,
-    scheduledAt: ''
+    scheduledAt: "",
   });
 
   useEffect(() => {
@@ -63,62 +63,68 @@ export default function SendNotificationPage() {
 
   const loadTemplates = async () => {
     try {
-      const response = await fetch('/api/notifications/templates?isActive=true');
+      const response = await fetch(
+        "/api/notifications/templates?isActive=true",
+      );
       if (response.ok) {
         const data = await response.json();
         setTemplates(data.templates || []);
       }
     } catch (error) {
-      console.error('Error loading templates:', error);
+      console.error("Error loading templates:", error);
     }
   };
 
   const loadUsers = async () => {
     try {
-      const response = await fetch('/api/users');
+      const response = await fetch("/api/users");
       if (response.ok) {
         const data = await response.json();
         setUsers(data.users || []);
       }
     } catch (error) {
-      console.error('Error loading users:', error);
+      console.error("Error loading users:", error);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     const { name, value, type } = e.target;
-    
-    if (name === 'channels') {
+
+    if (name === "channels") {
       const checkbox = e.target as HTMLInputElement;
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        channels: checkbox.checked 
+        channels: checkbox.checked
           ? [...prev.channels, value]
-          : prev.channels.filter(c => c !== value)
+          : prev.channels.filter((c) => c !== value),
       }));
-    } else if (name === 'recipientIds') {
+    } else if (name === "recipientIds") {
       const checkbox = e.target as HTMLInputElement;
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        recipientIds: checkbox.checked 
+        recipientIds: checkbox.checked
           ? [...prev.recipientIds, value]
-          : prev.recipientIds.filter(id => id !== value)
+          : prev.recipientIds.filter((id) => id !== value),
       }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
   const handleTemplateChange = (templateId: string) => {
-    const template = templates.find(t => t.id === templateId);
+    const template = templates.find((t) => t.id === templateId);
     if (template) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         templateId,
         title: template.title,
         message: template.message,
         type: template.type,
-        channels: template.channels.split(',').map(c => c.trim())
+        channels: template.channels.split(",").map((c) => c.trim()),
       }));
 
       // Parse variables if available
@@ -126,21 +132,21 @@ export default function SendNotificationPage() {
         try {
           const variables = JSON.parse(template.variables);
           const variableDefaults: Record<string, string> = {};
-          Object.keys(variables).forEach(key => {
-            variableDefaults[key] = '';
+          Object.keys(variables).forEach((key) => {
+            variableDefaults[key] = "";
           });
-          setFormData(prev => ({ ...prev, variables: variableDefaults }));
+          setFormData((prev) => ({ ...prev, variables: variableDefaults }));
         } catch (error) {
-          console.error('Error parsing template variables:', error);
+          console.error("Error parsing template variables:", error);
         }
       }
     }
   };
 
   const handleVariableChange = (key: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      variables: { ...prev.variables, [key]: value }
+      variables: { ...prev.variables, [key]: value },
     }));
   };
 
@@ -150,32 +156,40 @@ export default function SendNotificationPage() {
 
     try {
       // Validation
-      if (formData.method === 'template' && !formData.templateId) {
-        toast.error('Pilih template notifikasi');
+      if (formData.method === "template" && !formData.templateId) {
+        toast.error("Pilih template notifikasi");
         return;
       }
 
-      if (formData.method === 'direct' && (!formData.title || !formData.message)) {
-        toast.error('Judul dan pesan wajib diisi');
+      if (
+        formData.method === "direct" &&
+        (!formData.title || !formData.message)
+      ) {
+        toast.error("Judul dan pesan wajib diisi");
         return;
       }
 
       if (formData.channels.length === 0) {
-        toast.error('Pilih minimal satu channel');
+        toast.error("Pilih minimal satu channel");
         return;
       }
 
-      if (formData.recipientType === 'specific' && formData.recipientIds.length === 0) {
-        toast.error('Pilih minimal satu penerima');
+      if (
+        formData.recipientType === "specific" &&
+        formData.recipientIds.length === 0
+      ) {
+        toast.error("Pilih minimal satu penerima");
         return;
       }
 
       const payload: any = {
-        createdBy: 'admin-user'
+        createdBy: "admin-user",
       };
 
-      if (formData.method === 'template') {
-        payload.templateName = templates.find(t => t.id === formData.templateId)?.name;
+      if (formData.method === "template") {
+        payload.templateName = templates.find(
+          (t) => t.id === formData.templateId,
+        )?.name;
         payload.variables = formData.variables;
       } else {
         payload.title = formData.title;
@@ -189,54 +203,58 @@ export default function SendNotificationPage() {
         payload.scheduledAt = formData.scheduledAt;
       }
 
-      let endpoint = '/api/notifications/send';
-      
-      if (formData.recipientType === 'specific') {
+      let endpoint = "/api/notifications/send";
+
+      if (formData.recipientType === "specific") {
         // Send to specific users
         if (formData.recipientIds.length === 1) {
           payload.recipientId = formData.recipientIds[0];
         } else {
           // Bulk send
-          endpoint = '/api/notifications/send';
+          endpoint = "/api/notifications/send";
           payload.recipientIds = formData.recipientIds;
         }
       } else {
         // Bulk send to user groups
-        endpoint = '/api/notifications/send';
+        endpoint = "/api/notifications/send";
         payload.recipientType = formData.recipientType.toUpperCase();
       }
 
       const response = await fetch(endpoint, {
-        method: formData.recipientIds.length > 1 || formData.recipientType !== 'specific' ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        method:
+          formData.recipientIds.length > 1 ||
+          formData.recipientType !== "specific"
+            ? "PUT"
+            : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
         const data = await response.json();
-        toast.success(data.message || 'Notifikasi berhasil dikirim');
-        
+        toast.success(data.message || "Notifikasi berhasil dikirim");
+
         // Reset form
         setFormData({
-          method: 'template',
-          templateId: '',
-          title: '',
-          message: '',
-          type: 'SYSTEM_ANNOUNCEMENT',
-          priority: 'NORMAL',
-          channels: ['IN_APP'],
-          recipientType: 'specific',
+          method: "template",
+          templateId: "",
+          title: "",
+          message: "",
+          type: "SYSTEM_ANNOUNCEMENT",
+          priority: "NORMAL",
+          channels: ["IN_APP"],
+          recipientType: "specific",
           recipientIds: [],
           variables: {},
-          scheduledAt: ''
+          scheduledAt: "",
         });
       } else {
         const error = await response.json();
-        toast.error(error.message || 'Gagal mengirim notifikasi');
+        toast.error(error.message || "Gagal mengirim notifikasi");
       }
     } catch (error) {
-      console.error('Error sending notification:', error);
-      toast.error('Gagal mengirim notifikasi');
+      console.error("Error sending notification:", error);
+      toast.error("Gagal mengirim notifikasi");
     } finally {
       setLoading(false);
     }
@@ -244,21 +262,23 @@ export default function SendNotificationPage() {
 
   const getChannelIcon = (channel: string) => {
     switch (channel) {
-      case 'IN_APP':
+      case "IN_APP":
         return <Bell className="h-4 w-4" />;
-      case 'EMAIL':
+      case "EMAIL":
         return <Mail className="h-4 w-4" />;
-      case 'WHATSAPP':
+      case "WHATSAPP":
         return <MessageSquare className="h-4 w-4" />;
-      case 'SMS':
+      case "SMS":
         return <Smartphone className="h-4 w-4" />;
       default:
         return null;
     }
   };
 
-  const selectedTemplate = templates.find(t => t.id === formData.templateId);
-  const templateVariables = selectedTemplate?.variables ? JSON.parse(selectedTemplate.variables) : {};
+  const selectedTemplate = templates.find((t) => t.id === formData.templateId);
+  const templateVariables = selectedTemplate?.variables
+    ? JSON.parse(selectedTemplate.variables)
+    : {};
 
   return (
     <DashboardLayout>
@@ -308,29 +328,33 @@ export default function SendNotificationPage() {
                         type="radio"
                         name="method"
                         value="template"
-                        checked={formData.method === 'template'}
+                        checked={formData.method === "template"}
                         onChange={handleInputChange}
                         className="form-radio text-blue-600"
                       />
-                      <span className="text-sm font-medium">Gunakan Template</span>
+                      <span className="text-sm font-medium">
+                        Gunakan Template
+                      </span>
                     </label>
                     <label className="flex items-center space-x-3">
                       <input
                         type="radio"
                         name="method"
                         value="direct"
-                        checked={formData.method === 'direct'}
+                        checked={formData.method === "direct"}
                         onChange={handleInputChange}
                         className="form-radio text-blue-600"
                       />
-                      <span className="text-sm font-medium">Tulis Langsung</span>
+                      <span className="text-sm font-medium">
+                        Tulis Langsung
+                      </span>
                     </label>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Template Selection */}
-              {formData.method === 'template' && (
+              {formData.method === "template" && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Pilih Template</CardTitle>
@@ -341,7 +365,7 @@ export default function SendNotificationPage() {
                       value={formData.templateId}
                       onChange={(e) => handleTemplateChange(e.target.value)}
                       className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      required={formData.method === 'template'}
+                      required={formData.method === "template"}
                     >
                       <option value="">Pilih template...</option>
                       {templates.map((template) => (
@@ -353,17 +377,30 @@ export default function SendNotificationPage() {
 
                     {selectedTemplate && (
                       <div className="mt-4 p-3 bg-gray-50 rounded-md">
-                        <h4 className="font-medium text-gray-900 mb-2">{selectedTemplate.title}</h4>
-                        <p className="text-sm text-gray-600 mb-2">{selectedTemplate.message}</p>
+                        <h4 className="font-medium text-gray-900 mb-2">
+                          {selectedTemplate.title}
+                        </h4>
+                        <p className="text-sm text-gray-600 mb-2">
+                          {selectedTemplate.message}
+                        </p>
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline">{selectedTemplate.type}</Badge>
+                          <Badge variant="outline">
+                            {selectedTemplate.type}
+                          </Badge>
                           <div className="flex gap-1">
-                            {selectedTemplate.channels.split(',').map((channel, index) => (
-                              <div key={index} className="flex items-center gap-1">
-                                {getChannelIcon(channel.trim())}
-                                <span className="text-xs">{channel.trim()}</span>
-                              </div>
-                            ))}
+                            {selectedTemplate.channels
+                              .split(",")
+                              .map((channel, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-center gap-1"
+                                >
+                                  {getChannelIcon(channel.trim())}
+                                  <span className="text-xs">
+                                    {channel.trim()}
+                                  </span>
+                                </div>
+                              ))}
                           </div>
                         </div>
                       </div>
@@ -373,7 +410,7 @@ export default function SendNotificationPage() {
               )}
 
               {/* Direct Message */}
-              {formData.method === 'direct' && (
+              {formData.method === "direct" && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Konten Notifikasi</CardTitle>
@@ -389,7 +426,7 @@ export default function SendNotificationPage() {
                         value={formData.title}
                         onChange={handleInputChange}
                         placeholder="Masukkan judul notifikasi"
-                        required={formData.method === 'direct'}
+                        required={formData.method === "direct"}
                       />
                     </div>
 
@@ -404,7 +441,7 @@ export default function SendNotificationPage() {
                         rows={4}
                         className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Tulis pesan notifikasi..."
-                        required={formData.method === 'direct'}
+                        required={formData.method === "direct"}
                       />
                     </div>
 
@@ -419,11 +456,21 @@ export default function SendNotificationPage() {
                           onChange={handleInputChange}
                           className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
-                          <option value="SYSTEM_ANNOUNCEMENT">Pengumuman Sistem</option>
-                          <option value="PAYMENT_REMINDER">Pengingat Pembayaran</option>
-                          <option value="ATTENDANCE_ALERT">Alert Absensi</option>
-                          <option value="HAFALAN_PROGRESS">Progress Hafalan</option>
-                          <option value="EMERGENCY_ALERT">Peringatan Darurat</option>
+                          <option value="SYSTEM_ANNOUNCEMENT">
+                            Pengumuman Sistem
+                          </option>
+                          <option value="PAYMENT_REMINDER">
+                            Pengingat Pembayaran
+                          </option>
+                          <option value="ATTENDANCE_ALERT">
+                            Alert Absensi
+                          </option>
+                          <option value="HAFALAN_PROGRESS">
+                            Progress Hafalan
+                          </option>
+                          <option value="EMERGENCY_ALERT">
+                            Peringatan Darurat
+                          </option>
                         </select>
                       </div>
 
@@ -449,30 +496,39 @@ export default function SendNotificationPage() {
               )}
 
               {/* Template Variables */}
-              {formData.method === 'template' && selectedTemplate && Object.keys(templateVariables).length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Isi Variabel Template</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {Object.entries(templateVariables).map(([key, description]) => (
-                        <div key={key}>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {key} <span className="text-gray-500">({String(description)})</span>
-                          </label>
-                          <Input
-                            type="text"
-                            value={formData.variables[key] || ''}
-                            onChange={(e) => handleVariableChange(key, e.target.value)}
-                            placeholder={`Masukkan ${String(description).toLowerCase()}`}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              {formData.method === "template" &&
+                selectedTemplate &&
+                Object.keys(templateVariables).length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Isi Variabel Template</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {Object.entries(templateVariables).map(
+                          ([key, description]) => (
+                            <div key={key}>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                {key}{" "}
+                                <span className="text-gray-500">
+                                  ({String(description)})
+                                </span>
+                              </label>
+                              <Input
+                                type="text"
+                                value={formData.variables[key] || ""}
+                                onChange={(e) =>
+                                  handleVariableChange(key, e.target.value)
+                                }
+                                placeholder={`Masukkan ${String(description).toLowerCase()}`}
+                              />
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
               {/* Channels */}
               <Card>
@@ -482,14 +538,25 @@ export default function SendNotificationPage() {
                 <CardContent>
                   <div className="space-y-3">
                     {[
-                      { value: 'IN_APP', label: 'In-App Notification', icon: Bell },
-                      { value: 'EMAIL', label: 'Email', icon: Mail },
-                      { value: 'WHATSAPP', label: 'WhatsApp', icon: MessageSquare },
-                      { value: 'SMS', label: 'SMS', icon: Smartphone }
+                      {
+                        value: "IN_APP",
+                        label: "In-App Notification",
+                        icon: Bell,
+                      },
+                      { value: "EMAIL", label: "Email", icon: Mail },
+                      {
+                        value: "WHATSAPP",
+                        label: "WhatsApp",
+                        icon: MessageSquare,
+                      },
+                      { value: "SMS", label: "SMS", icon: Smartphone },
                     ].map((channel) => {
                       const Icon = channel.icon;
                       return (
-                        <label key={channel.value} className="flex items-center space-x-3">
+                        <label
+                          key={channel.value}
+                          className="flex items-center space-x-3"
+                        >
                           <input
                             type="checkbox"
                             name="channels"
@@ -499,7 +566,9 @@ export default function SendNotificationPage() {
                             className="form-checkbox text-blue-600"
                           />
                           <Icon className="h-4 w-4 text-gray-600" />
-                          <span className="text-sm font-medium">{channel.label}</span>
+                          <span className="text-sm font-medium">
+                            {channel.label}
+                          </span>
                         </label>
                       );
                     })}
@@ -527,33 +596,46 @@ export default function SendNotificationPage() {
                         onChange={handleInputChange}
                         className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        <option value="specific">Pilih Pengguna Spesifik</option>
+                        <option value="specific">
+                          Pilih Pengguna Spesifik
+                        </option>
                         <option value="all_users">Semua Pengguna</option>
                         <option value="all_wali">Semua Wali</option>
                         <option value="all_musyrif">Semua Musyrif</option>
                       </select>
                     </div>
 
-                    {formData.recipientType === 'specific' && (
+                    {formData.recipientType === "specific" && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Pilih Pengguna
                         </label>
                         <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
                           {users.map((user) => (
-                            <label key={user.id} className="flex items-center space-x-3">
+                            <label
+                              key={user.id}
+                              className="flex items-center space-x-3"
+                            >
                               <input
                                 type="checkbox"
                                 name="recipientIds"
                                 value={user.id}
-                                checked={formData.recipientIds.includes(user.id)}
+                                checked={formData.recipientIds.includes(
+                                  user.id,
+                                )}
                                 onChange={handleInputChange}
                                 className="form-checkbox text-blue-600"
                               />
                               <div className="flex-1">
-                                <span className="text-sm font-medium">{user.name}</span>
-                                <span className="text-xs text-gray-500 ml-2">({user.role})</span>
-                                <div className="text-xs text-gray-400">{user.email}</div>
+                                <span className="text-sm font-medium">
+                                  {user.name}
+                                </span>
+                                <span className="text-xs text-gray-500 ml-2">
+                                  ({user.role})
+                                </span>
+                                <div className="text-xs text-gray-400">
+                                  {user.email}
+                                </div>
                               </div>
                             </label>
                           ))}
@@ -602,18 +684,22 @@ export default function SendNotificationPage() {
                 <CardContent>
                   <div className="bg-gray-50 p-4 rounded-md">
                     <h4 className="font-medium text-gray-900 mb-2">
-                      {formData.title || selectedTemplate?.title || 'Judul Notifikasi'}
+                      {formData.title ||
+                        selectedTemplate?.title ||
+                        "Judul Notifikasi"}
                     </h4>
                     <p className="text-sm text-gray-600 mb-3">
-                      {formData.message || selectedTemplate?.message || 'Isi pesan notifikasi akan tampil di sini...'}
+                      {formData.message ||
+                        selectedTemplate?.message ||
+                        "Isi pesan notifikasi akan tampil di sini..."}
                     </p>
                     <div className="flex items-center gap-2 text-xs">
                       <Badge variant="outline">
-                        {formData.type || selectedTemplate?.type || 'SYSTEM_ANNOUNCEMENT'}
+                        {formData.type ||
+                          selectedTemplate?.type ||
+                          "SYSTEM_ANNOUNCEMENT"}
                       </Badge>
-                      <Badge variant="secondary">
-                        {formData.priority}
-                      </Badge>
+                      <Badge variant="secondary">{formData.priority}</Badge>
                       <div className="flex gap-1">
                         {formData.channels.map((channel, index) => (
                           <div key={index} className="flex items-center gap-1">
@@ -639,7 +725,11 @@ export default function SendNotificationPage() {
                     ) : (
                       <Send className="h-4 w-4" />
                     )}
-                    {loading ? 'Mengirim...' : (formData.scheduledAt ? 'Jadwalkan Notifikasi' : 'Kirim Notifikasi')}
+                    {loading
+                      ? "Mengirim..."
+                      : formData.scheduledAt
+                        ? "Jadwalkan Notifikasi"
+                        : "Kirim Notifikasi"}
                   </Button>
                 </CardContent>
               </Card>

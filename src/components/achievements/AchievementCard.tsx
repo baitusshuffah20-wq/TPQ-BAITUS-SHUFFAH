@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Award,
   Lock,
@@ -11,16 +11,16 @@ import {
   Star,
   Trophy,
   Medal,
-  Crown
-} from 'lucide-react';
+  Crown,
+} from "lucide-react";
 import {
   AchievementBadge,
   SantriAchievement,
   getRarityColor,
   getRarityText,
   getCategoryColor,
-  getCategoryText
-} from '@/lib/achievement-data';
+  getCategoryText,
+} from "@/lib/achievement-data";
 
 interface AchievementCardProps {
   badge: AchievementBadge;
@@ -30,7 +30,7 @@ interface AchievementCardProps {
   onShare?: () => void;
   onDownloadCertificate?: () => void;
   showActions?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
 }
 
 export default function AchievementCard({
@@ -41,47 +41,65 @@ export default function AchievementCard({
   onShare,
   onDownloadCertificate,
   showActions = true,
-  size = 'md'
+  size = "md",
 }: AchievementCardProps) {
-  const getRarityIcon = (rarity: AchievementBadge['rarity']) => {
+  const getRarityIcon = (rarity: AchievementBadge["rarity"]) => {
     switch (rarity) {
-      case 'COMMON': return Star;
-      case 'UNCOMMON': return Award;
-      case 'RARE': return Medal;
-      case 'EPIC': return Trophy;
-      case 'LEGENDARY': return Crown;
-      default: return Star;
+      case "COMMON":
+        return Star;
+      case "UNCOMMON":
+        return Award;
+      case "RARE":
+        return Medal;
+      case "EPIC":
+        return Trophy;
+      case "LEGENDARY":
+        return Crown;
+      default:
+        return Star;
     }
   };
 
   const getSizeClasses = () => {
     switch (size) {
-      case 'sm': return 'p-4';
-      case 'md': return 'p-6';
-      case 'lg': return 'p-8';
-      default: return 'p-6';
+      case "sm":
+        return "p-4";
+      case "md":
+        return "p-6";
+      case "lg":
+        return "p-8";
+      default:
+        return "p-6";
     }
   };
 
   const getIconSize = () => {
     switch (size) {
-      case 'sm': return 'text-2xl';
-      case 'md': return 'text-4xl';
-      case 'lg': return 'text-6xl';
-      default: return 'text-4xl';
+      case "sm":
+        return "text-2xl";
+      case "md":
+        return "text-4xl";
+      case "lg":
+        return "text-6xl";
+      default:
+        return "text-4xl";
     }
   };
 
   const RarityIcon = getRarityIcon(badge.rarity);
 
   return (
-    <Card className={`relative overflow-hidden transition-all duration-300 hover:shadow-lg ${
-      isUnlocked 
-        ? 'border-2 border-teal-200 bg-gradient-to-br from-white to-teal-50' 
-        : 'border border-gray-200 bg-gray-50 opacity-75'
-    }`}>
+    <Card
+      className={`relative overflow-hidden transition-all duration-300 hover:shadow-lg ${
+        isUnlocked
+          ? "border-2 border-teal-200 bg-gradient-to-br from-white to-teal-50"
+          : "border border-gray-200 bg-gray-50 opacity-75"
+      }`}
+    >
       {/* Rarity Indicator */}
-      <div className={`absolute top-0 right-0 px-2 py-1 text-xs font-bold rounded-bl-lg ${getRarityColor(badge.rarity)}`}>
+      <div
+        className={`absolute top-0 right-0 px-2 py-1 text-xs font-bold rounded-bl-lg ${getRarityColor(badge.rarity)}`}
+      >
         {getRarityText(badge.rarity)}
       </div>
 
@@ -99,7 +117,9 @@ export default function AchievementCard({
         <div className="text-center space-y-4">
           {/* Badge Icon */}
           <div className="relative">
-            <div className={`${getIconSize()} ${isUnlocked ? '' : 'grayscale'} transition-all duration-300`}>
+            <div
+              className={`${getIconSize()} ${isUnlocked ? "" : "grayscale"} transition-all duration-300`}
+            >
               {badge.icon}
             </div>
             {isUnlocked && (
@@ -111,25 +131,37 @@ export default function AchievementCard({
 
           {/* Badge Info */}
           <div className="space-y-2">
-            <h3 className={`font-bold ${
-              size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-xl' : 'text-lg'
-            } ${isUnlocked ? 'text-gray-900' : 'text-gray-600'}`}>
+            <h3
+              className={`font-bold ${
+                size === "sm"
+                  ? "text-sm"
+                  : size === "lg"
+                    ? "text-xl"
+                    : "text-lg"
+              } ${isUnlocked ? "text-gray-900" : "text-gray-600"}`}
+            >
               {badge.name}
             </h3>
-            
-            <p className={`text-xs ${isUnlocked ? 'text-teal-600' : 'text-gray-500'} font-medium`}>
+
+            <p
+              className={`text-xs ${isUnlocked ? "text-teal-600" : "text-gray-500"} font-medium`}
+            >
               {badge.nameArabic}
             </p>
 
-            <p className={`${
-              size === 'sm' ? 'text-xs' : 'text-sm'
-            } ${isUnlocked ? 'text-gray-700' : 'text-gray-500'} leading-relaxed`}>
+            <p
+              className={`${
+                size === "sm" ? "text-xs" : "text-sm"
+              } ${isUnlocked ? "text-gray-700" : "text-gray-500"} leading-relaxed`}
+            >
               {badge.description}
             </p>
 
             {/* Category Badge */}
             <div className="flex justify-center">
-              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor(badge.category)}`}>
+              <span
+                className={`px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor(badge.category)}`}
+              >
                 {getCategoryText(badge.category)}
               </span>
             </div>
@@ -137,7 +169,9 @@ export default function AchievementCard({
             {/* Points */}
             <div className="flex items-center justify-center space-x-1">
               <Star className="h-4 w-4 text-yellow-500" />
-              <span className={`text-sm font-medium ${isUnlocked ? 'text-gray-900' : 'text-gray-600'}`}>
+              <span
+                className={`text-sm font-medium ${isUnlocked ? "text-gray-900" : "text-gray-600"}`}
+              >
                 {badge.points} poin
               </span>
             </div>
@@ -161,11 +195,15 @@ export default function AchievementCard({
           {/* Achievement Date */}
           {isUnlocked && santriAchievement && (
             <div className="text-xs text-gray-500">
-              Diraih pada: {new Date(santriAchievement.achievedAt).toLocaleDateString('id-ID', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-              })}
+              Diraih pada:{" "}
+              {new Date(santriAchievement.achievedAt).toLocaleDateString(
+                "id-ID",
+                {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                },
+              )}
             </div>
           )}
 
@@ -183,34 +221,37 @@ export default function AchievementCard({
                   Bagikan
                 </Button>
               )}
-              {onDownloadCertificate && santriAchievement?.certificateGenerated && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onDownloadCertificate}
-                  className="flex-1"
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  Sertifikat
-                </Button>
-              )}
+              {onDownloadCertificate &&
+                santriAchievement?.certificateGenerated && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onDownloadCertificate}
+                    className="flex-1"
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    Sertifikat
+                  </Button>
+                )}
             </div>
           )}
 
           {/* Unlock Message (for newly unlocked achievements) */}
-          {isUnlocked && santriAchievement && !santriAchievement.notificationSent && (
-            <div className="bg-gradient-to-r from-green-100 to-teal-100 border border-green-200 rounded-lg p-3 mt-4">
-              <div className="flex items-center justify-center space-x-2">
-                <Trophy className="h-5 w-5 text-green-600" />
-                <span className="text-sm font-medium text-green-800">
-                  Baru Diraih!
-                </span>
+          {isUnlocked &&
+            santriAchievement &&
+            !santriAchievement.notificationSent && (
+              <div className="bg-gradient-to-r from-green-100 to-teal-100 border border-green-200 rounded-lg p-3 mt-4">
+                <div className="flex items-center justify-center space-x-2">
+                  <Trophy className="h-5 w-5 text-green-600" />
+                  <span className="text-sm font-medium text-green-800">
+                    Baru Diraih!
+                  </span>
+                </div>
+                <p className="text-xs text-green-700 mt-1 text-center">
+                  {badge.unlockMessage}
+                </p>
               </div>
-              <p className="text-xs text-green-700 mt-1 text-center">
-                {badge.unlockMessage}
-              </p>
-            </div>
-          )}
+            )}
         </div>
       </CardContent>
     </Card>

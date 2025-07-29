@@ -21,18 +21,18 @@ interface ReceiptData {
 
 export function generateReceiptHTML(data: ReceiptData): string {
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(amount);
   };
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('id-ID', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
+    return new Intl.DateTimeFormat("id-ID", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
     }).format(date);
   };
 
@@ -236,18 +236,26 @@ export function generateReceiptHTML(data: ReceiptData): string {
               <span>Jumlah SPP:</span>
               <span>${formatCurrency(data.spp.amount)}</span>
             </div>
-            ${data.spp.discount > 0 ? `
+            ${
+              data.spp.discount > 0
+                ? `
             <div class="total-row">
               <span>Diskon:</span>
               <span style="color: #10b981;">-${formatCurrency(data.spp.discount)}</span>
             </div>
-            ` : ''}
-            ${data.spp.fine > 0 ? `
+            `
+                : ""
+            }
+            ${
+              data.spp.fine > 0
+                ? `
             <div class="total-row">
               <span>Denda:</span>
               <span style="color: #ef4444;">+${formatCurrency(data.spp.fine)}</span>
             </div>
-            ` : ''}
+            `
+                : ""
+            }
             <div class="total-row main">
               <span>Total Dibayar:</span>
               <span>${formatCurrency(data.spp.paidAmount)}</span>
@@ -266,12 +274,16 @@ export function generateReceiptHTML(data: ReceiptData): string {
             </div>
           </div>
 
-          ${data.notes ? `
+          ${
+            data.notes
+              ? `
           <div class="notes">
             <div class="notes-title">Catatan:</div>
             <div class="notes-content">${data.notes}</div>
           </div>
-          ` : ''}
+          `
+              : ""
+          }
 
           <div class="signature-section">
             <div class="signature-box">
@@ -311,11 +323,14 @@ export function generateReceiptHTML(data: ReceiptData): string {
 export function generateReceiptNumber(): string {
   const now = new Date();
   const year = now.getFullYear().toString().slice(-2);
-  const month = (now.getMonth() + 1).toString().padStart(2, '0');
-  const day = now.getDate().toString().padStart(2, '0');
-  const time = now.getHours().toString().padStart(2, '0') + 
-               now.getMinutes().toString().padStart(2, '0');
-  const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
-  
+  const month = (now.getMonth() + 1).toString().padStart(2, "0");
+  const day = now.getDate().toString().padStart(2, "0");
+  const time =
+    now.getHours().toString().padStart(2, "0") +
+    now.getMinutes().toString().padStart(2, "0");
+  const random = Math.floor(Math.random() * 100)
+    .toString()
+    .padStart(2, "0");
+
   return `SPP${year}${month}${day}${time}${random}`;
 }

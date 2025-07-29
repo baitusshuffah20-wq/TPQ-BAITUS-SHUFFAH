@@ -1,17 +1,17 @@
-'use client';
+﻿"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Settings, 
-  Clock, 
-  MessageSquare, 
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Settings,
+  Clock,
+  MessageSquare,
   Users,
   Calendar,
   CreditCard,
@@ -19,16 +19,23 @@ import {
   CheckCircle,
   XCircle,
   Play,
-  Pause
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+} from "lucide-react";
+import { toast } from "react-hot-toast";
+
+interface AutomationRuleConditions {
+  minGrade?: number;
+  consecutiveDays?: number;
+  daysBefore?: number;
+  dayOfMonth?: number;
+  [key: string]: unknown;
+}
 
 interface AutomationRule {
   id: string;
   name: string;
   trigger: string;
   enabled: boolean;
-  conditions: any;
+  conditions: AutomationRuleConditions;
   template: string;
   recipients: string;
 }
@@ -48,13 +55,13 @@ interface CronStatus {
 export default function WhatsAppSettings() {
   const [cronStatus, setCronStatus] = useState<CronStatus | null>(null);
   const [loading, setLoading] = useState(false);
-  const [testPhone, setTestPhone] = useState('');
+  const [testPhone, setTestPhone] = useState("");
   const [apiConfig, setApiConfig] = useState({
-    apiUrl: '',
-    accessToken: '',
-    phoneNumberId: '',
-    webhookToken: '',
-    webhookSecret: ''
+    apiUrl: "",
+    accessToken: "",
+    phoneNumberId: "",
+    webhookToken: "",
+    webhookSecret: "",
   });
 
   useEffect(() => {
@@ -64,55 +71,63 @@ export default function WhatsAppSettings() {
 
   const loadCronStatus = async () => {
     try {
-      const response = await fetch('/api/cron/whatsapp-notifications');
+      const response = await fetch("/api/cron/whatsapp-notifications");
       if (response.ok) {
         const data = await response.json();
         setCronStatus(data);
       }
     } catch (error) {
-      console.error('Error loading cron status:', error);
+      console.error("Error loading cron status:", error);
     }
   };
 
   const loadApiConfig = async () => {
     try {
-      const response = await fetch('/api/whatsapp/test');
+      const response = await fetch("/api/whatsapp/test");
       if (response.ok) {
         const data = await response.json();
         // Don't load actual secrets, just show configuration status
         setApiConfig({
-          apiUrl: data.environment.hasApiUrl ? 'Configured' : 'Not configured',
-          accessToken: data.environment.hasAccessToken ? 'Configured' : 'Not configured',
-          phoneNumberId: data.environment.hasPhoneNumberId ? 'Configured' : 'Not configured',
-          webhookToken: data.environment.hasWebhookToken ? 'Configured' : 'Not configured',
-          webhookSecret: data.environment.hasWebhookSecret ? 'Configured' : 'Not configured'
+          apiUrl: data.environment.hasApiUrl ? "Configured" : "Not configured",
+          accessToken: data.environment.hasAccessToken
+            ? "Configured"
+            : "Not configured",
+          phoneNumberId: data.environment.hasPhoneNumberId
+            ? "Configured"
+            : "Not configured",
+          webhookToken: data.environment.hasWebhookToken
+            ? "Configured"
+            : "Not configured",
+          webhookSecret: data.environment.hasWebhookSecret
+            ? "Configured"
+            : "Not configured",
         });
       }
     } catch (error) {
-      console.error('Error loading API config:', error);
+      console.error("Error loading API config:", error);
     }
   };
 
   const toggleAutomationRule = async (ruleId: string, enabled: boolean) => {
     try {
       setLoading(true);
-      
+
       // In a real app, this would call an API to update the rule
       // For now, we'll just update the local state
       if (cronStatus) {
-        const updatedRules = cronStatus.automationRules.map(rule =>
-          rule.id === ruleId ? { ...rule, enabled } : rule
+        const updatedRules = cronStatus.automationRules.map((rule) =>
+          rule.id === ruleId ? { ...rule, enabled } : rule,
         );
         setCronStatus({
           ...cronStatus,
-          automationRules: updatedRules
+          automationRules: updatedRules,
         });
       }
 
-      toast.success(`Automation rule ${enabled ? 'enabled' : 'disabled'}`);
+      toast.success(`Automation rule ${enabled ? "enabled" : "disabled"}`);
     } catch (error) {
-      console.error('Error toggling automation rule:', error);
-      toast.error('Failed to update automation rule');
+      console.error("Error toggling automation rule:", error);
+      toast.error("Failed to update automation rule");
     } finally {
       setLoading(false);
     }
@@ -121,26 +136,26 @@ export default function WhatsAppSettings() {
   const runManualCron = async (type: string) => {
     try {
       setLoading(true);
-      
-      const response = await fetch('/api/cron/whatsapp-notifications', {
-        method: 'POST',
+
+      const response = await fetch("/api/cron/whatsapp-notifications", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || 'demo-secret'}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || "demo-secret"}`,
         },
-        body: JSON.stringify({ type })
+        body: JSON.stringify({ type }),
       });
 
       if (response.ok) {
         const result = await response.json();
         toast.success(`${type} notifications processed successfully`);
-        console.log('Cron result:', result);
+        console.log("Cron result:", result);
       } else {
         toast.error(`Failed to run ${type} notifications`);
       }
     } catch (error) {
-      console.error('Error running manual cron:', error);
-      toast.error('Failed to run notifications');
+      console.error("Error running manual cron:", error);
+      toast.error("Failed to run notifications");
     } finally {
       setLoading(false);
     }
@@ -149,25 +164,25 @@ export default function WhatsAppSettings() {
   const testWhatsAppConnection = async () => {
     try {
       setLoading(true);
-      
-      const response = await fetch('/api/whatsapp/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+
+      const response = await fetch("/api/whatsapp/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           phone: testPhone,
-          message: 'Test connection dari WhatsApp Settings'
-        })
+          message: "Test connection dari WhatsApp Settings",
+        }),
       });
 
       if (response.ok) {
-        toast.success('Test message sent successfully!');
+        toast.success("Test message sent successfully!");
       } else {
         const error = await response.json();
         toast.error(`Test failed: ${error.error}`);
       }
     } catch (error) {
-      console.error('Error testing WhatsApp:', error);
-      toast.error('Failed to test WhatsApp connection');
+      console.error("Error testing WhatsApp:", error);
+      toast.error("Failed to test WhatsApp connection");
     } finally {
       setLoading(false);
     }
@@ -175,13 +190,13 @@ export default function WhatsAppSettings() {
 
   const getRuleIcon = (trigger: string) => {
     switch (trigger) {
-      case 'hafalan_completed':
+      case "hafalan_completed":
         return <FileText className="h-4 w-4" />;
-      case 'attendance_absent':
+      case "attendance_absent":
         return <Calendar className="h-4 w-4" />;
-      case 'payment_due':
+      case "payment_due":
         return <CreditCard className="h-4 w-4" />;
-      case 'monthly_report':
+      case "monthly_report":
         return <Users className="h-4 w-4" />;
       default:
         return <MessageSquare className="h-4 w-4" />;
@@ -189,7 +204,7 @@ export default function WhatsAppSettings() {
   };
 
   const formatNextScheduled = (dateString: string) => {
-    return new Date(dateString).toLocaleString('id-ID');
+    return new Date(dateString).toLocaleString("id-ID");
   };
 
   return (
@@ -223,18 +238,21 @@ export default function WhatsAppSettings() {
                         <div>
                           <h4 className="font-medium">{rule.name}</h4>
                           <p className="text-sm text-gray-500">
-                            Trigger: {rule.trigger} • Recipients: {rule.recipients}
+                            Trigger: {rule.trigger} � Recipients:{" "}
+                            {rule.recipients}
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-3">
                         <Badge variant={rule.enabled ? "default" : "secondary"}>
-                          {rule.enabled ? 'Active' : 'Inactive'}
+                          {rule.enabled ? "Active" : "Inactive"}
                         </Badge>
                         <Switch
                           checked={rule.enabled}
-                          onCheckedChange={(enabled) => toggleAutomationRule(rule.id, enabled)}
+                          onCheckedChange={(enabled) =>
+                            toggleAutomationRule(rule.id, enabled)
+                          }
                           disabled={loading}
                         />
                       </div>
@@ -261,30 +279,34 @@ export default function WhatsAppSettings() {
             <CardContent>
               {cronStatus ? (
                 <div className="space-y-4">
-                  {Object.entries(cronStatus.nextScheduled).map(([type, nextTime]) => (
-                    <div
-                      key={type}
-                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
-                    >
-                      <div>
-                        <h4 className="font-medium capitalize">{type.replace('_', ' ')}</h4>
-                        <p className="text-sm text-gray-500">
-                          Next run: {formatNextScheduled(nextTime)}
-                        </p>
-                      </div>
-                      
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => runManualCron(type)}
-                        disabled={loading}
-                        className="flex items-center gap-2"
+                  {Object.entries(cronStatus.nextScheduled).map(
+                    ([type, nextTime]) => (
+                      <div
+                        key={type}
+                        className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
                       >
-                        <Play className="h-4 w-4" />
-                        Run Now
-                      </Button>
-                    </div>
-                  ))}
+                        <div>
+                          <h4 className="font-medium capitalize">
+                            {type.replace("_", " ")}
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            Next run: {formatNextScheduled(nextTime)}
+                          </p>
+                        </div>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => runManualCron(type)}
+                          disabled={loading}
+                          className="flex items-center gap-2"
+                        >
+                          <Play className="h-4 w-4" />
+                          Run Now
+                        </Button>
+                      </div>
+                    ),
+                  )}
                 </div>
               ) : (
                 <p className="text-center text-gray-500 py-8">
@@ -309,7 +331,7 @@ export default function WhatsAppSettings() {
                   <Label>WhatsApp API URL</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Input value={apiConfig.apiUrl} readOnly />
-                    {apiConfig.apiUrl === 'Configured' ? (
+                    {apiConfig.apiUrl === "Configured" ? (
                       <CheckCircle className="h-5 w-5 text-green-500" />
                     ) : (
                       <XCircle className="h-5 w-5 text-red-500" />
@@ -321,7 +343,7 @@ export default function WhatsAppSettings() {
                   <Label>Access Token</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Input value={apiConfig.accessToken} readOnly />
-                    {apiConfig.accessToken === 'Configured' ? (
+                    {apiConfig.accessToken === "Configured" ? (
                       <CheckCircle className="h-5 w-5 text-green-500" />
                     ) : (
                       <XCircle className="h-5 w-5 text-red-500" />
@@ -333,7 +355,7 @@ export default function WhatsAppSettings() {
                   <Label>Phone Number ID</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Input value={apiConfig.phoneNumberId} readOnly />
-                    {apiConfig.phoneNumberId === 'Configured' ? (
+                    {apiConfig.phoneNumberId === "Configured" ? (
                       <CheckCircle className="h-5 w-5 text-green-500" />
                     ) : (
                       <XCircle className="h-5 w-5 text-red-500" />
@@ -345,7 +367,7 @@ export default function WhatsAppSettings() {
                   <Label>Webhook Token</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Input value={apiConfig.webhookToken} readOnly />
-                    {apiConfig.webhookToken === 'Configured' ? (
+                    {apiConfig.webhookToken === "Configured" ? (
                       <CheckCircle className="h-5 w-5 text-green-500" />
                     ) : (
                       <XCircle className="h-5 w-5 text-red-500" />
@@ -355,12 +377,24 @@ export default function WhatsAppSettings() {
               </div>
 
               <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-medium text-blue-900 mb-2">Configuration Notes:</h4>
+                <h4 className="font-medium text-blue-900 mb-2">
+                  Configuration Notes:
+                </h4>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• API credentials are configured via environment variables</li>
-                  <li>• Webhook URL should be set to: {process.env.NEXT_PUBLIC_APP_URL}/api/whatsapp/webhook</li>
-                  <li>• Make sure to verify webhook in Facebook Business Manager</li>
-                  <li>• Test phone number should be added to WhatsApp Business account</li>
+                  <li>
+                    � API credentials are configured via environment variables
+                  </li>
+                  <li>
+                    � Webhook URL should be set to:{" "}
+                    {process.env.NEXT_PUBLIC_APP_URL}/api/whatsapp/webhook
+                  </li>
+                  <li>
+                    � Make sure to verify webhook in Facebook Business Manager
+                  </li>
+                  <li>
+                    � Test phone number should be added to WhatsApp Business
+                    account
+                  </li>
                 </ul>
               </div>
             </CardContent>
@@ -394,16 +428,23 @@ export default function WhatsAppSettings() {
                 disabled={loading || !testPhone}
                 className="w-full"
               >
-                {loading ? 'Sending...' : 'Send Test Message'}
+                {loading ? "Sending..." : "Send Test Message"}
               </Button>
 
               <div className="mt-6 p-4 bg-yellow-50 rounded-lg">
-                <h4 className="font-medium text-yellow-900 mb-2">Test Guidelines:</h4>
+                <h4 className="font-medium text-yellow-900 mb-2">
+                  Test Guidelines:
+                </h4>
                 <ul className="text-sm text-yellow-800 space-y-1">
-                  <li>• Use a phone number that's registered with WhatsApp</li>
-                  <li>• Phone number should be added to your WhatsApp Business account</li>
-                  <li>• Check WhatsApp Business API logs for delivery status</li>
-                  <li>• Test messages may take a few seconds to arrive</li>
+                  <li>� Use a phone number that's registered with WhatsApp</li>
+                  <li>
+                    � Phone number should be added to your WhatsApp Business
+                    account
+                  </li>
+                  <li>
+                    � Check WhatsApp Business API logs for delivery status
+                  </li>
+                  <li>� Test messages may take a few seconds to arrive</li>
                 </ul>
               </div>
             </CardContent>

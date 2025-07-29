@@ -1,8 +1,24 @@
 // Attendance Data Models for TPQ Management System
 
-export type AttendanceStatus = 'PRESENT' | 'LATE' | 'ABSENT' | 'EXCUSED' | 'SICK' | 'PERMISSION';
-export type AttendanceMethod = 'MANUAL' | 'QR_CODE' | 'RFID' | 'BIOMETRIC' | 'AUTO';
-export type SessionType = 'MORNING' | 'AFTERNOON' | 'EVENING' | 'WEEKEND' | 'SPECIAL';
+export type AttendanceStatus =
+  | "PRESENT"
+  | "LATE"
+  | "ABSENT"
+  | "EXCUSED"
+  | "SICK"
+  | "PERMISSION";
+export type AttendanceMethod =
+  | "MANUAL"
+  | "QR_CODE"
+  | "RFID"
+  | "BIOMETRIC"
+  | "AUTO";
+export type SessionType =
+  | "MORNING"
+  | "AFTERNOON"
+  | "EVENING"
+  | "WEEKEND"
+  | "SPECIAL";
 
 // Attendance Record
 export interface AttendanceRecord {
@@ -50,7 +66,7 @@ export interface AttendanceSummary {
   period: {
     startDate: string;
     endDate: string;
-    type: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'CUSTOM';
+    type: "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY" | "CUSTOM";
   };
   totalSessions: number;
   presentCount: number;
@@ -64,7 +80,7 @@ export interface AttendanceSummary {
   streak: {
     current: number;
     longest: number;
-    type: 'PRESENT' | 'PUNCTUAL';
+    type: "PRESENT" | "PUNCTUAL";
   };
   averageCheckInTime?: string;
   totalLateMinutes: number;
@@ -103,13 +119,18 @@ export interface AttendanceSchedule {
 // Attendance Alert
 export interface AttendanceAlert {
   id: string;
-  type: 'ABSENT' | 'LATE' | 'STREAK_BROKEN' | 'PERFECT_ATTENDANCE' | 'CHRONIC_LATE';
+  type:
+    | "ABSENT"
+    | "LATE"
+    | "STREAK_BROKEN"
+    | "PERFECT_ATTENDANCE"
+    | "CHRONIC_LATE";
   santriId: string;
   santriName: string;
   halaqahId: string;
   date: string;
   message: string;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   isRead: boolean;
   notificationSent: boolean;
   recipients: string[]; // user IDs
@@ -192,47 +213,73 @@ export interface AttendanceStats {
 // Helper Functions
 export const getAttendanceStatusColor = (status: AttendanceStatus): string => {
   switch (status) {
-    case 'PRESENT': return 'text-green-600 bg-green-100';
-    case 'LATE': return 'text-yellow-600 bg-yellow-100';
-    case 'ABSENT': return 'text-red-600 bg-red-100';
-    case 'EXCUSED': return 'text-blue-600 bg-blue-100';
-    case 'SICK': return 'text-purple-600 bg-purple-100';
-    case 'PERMISSION': return 'text-indigo-600 bg-indigo-100';
-    default: return 'text-gray-600 bg-gray-100';
+    case "PRESENT":
+      return "text-green-600 bg-green-100";
+    case "LATE":
+      return "text-yellow-600 bg-yellow-100";
+    case "ABSENT":
+      return "text-red-600 bg-red-100";
+    case "EXCUSED":
+      return "text-blue-600 bg-blue-100";
+    case "SICK":
+      return "text-purple-600 bg-purple-100";
+    case "PERMISSION":
+      return "text-indigo-600 bg-indigo-100";
+    default:
+      return "text-gray-600 bg-gray-100";
   }
 };
 
 export const getAttendanceStatusText = (status: AttendanceStatus): string => {
   switch (status) {
-    case 'PRESENT': return 'Hadir';
-    case 'LATE': return 'Terlambat';
-    case 'ABSENT': return 'Tidak Hadir';
-    case 'EXCUSED': return 'Izin';
-    case 'SICK': return 'Sakit';
-    case 'PERMISSION': return 'Izin Khusus';
-    default: return status;
+    case "PRESENT":
+      return "Hadir";
+    case "LATE":
+      return "Terlambat";
+    case "ABSENT":
+      return "Tidak Hadir";
+    case "EXCUSED":
+      return "Izin";
+    case "SICK":
+      return "Sakit";
+    case "PERMISSION":
+      return "Izin Khusus";
+    default:
+      return status;
   }
 };
 
 export const getSessionTypeText = (type: SessionType): string => {
   switch (type) {
-    case 'MORNING': return 'Pagi';
-    case 'AFTERNOON': return 'Siang';
-    case 'EVENING': return 'Sore';
-    case 'WEEKEND': return 'Weekend';
-    case 'SPECIAL': return 'Khusus';
-    default: return type;
+    case "MORNING":
+      return "Pagi";
+    case "AFTERNOON":
+      return "Siang";
+    case "EVENING":
+      return "Sore";
+    case "WEEKEND":
+      return "Weekend";
+    case "SPECIAL":
+      return "Khusus";
+    default:
+      return type;
   }
 };
 
 export const getSessionTypeColor = (type: SessionType): string => {
   switch (type) {
-    case 'MORNING': return 'text-blue-600 bg-blue-100';
-    case 'AFTERNOON': return 'text-orange-600 bg-orange-100';
-    case 'EVENING': return 'text-purple-600 bg-purple-100';
-    case 'WEEKEND': return 'text-green-600 bg-green-100';
-    case 'SPECIAL': return 'text-red-600 bg-red-100';
-    default: return 'text-gray-600 bg-gray-100';
+    case "MORNING":
+      return "text-blue-600 bg-blue-100";
+    case "AFTERNOON":
+      return "text-orange-600 bg-orange-100";
+    case "EVENING":
+      return "text-purple-600 bg-purple-100";
+    case "WEEKEND":
+      return "text-green-600 bg-green-100";
+    case "SPECIAL":
+      return "text-red-600 bg-red-100";
+    default:
+      return "text-gray-600 bg-gray-100";
   }
 };
 
@@ -241,32 +288,43 @@ export const calculateAttendanceRate = (summary: AttendanceSummary): number => {
   return Math.round((summary.presentCount / summary.totalSessions) * 100);
 };
 
-export const calculatePunctualityRate = (summary: AttendanceSummary): number => {
+export const calculatePunctualityRate = (
+  summary: AttendanceSummary,
+): number => {
   if (summary.totalSessions === 0) return 0;
   const punctualSessions = summary.presentCount - summary.lateCount;
   return Math.round((punctualSessions / summary.totalSessions) * 100);
 };
 
-export const isLate = (checkInTime: string, scheduledTime: string, threshold: number): boolean => {
+export const isLate = (
+  checkInTime: string,
+  scheduledTime: string,
+  threshold: number,
+): boolean => {
   const checkIn = new Date(`1970-01-01T${checkInTime}`);
   const scheduled = new Date(`1970-01-01T${scheduledTime}`);
   const diffMinutes = (checkIn.getTime() - scheduled.getTime()) / (1000 * 60);
   return diffMinutes > threshold;
 };
 
-export const calculateLateMinutes = (checkInTime: string, scheduledTime: string): number => {
+export const calculateLateMinutes = (
+  checkInTime: string,
+  scheduledTime: string,
+): number => {
   const checkIn = new Date(`1970-01-01T${checkInTime}`);
   const scheduled = new Date(`1970-01-01T${scheduledTime}`);
   const diffMinutes = (checkIn.getTime() - scheduled.getTime()) / (1000 * 60);
   return Math.max(0, Math.round(diffMinutes));
 };
 
-export const getAttendanceStreak = (records: AttendanceRecord[]): { current: number; longest: number } => {
+export const getAttendanceStreak = (
+  records: AttendanceRecord[],
+): { current: number; longest: number } => {
   if (records.length === 0) return { current: 0, longest: 0 };
 
   // Sort by date descending
   const sortedRecords = records
-    .filter(r => r.status === 'PRESENT' || r.status === 'LATE')
+    .filter((r) => r.status === "PRESENT" || r.status === "LATE")
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   let current = 0;
@@ -275,7 +333,10 @@ export const getAttendanceStreak = (records: AttendanceRecord[]): { current: num
 
   // Calculate current streak
   for (let i = 0; i < sortedRecords.length; i++) {
-    if (sortedRecords[i].status === 'PRESENT' || sortedRecords[i].status === 'LATE') {
+    if (
+      sortedRecords[i].status === "PRESENT" ||
+      sortedRecords[i].status === "LATE"
+    ) {
       current++;
     } else {
       break;
@@ -284,7 +345,7 @@ export const getAttendanceStreak = (records: AttendanceRecord[]): { current: num
 
   // Calculate longest streak
   for (const record of sortedRecords) {
-    if (record.status === 'PRESENT' || record.status === 'LATE') {
+    if (record.status === "PRESENT" || record.status === "LATE") {
       tempStreak++;
       longest = Math.max(longest, tempStreak);
     } else {
@@ -295,17 +356,25 @@ export const getAttendanceStreak = (records: AttendanceRecord[]): { current: num
   return { current, longest };
 };
 
-export const generateQRCode = (halaqahId: string, sessionType: SessionType, date: string): string => {
+export const generateQRCode = (
+  halaqahId: string,
+  sessionType: SessionType,
+  date: string,
+): string => {
   const data = {
     halaqahId,
     sessionType,
     date,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
   return btoa(JSON.stringify(data));
 };
 
-export const validateQRCode = (qrCode: string, expectedHalaqah: string, expectedDate: string): boolean => {
+export const validateQRCode = (
+  qrCode: string,
+  expectedHalaqah: string,
+  expectedDate: string,
+): boolean => {
   try {
     const data = JSON.parse(atob(qrCode));
     return data.halaqahId === expectedHalaqah && data.date === expectedDate;
@@ -314,20 +383,27 @@ export const validateQRCode = (qrCode: string, expectedHalaqah: string, expected
   }
 };
 
-export const getAlertSeverityColor = (severity: AttendanceAlert['severity']): string => {
+export const getAlertSeverityColor = (
+  severity: AttendanceAlert["severity"],
+): string => {
   switch (severity) {
-    case 'LOW': return 'text-blue-600 bg-blue-100';
-    case 'MEDIUM': return 'text-yellow-600 bg-yellow-100';
-    case 'HIGH': return 'text-orange-600 bg-orange-100';
-    case 'CRITICAL': return 'text-red-600 bg-red-100';
-    default: return 'text-gray-600 bg-gray-100';
+    case "LOW":
+      return "text-blue-600 bg-blue-100";
+    case "MEDIUM":
+      return "text-yellow-600 bg-yellow-100";
+    case "HIGH":
+      return "text-orange-600 bg-orange-100";
+    case "CRITICAL":
+      return "text-red-600 bg-red-100";
+    default:
+      return "text-gray-600 bg-gray-100";
   }
 };
 
 export const formatTime = (time: string): string => {
-  return new Date(`1970-01-01T${time}`).toLocaleTimeString('id-ID', {
-    hour: '2-digit',
-    minute: '2-digit'
+  return new Date(`1970-01-01T${time}`).toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 

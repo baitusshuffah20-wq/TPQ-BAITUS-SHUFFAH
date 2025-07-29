@@ -1,7 +1,12 @@
 /* Apply theme to all components */
 
 /* Headings */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: var(--color-text);
 }
 
@@ -46,7 +51,9 @@ a:hover {
 }
 
 /* Inputs */
-input, select, textarea {
+input,
+select,
+textarea {
   border-radius: var(--border-radius) !important;
 }
 
@@ -296,11 +303,19 @@ table {
 }
 
 /* Headings */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
 }
 
 /* Body text */
-body, p, div, span {
+body,
+p,
+div,
+span {
   font-family: var(--font-body);
 }

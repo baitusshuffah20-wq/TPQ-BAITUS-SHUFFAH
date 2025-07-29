@@ -1,27 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { EmailService } from '@/lib/email-service';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { EmailService } from "@/lib/email-service";
+import { prisma } from "@/lib/prisma";
 
 // GET /api/email/templates - Get all email templates
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const search = searchParams.get('search') || '';
-    const category = searchParams.get('category') || '';
-    const isActive = searchParams.get('isActive');
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const search = searchParams.get("search") || "";
+    const category = searchParams.get("category") || "";
+    const isActive = searchParams.get("isActive");
 
     const skip = (page - 1) * limit;
 
     // Build where clause
     const where: any = {};
-    
+
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { subject: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
+        { name: { contains: search, mode: "insensitive" } },
+        { subject: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
       ];
     }
 
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (isActive !== null && isActive !== undefined) {
-      where.isActive = isActive === 'true';
+      where.isActive = isActive === "true";
     }
 
     const [templates, total] = await Promise.all([
@@ -41,15 +41,15 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               name: true,
-              email: true
-            }
-          }
+              email: true,
+            },
+          },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         skip,
-        take: limit
+        take: limit,
       }),
-      prisma.emailTemplate.count({ where })
+      prisma.emailTemplate.count({ where }),
     ]);
 
     return NextResponse.json({
@@ -60,19 +60,19 @@ export async function GET(request: NextRequest) {
           page,
           limit,
           total,
-          totalPages: Math.ceil(total / limit)
-        }
-      }
+          totalPages: Math.ceil(total / limit),
+        },
+      },
     });
   } catch (error) {
-    console.error('Error fetching email templates:', error);
+    console.error("Error fetching email templates:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to fetch email templates',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to fetch email templates",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -89,26 +89,29 @@ export async function POST(request: NextRequest) {
       variables,
       description,
       category,
-      createdBy
+      createdBy,
     } = body;
 
     // Validation
     if (!name || !subject || !html || !createdBy) {
       return NextResponse.json(
-        { success: false, message: 'Name, subject, HTML content, and creator are required' },
-        { status: 400 }
+        {
+          success: false,
+          message: "Name, subject, HTML content, and creator are required",
+        },
+        { status: 400 },
       );
     }
 
     // Check if template name already exists
     const existingTemplate = await prisma.emailTemplate.findUnique({
-      where: { name }
+      where: { name },
     });
 
     if (existingTemplate) {
       return NextResponse.json(
-        { success: false, message: 'Template with this name already exists' },
-        { status: 400 }
+        { success: false, message: "Template with this name already exists" },
+        { status: 400 },
       );
     }
 
@@ -121,23 +124,23 @@ export async function POST(request: NextRequest) {
       variables,
       description,
       category,
-      createdBy
+      createdBy,
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Email template created successfully',
-      data: template
+      message: "Email template created successfully",
+      data: template,
     });
   } catch (error) {
-    console.error('Error creating email template:', error);
+    console.error("Error creating email template:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to create email template',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to create email template",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -155,39 +158,39 @@ export async function PUT(request: NextRequest) {
       variables,
       description,
       category,
-      isActive
+      isActive,
     } = body;
 
     // Validation
     if (!id) {
       return NextResponse.json(
-        { success: false, message: 'Template ID is required' },
-        { status: 400 }
+        { success: false, message: "Template ID is required" },
+        { status: 400 },
       );
     }
 
     // Check if template exists
     const existingTemplate = await prisma.emailTemplate.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!existingTemplate) {
       return NextResponse.json(
-        { success: false, message: 'Template not found' },
-        { status: 404 }
+        { success: false, message: "Template not found" },
+        { status: 404 },
       );
     }
 
     // Check if new name conflicts with existing template
     if (name && name !== existingTemplate.name) {
       const nameConflict = await prisma.emailTemplate.findUnique({
-        where: { name }
+        where: { name },
       });
 
       if (nameConflict) {
         return NextResponse.json(
-          { success: false, message: 'Template with this name already exists' },
-          { status: 400 }
+          { success: false, message: "Template with this name already exists" },
+          { status: 400 },
         );
       }
     }
@@ -202,33 +205,33 @@ export async function PUT(request: NextRequest) {
         ...(variables && { variables: JSON.stringify(variables) }),
         ...(description !== undefined && { description }),
         ...(category !== undefined && { category }),
-        ...(isActive !== undefined && { isActive })
+        ...(isActive !== undefined && { isActive }),
       },
       include: {
         creator: {
           select: {
             id: true,
             name: true,
-            email: true
-          }
-        }
-      }
+            email: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Email template updated successfully',
-      data: updatedTemplate
+      message: "Email template updated successfully",
+      data: updatedTemplate,
     });
   } catch (error) {
-    console.error('Error updating email template:', error);
+    console.error("Error updating email template:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to update email template',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to update email template",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -237,44 +240,44 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    const id = searchParams.get("id");
 
     if (!id) {
       return NextResponse.json(
-        { success: false, message: 'Template ID is required' },
-        { status: 400 }
+        { success: false, message: "Template ID is required" },
+        { status: 400 },
       );
     }
 
     // Check if template exists
     const existingTemplate = await prisma.emailTemplate.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!existingTemplate) {
       return NextResponse.json(
-        { success: false, message: 'Template not found' },
-        { status: 404 }
+        { success: false, message: "Template not found" },
+        { status: 404 },
       );
     }
 
     await prisma.emailTemplate.delete({
-      where: { id }
+      where: { id },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Email template deleted successfully'
+      message: "Email template deleted successfully",
     });
   } catch (error) {
-    console.error('Error deleting email template:', error);
+    console.error("Error deleting email template:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Failed to delete email template',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        message: "Failed to delete email template",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

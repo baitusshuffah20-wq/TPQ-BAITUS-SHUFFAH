@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { createAuditLog } from '@/lib/audit-log';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { createAuditLog } from "@/lib/audit-log";
+import { z } from "zod";
 
 // Schema for news validation
 const newsSchema = z.object({
@@ -20,54 +20,56 @@ export async function GET(request: NextRequest) {
   try {
     // Get query parameters
     const url = new URL(request.url);
-    const category = url.searchParams.get('category');
-    const limit = parseInt(url.searchParams.get('limit') || '10');
-    const featured = url.searchParams.get('featured') === 'true';
-    const status = url.searchParams.get('status');
-    
+    const category = url.searchParams.get("category");
+    const limit = parseInt(url.searchParams.get("limit") || "10");
+    const featured = url.searchParams.get("featured") === "true";
+    const status = url.searchParams.get("status");
+
     // Build where clause
     const where: any = {};
-    
-    // If admin is viewing, show all statuses, otherwise only published
+
+    // Untuk akses publik, kita tidak perlu memeriksa session
+    // Jika parameter status diberikan dan pengguna adalah admin, gunakan status tersebut
+    // Jika tidak, selalu tampilkan berita PUBLISHED
     const session = await getServerSession(authOptions);
-    const isAdmin = session?.user?.role === 'ADMIN';
-    
-    if (!isAdmin && !status) {
-      where.status = 'PUBLISHED';
-    } else if (status && status !== 'ALL') {
+    const isAdmin = session?.user?.role === "ADMIN";
+
+    if (isAdmin && status && status !== "ALL") {
       where.status = status;
+    } else {
+      where.status = "PUBLISHED";
     }
-    
-    if (category && category !== 'Semua' && category !== 'ALL') {
+
+    if (category && category !== "Semua" && category !== "ALL") {
       where.category = category;
     }
-    
+
     if (featured) {
       where.featured = true;
     }
-    
+
     // Fetch news from database
     const news = await prisma.news.findMany({
       where,
       orderBy: {
-        publishedAt: 'desc'
+        publishedAt: "desc",
       },
-      take: limit
+      take: limit,
     });
 
     return NextResponse.json({
       success: true,
-      news
+      news,
     });
   } catch (error) {
-    console.error('Error fetching news:', error);
+    console.error("Error fetching news:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch news',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: "Failed to fetch news",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -76,8 +78,12 @@ export async function GET(request: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user || !['ADMIN', 'MUSYRIF'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (
+      !session ||
+      !session.user ||
+      !["ADMIN", "MUSYRIF"].includes(session.user.role)
+    ) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const data = await req.json();
@@ -86,12 +92,12 @@ export async function POST(req: NextRequest) {
     const validationResult = newsSchema.safeParse(data);
     if (!validationResult.success) {
       return NextResponse.json(
-        { 
+        {
           success: false,
-          error: 'Validation failed', 
-          details: validationResult.error.format() 
+          error: "Validation failed",
+          details: validationResult.error.format(),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -102,37 +108,40 @@ export async function POST(req: NextRequest) {
         excerpt: data.excerpt,
         content: data.content,
         image: data.image,
-        author: session.user.name || 'Admin',
+        author: session.user.name || "Admin",
         publishedAt: new Date(),
         category: data.category,
         status: data.status,
         featured: data.featured,
-        views: 0
+        views: 0,
       },
     });
 
     // Create audit log
     await createAuditLog({
-      action: 'CREATE',
-      entity: 'NEWS',
+      action: "CREATE",
+      entity: "NEWS",
       entityId: news.id,
       userId: session.user.id,
       newData: JSON.stringify(news),
     });
 
-    return NextResponse.json({
-      success: true,
-      news
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        news,
+      },
+      { status: 201 },
+    );
   } catch (error) {
-    console.error('Error creating news:', error);
+    console.error("Error creating news:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to create news',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: "Failed to create news",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

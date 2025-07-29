@@ -1,5 +1,5 @@
-import nodemailer from 'nodemailer';
-import { prisma } from './prisma';
+import nodemailer from "nodemailer";
+import { prisma } from "./prisma";
 
 interface EmailConfig {
   host: string;
@@ -43,17 +43,18 @@ class EmailService {
 
   constructor() {
     const config: EmailConfig = {
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: parseInt(process.env.SMTP_PORT || "587"),
+      secure: process.env.SMTP_SECURE === "true",
       auth: {
-        user: process.env.SMTP_USER || '',
-        pass: process.env.SMTP_PASS || ''
-      }
+        user: process.env.SMTP_USER || "",
+        pass: process.env.SMTP_PASS || "",
+      },
     };
 
-    this.fromEmail = process.env.EMAIL_FROM || 'noreply@rumahtahfidz.com';
-    this.fromName = process.env.NEXT_PUBLIC_APP_NAME || 'Rumah Tahfidz Baitus Shuffah';
+    this.fromEmail = process.env.EMAIL_FROM || "noreply@rumahtahfidz.com";
+    this.fromName =
+      process.env.NEXT_PUBLIC_APP_NAME || "Rumah Tahfidz Baitus Shuffah";
 
     this.transporter = nodemailer.createTransport(config);
   }
@@ -61,13 +62,18 @@ class EmailService {
   /**
    * Send email with template or custom content
    */
-  async sendEmail(options: SendEmailOptions): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  async sendEmail(
+    options: SendEmailOptions,
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
       let { html, text, subject } = options;
 
       // Use template if specified
       if (options.template && options.templateData) {
-        const template = await this.getTemplate(options.template, options.templateData);
+        const template = await this.getTemplate(
+          options.template,
+          options.templateData,
+        );
         html = template.html;
         text = template.text;
         subject = template.subject;
@@ -75,13 +81,21 @@ class EmailService {
 
       const mailOptions = {
         from: `${this.fromName} <${this.fromEmail}>`,
-        to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
-        cc: options.cc ? (Array.isArray(options.cc) ? options.cc.join(', ') : options.cc) : undefined,
-        bcc: options.bcc ? (Array.isArray(options.bcc) ? options.bcc.join(', ') : options.bcc) : undefined,
+        to: Array.isArray(options.to) ? options.to.join(", ") : options.to,
+        cc: options.cc
+          ? Array.isArray(options.cc)
+            ? options.cc.join(", ")
+            : options.cc
+          : undefined,
+        bcc: options.bcc
+          ? Array.isArray(options.bcc)
+            ? options.bcc.join(", ")
+            : options.bcc
+          : undefined,
         subject,
         html,
         text,
-        attachments: options.attachments
+        attachments: options.attachments,
       };
 
       const result = await this.transporter.sendMail(mailOptions);
@@ -90,31 +104,30 @@ class EmailService {
       await this.logEmail({
         to: mailOptions.to,
         subject,
-        status: 'SENT',
+        status: "SENT",
         messageId: result.messageId,
-        template: options.template
+        template: options.template,
       });
 
       return {
         success: true,
-        messageId: result.messageId
+        messageId: result.messageId,
       };
-
     } catch (error: any) {
-      console.error('Email send error:', error);
+      console.error("Email send error:", error);
 
       // Log failed email
       await this.logEmail({
-        to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
+        to: Array.isArray(options.to) ? options.to.join(", ") : options.to,
         subject: options.subject,
-        status: 'FAILED',
+        status: "FAILED",
         error: error.message,
-        template: options.template
+        template: options.template,
       });
 
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -122,19 +135,23 @@ class EmailService {
   /**
    * Send welcome email to new user
    */
-  async sendWelcomeEmail(userEmail: string, userName: string, userRole: string): Promise<any> {
+  async sendWelcomeEmail(
+    userEmail: string,
+    userName: string,
+    userRole: string,
+  ): Promise<any> {
     const templateData = {
       userName,
       userRole,
       loginUrl: `${process.env.NEXT_PUBLIC_APP_URL}/login`,
-      supportEmail: 'support@rumahtahfidz.com',
-      currentYear: new Date().getFullYear()
+      supportEmail: "support@rumahtahfidz.com",
+      currentYear: new Date().getFullYear(),
     };
 
     return this.sendEmail({
       to: userEmail,
-      template: 'welcome',
-      templateData
+      template: "welcome",
+      templateData,
     });
   }
 
@@ -151,18 +168,18 @@ class EmailService {
       notes?: string;
       musyrif: string;
       date: string;
-    }
+    },
   ): Promise<any> {
     const templateData = {
       studentName,
       ...hafalanData,
-      currentYear: new Date().getFullYear()
+      currentYear: new Date().getFullYear(),
     };
 
     return this.sendEmail({
       to: parentEmail,
-      template: 'hafalan_progress',
-      templateData
+      template: "hafalan_progress",
+      templateData,
     });
   }
 
@@ -182,18 +199,18 @@ class EmailService {
       totalHafalan: number;
       achievements: string[];
       recommendations: string[];
-    }
+    },
   ): Promise<any> {
     const templateData = {
       studentName,
       ...reportData,
-      currentYear: new Date().getFullYear()
+      currentYear: new Date().getFullYear(),
     };
 
     return this.sendEmail({
       to: parentEmail,
-      template: 'monthly_report',
-      templateData
+      template: "monthly_report",
+      templateData,
     });
   }
 
@@ -212,17 +229,17 @@ class EmailService {
       totalAmount: number;
       dueDate: string;
       paymentMethods: string[];
-    }
+    },
   ): Promise<any> {
     const templateData = {
       ...invoiceData,
-      currentYear: new Date().getFullYear()
+      currentYear: new Date().getFullYear(),
     };
 
     return this.sendEmail({
       to: recipientEmail,
-      template: 'payment_invoice',
-      templateData
+      template: "payment_invoice",
+      templateData,
     });
   }
 
@@ -238,17 +255,17 @@ class EmailService {
       paymentMethod: string;
       paymentDate: string;
       description: string;
-    }
+    },
   ): Promise<any> {
     const templateData = {
       ...paymentData,
-      currentYear: new Date().getFullYear()
+      currentYear: new Date().getFullYear(),
     };
 
     return this.sendEmail({
       to: recipientEmail,
-      template: 'payment_confirmation',
-      templateData
+      template: "payment_confirmation",
+      templateData,
     });
   }
 
@@ -263,18 +280,18 @@ class EmailService {
       status: string;
       notes?: string;
       consecutiveAbsent?: number;
-    }
+    },
   ): Promise<any> {
     const templateData = {
       studentName,
       ...attendanceData,
-      currentYear: new Date().getFullYear()
+      currentYear: new Date().getFullYear(),
     };
 
     return this.sendEmail({
       to: parentEmail,
-      template: 'attendance_notification',
-      templateData
+      template: "attendance_notification",
+      templateData,
     });
   }
 
@@ -289,24 +306,27 @@ class EmailService {
       imageUrl?: string;
       ctaText?: string;
       ctaUrl?: string;
-    }
+    },
   ): Promise<any> {
     const templateData = {
       ...newsletterData,
-      currentYear: new Date().getFullYear()
+      currentYear: new Date().getFullYear(),
     };
 
     return this.sendEmail({
       to: recipients,
-      template: 'newsletter',
-      templateData
+      template: "newsletter",
+      templateData,
     });
   }
 
   /**
    * Get email template
    */
-  private async getTemplate(templateName: string, data: any): Promise<EmailTemplate> {
+  private async getTemplate(
+    templateName: string,
+    data: any,
+  ): Promise<EmailTemplate> {
     const templates = {
       welcome: this.getWelcomeTemplate(data),
       hafalan_progress: this.getHafalanProgressTemplate(data),
@@ -314,10 +334,12 @@ class EmailService {
       payment_invoice: this.getPaymentInvoiceTemplate(data),
       payment_confirmation: this.getPaymentConfirmationTemplate(data),
       attendance_notification: this.getAttendanceNotificationTemplate(data),
-      newsletter: this.getNewsletterTemplate(data)
+      newsletter: this.getNewsletterTemplate(data),
     };
 
-    return templates[templateName as keyof typeof templates] || templates.welcome;
+    return (
+      templates[templateName as keyof typeof templates] || templates.welcome
+    );
   }
 
   /**
@@ -379,7 +401,7 @@ class EmailService {
         </body>
         </html>
       `,
-      text: `Assalamu'alaikum ${data.userName}, Selamat datang di Rumah Tahfidz Baitus Shuffah! Akun Anda sebagai ${data.userRole} telah berhasil dibuat. Silakan login di ${data.loginUrl}`
+      text: `Assalamu'alaikum ${data.userName}, Selamat datang di Rumah Tahfidz Baitus Shuffah! Akun Anda sebagai ${data.userRole} telah berhasil dibuat. Silakan login di ${data.loginUrl}`,
     };
   }
 
@@ -419,17 +441,21 @@ class EmailService {
                 <h3>👤 Santri: ${data.studentName}</h3>
                 <h3>📖 Surah: ${data.surah}</h3>
                 <h3>📊 Progress: ${data.progress}%</h3>
-                ${data.grade ? `<h3>⭐ Nilai: <span class="grade-badge">${data.grade}</span></h3>` : ''}
+                ${data.grade ? `<h3>⭐ Nilai: <span class="grade-badge">${data.grade}</span></h3>` : ""}
                 <h3>👨‍🏫 Musyrif: ${data.musyrif}</h3>
                 <h3>📅 Tanggal: ${data.date}</h3>
               </div>
 
-              ${data.notes ? `
+              ${
+                data.notes
+                  ? `
                 <h4>📝 Catatan Musyrif:</h4>
                 <p style="background-color: #fef3c7; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b;">
                   ${data.notes}
                 </p>
-              ` : ''}
+              `
+                  : ""
+              }
 
               <p>Alhamdulillah, putra/putri Anda menunjukkan kemajuan yang baik dalam menghafal Al-Quran. Semoga Allah senantiasa memberkahi usaha dan doa kita semua.</p>
 
@@ -443,7 +469,7 @@ class EmailService {
         </body>
         </html>
       `,
-      text: `Laporan Hafalan ${data.studentName} - Surah: ${data.surah}, Progress: ${data.progress}%, Nilai: ${data.grade || 'Belum dinilai'}, Musyrif: ${data.musyrif}`
+      text: `Laporan Hafalan ${data.studentName} - Surah: ${data.surah}, Progress: ${data.progress}%, Nilai: ${data.grade || "Belum dinilai"}, Musyrif: ${data.musyrif}`,
     };
   }
 
@@ -506,23 +532,31 @@ class EmailService {
 
               <h4>📖 Surah Saat Ini: ${data.currentSurah}</h4>
 
-              ${data.achievements.length > 0 ? `
+              ${
+                data.achievements.length > 0
+                  ? `
                 <div class="achievements">
                   <h4>🏆 Pencapaian Bulan Ini:</h4>
                   <ul>
-                    ${data.achievements.map((achievement: string) => `<li>${achievement}</li>`).join('')}
+                    ${data.achievements.map((achievement: string) => `<li>${achievement}</li>`).join("")}
                   </ul>
                 </div>
-              ` : ''}
+              `
+                  : ""
+              }
 
-              ${data.recommendations.length > 0 ? `
+              ${
+                data.recommendations.length > 0
+                  ? `
                 <div class="recommendations">
                   <h4>💡 Rekomendasi:</h4>
                   <ul>
-                    ${data.recommendations.map((rec: string) => `<li>${rec}</li>`).join('')}
+                    ${data.recommendations.map((rec: string) => `<li>${rec}</li>`).join("")}
                   </ul>
                 </div>
-              ` : ''}
+              `
+                  : ""
+              }
 
               <p>Semoga laporan ini bermanfaat untuk memantau perkembangan putra/putri Anda. Mari kita terus berdoa dan berusaha bersama dalam mendidik generasi penghafal Al-Quran.</p>
 
@@ -536,7 +570,7 @@ class EmailService {
         </body>
         </html>
       `,
-      text: `Laporan Bulanan ${data.studentName} - ${data.month} ${data.year}. Kehadiran: ${data.attendanceRate}%, Progress: ${data.hafalanProgress}%, Nilai: ${data.averageGrade}`
+      text: `Laporan Bulanan ${data.studentName} - ${data.month} ${data.year}. Kehadiran: ${data.attendanceRate}%, Progress: ${data.hafalanProgress}%, Nilai: ${data.averageGrade}`,
     };
   }
 
@@ -544,7 +578,7 @@ class EmailService {
    * Payment invoice email template
    */
   private getPaymentInvoiceTemplate(data: any): EmailTemplate {
-    const totalFormatted = data.totalAmount.toLocaleString('id-ID');
+    const totalFormatted = data.totalAmount.toLocaleString("id-ID");
 
     return {
       subject: `💳 Invoice Pembayaran #${data.invoiceNumber} - ${data.studentName}`,
@@ -590,12 +624,16 @@ class EmailService {
                   </tr>
                 </thead>
                 <tbody>
-                  ${data.items.map((item: any) => `
+                  ${data.items
+                    .map(
+                      (item: any) => `
                     <tr>
                       <td>${item.description}</td>
-                      <td>Rp ${item.amount.toLocaleString('id-ID')}</td>
+                      <td>Rp ${item.amount.toLocaleString("id-ID")}</td>
                     </tr>
-                  `).join('')}
+                  `,
+                    )
+                    .join("")}
                   <tr class="total-row">
                     <td><strong>TOTAL</strong></td>
                     <td><strong>Rp ${totalFormatted}</strong></td>
@@ -606,7 +644,7 @@ class EmailService {
               <div class="payment-methods">
                 <h4>💳 Metode Pembayaran:</h4>
                 <ul>
-                  ${data.paymentMethods.map((method: string) => `<li>${method}</li>`).join('')}
+                  ${data.paymentMethods.map((method: string) => `<li>${method}</li>`).join("")}
                 </ul>
               </div>
 
@@ -622,7 +660,7 @@ class EmailService {
         </body>
         </html>
       `,
-      text: `Invoice #${data.invoiceNumber} untuk ${data.studentName}. Total: Rp ${totalFormatted}. Jatuh tempo: ${data.dueDate}`
+      text: `Invoice #${data.invoiceNumber} untuk ${data.studentName}. Total: Rp ${totalFormatted}. Jatuh tempo: ${data.dueDate}`,
     };
   }
 
@@ -666,7 +704,7 @@ class EmailService {
                 <h3>📄 Detail Pembayaran</h3>
                 <p><strong>🆔 ID Transaksi:</strong> ${data.transactionId}</p>
                 <p><strong>👤 Santri:</strong> ${data.studentName}</p>
-                <p><strong>💰 Jumlah:</strong> Rp ${data.amount.toLocaleString('id-ID')}</p>
+                <p><strong>💰 Jumlah:</strong> Rp ${data.amount.toLocaleString("id-ID")}</p>
                 <p><strong>💳 Metode:</strong> ${data.paymentMethod}</p>
                 <p><strong>📅 Tanggal:</strong> ${data.paymentDate}</p>
                 <p><strong>📝 Deskripsi:</strong> ${data.description}</p>
@@ -686,7 +724,7 @@ class EmailService {
         </body>
         </html>
       `,
-      text: `Pembayaran berhasil! ID: ${data.transactionId}, Santri: ${data.studentName}, Jumlah: Rp ${data.amount.toLocaleString('id-ID')}, Metode: ${data.paymentMethod}`
+      text: `Pembayaran berhasil! ID: ${data.transactionId}, Santri: ${data.studentName}, Jumlah: Rp ${data.amount.toLocaleString("id-ID")}, Metode: ${data.paymentMethod}`,
     };
   }
 
@@ -695,10 +733,10 @@ class EmailService {
    */
   private getAttendanceNotificationTemplate(data: any): EmailTemplate {
     const statusEmoji = {
-      'HADIR': '✅',
-      'ALPHA': '❌',
-      'IZIN': '📝',
-      'SAKIT': '🏥'
+      HADIR: "✅",
+      ALPHA: "❌",
+      IZIN: "📝",
+      SAKIT: "🏥",
     };
 
     return {
@@ -742,19 +780,27 @@ class EmailService {
                 </h3>
               </div>
 
-              ${data.notes ? `
+              ${
+                data.notes
+                  ? `
                 <h4>📝 Catatan:</h4>
                 <p style="background-color: #fef3c7; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b;">
                   ${data.notes}
                 </p>
-              ` : ''}
+              `
+                  : ""
+              }
 
-              ${data.consecutiveAbsent && data.consecutiveAbsent >= 3 ? `
+              ${
+                data.consecutiveAbsent && data.consecutiveAbsent >= 3
+                  ? `
                 <div class="warning">
                   <h4>⚠️ Peringatan</h4>
                   <p>Putra/putri Anda telah tidak hadir selama ${data.consecutiveAbsent} hari berturut-turut. Mohon untuk segera menghubungi pihak sekolah.</p>
                 </div>
-              ` : ''}
+              `
+                  : ""
+              }
 
               <p>Terima kasih atas perhatian Anda terhadap kehadiran putra/putri di Rumah Tahfidz.</p>
 
@@ -768,7 +814,7 @@ class EmailService {
         </body>
         </html>
       `,
-      text: `Notifikasi Kehadiran ${data.studentName} - ${data.date}: ${data.status}${data.notes ? `. Catatan: ${data.notes}` : ''}`
+      text: `Notifikasi Kehadiran ${data.studentName} - ${data.date}: ${data.status}${data.notes ? `. Catatan: ${data.notes}` : ""}`,
     };
   }
 
@@ -805,17 +851,21 @@ class EmailService {
             <div class="content">
               <p>Assalamu'alaikum Warahmatullahi Wabarakatuh,</p>
 
-              ${data.imageUrl ? `<img src="${data.imageUrl}" alt="Newsletter Image" class="newsletter-image">` : ''}
+              ${data.imageUrl ? `<img src="${data.imageUrl}" alt="Newsletter Image" class="newsletter-image">` : ""}
 
               <div style="line-height: 1.6;">
                 ${data.content}
               </div>
 
-              ${data.ctaText && data.ctaUrl ? `
+              ${
+                data.ctaText && data.ctaUrl
+                  ? `
                 <div style="text-align: center; margin: 30px 0;">
                   <a href="${data.ctaUrl}" class="cta-button">${data.ctaText}</a>
                 </div>
-              ` : ''}
+              `
+                  : ""
+              }
 
               <p>Barakallahu fiikum,<br>
               Tim Rumah Tahfidz Baitus Shuffah</p>
@@ -828,7 +878,7 @@ class EmailService {
         </body>
         </html>
       `,
-      text: `${data.title}\n\n${data.content.replace(/<[^>]*>/g, '')}\n\n${data.ctaText && data.ctaUrl ? `${data.ctaText}: ${data.ctaUrl}` : ''}`
+      text: `${data.title}\n\n${data.content.replace(/<[^>]*>/g, "")}\n\n${data.ctaText && data.ctaUrl ? `${data.ctaText}: ${data.ctaUrl}` : ""}`,
     };
   }
 
@@ -838,7 +888,7 @@ class EmailService {
   private async logEmail(logData: {
     to: string;
     subject: string;
-    status: 'SENT' | 'FAILED';
+    status: "SENT" | "FAILED";
     messageId?: string;
     error?: string;
     template?: string;
@@ -849,14 +899,14 @@ class EmailService {
           recipient: logData.to,
           subject: logData.subject,
           status: logData.status,
-          messageId: logData.messageId || '',
-          template: logData.template || '',
-          error: logData.error || '',
-          sentAt: new Date()
-        }
+          messageId: logData.messageId || "",
+          template: logData.template || "",
+          error: logData.error || "",
+          sentAt: new Date(),
+        },
       });
     } catch (error) {
-      console.error('Failed to log email:', error);
+      console.error("Failed to log email:", error);
     }
   }
 
@@ -882,20 +932,20 @@ class EmailService {
 
       const [total, sent, failed] = await Promise.all([
         prisma.emailLog.count({
-          where: { sentAt: { gte: startDate } }
+          where: { sentAt: { gte: startDate } },
         }),
         prisma.emailLog.count({
           where: {
             sentAt: { gte: startDate },
-            status: 'SENT'
-          }
+            status: "SENT",
+          },
         }),
         prisma.emailLog.count({
           where: {
             sentAt: { gte: startDate },
-            status: 'FAILED'
-          }
-        })
+            status: "FAILED",
+          },
+        }),
       ]);
 
       const successRate = total > 0 ? Math.round((sent / total) * 100) : 0;
@@ -905,10 +955,10 @@ class EmailService {
         sent,
         failed,
         successRate,
-        period: days
+        period: days,
       };
     } catch (error) {
-      console.error('Error getting email stats:', error);
+      console.error("Error getting email stats:", error);
       return null;
     }
   }
@@ -917,7 +967,11 @@ class EmailService {
    * Check if email service is configured
    */
   isConfigured(): boolean {
-    return !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+    return !!(
+      process.env.SMTP_HOST &&
+      process.env.SMTP_USER &&
+      process.env.SMTP_PASS
+    );
   }
 }
 

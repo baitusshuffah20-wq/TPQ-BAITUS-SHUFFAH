@@ -1,19 +1,15 @@
-import axios from 'axios';
-
-interface WhatsAppMessage {
-  to: string;
-  type: 'text' | 'template' | 'media';
-  content: string;
-  templateName?: string;
-  templateParams?: string[];
-  mediaUrl?: string;
-  mediaType?: 'image' | 'document' | 'audio' | 'video';
-}
+import axios, { AxiosError } from "axios";
 
 interface WhatsAppResponse {
   success: boolean;
   messageId?: string;
   error?: string;
+}
+
+interface MediaObject {
+  link: string;
+  caption?: string;
+  filename?: string;
 }
 
 class WhatsAppService {
@@ -22,43 +18,53 @@ class WhatsAppService {
   private phoneNumberId: string;
 
   constructor() {
-    this.apiUrl = process.env.WHATSAPP_API_URL || 'https://graph.facebook.com/v18.0';
-    this.accessToken = process.env.WHATSAPP_ACCESS_TOKEN || '';
-    this.phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
+    this.apiUrl =
+      process.env.WHATSAPP_API_URL || "https://graph.facebook.com/v18.0";
+    this.accessToken = process.env.WHATSAPP_ACCESS_TOKEN || "";
+    this.phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID || "";
   }
 
   /**
    * Send a text message via WhatsApp
    */
-  async sendTextMessage(to: string, message: string): Promise<WhatsAppResponse> {
+  async sendTextMessage(
+    to: string,
+    message: string,
+  ): Promise<WhatsAppResponse> {
     try {
       const response = await axios.post(
         `${this.apiUrl}/${this.phoneNumberId}/messages`,
         {
-          messaging_product: 'whatsapp',
+          messaging_product: "whatsapp",
           to: this.formatPhoneNumber(to),
-          type: 'text',
+          type: "text",
           text: {
-            body: message
-          }
+            body: message,
+          },
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.accessToken}`,
-            'Content-Type': 'application/json'
-          }
-        }
+            Authorization: `Bearer ${this.accessToken}`,
+            "Content-Type": "application/json",
+          },
+        },
       );
 
       return {
         success: true,
-        messageId: response.data.messages[0].id
+        messageId: response.data.messages[0].id,
       };
-    } catch (error: any) {
-      console.error('WhatsApp send error:', error.response?.data || error.message);
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      console.error(
+        "WhatsApp send error:",
+        axiosError.response?.data || axiosError.message,
+      );
       return {
         success: false,
-        error: error.response?.data?.error?.message || error.message
+        error:
+          (axiosError.response?.data as { error?: { message?: string } })?.error
+            ?.message || axiosError.message,
       };
     }
   }
@@ -67,50 +73,61 @@ class WhatsAppService {
    * Send a template message via WhatsApp
    */
   async sendTemplateMessage(
-    to: string, 
-    templateName: string, 
-    params: string[] = []
+    to: string,
+    templateName: string,
+    params: string[] = [],
   ): Promise<WhatsAppResponse> {
     try {
-      const components = params.length > 0 ? [{
-        type: 'body',
-        parameters: params.map(param => ({
-          type: 'text',
-          text: param
-        }))
-      }] : [];
+      const components =
+        params.length > 0
+          ? [
+              {
+                type: "body",
+                parameters: params.map((param) => ({
+                  type: "text",
+                  text: param,
+                })),
+              },
+            ]
+          : [];
 
       const response = await axios.post(
         `${this.apiUrl}/${this.phoneNumberId}/messages`,
         {
-          messaging_product: 'whatsapp',
+          messaging_product: "whatsapp",
           to: this.formatPhoneNumber(to),
-          type: 'template',
+          type: "template",
           template: {
             name: templateName,
             language: {
-              code: 'id'
+              code: "id",
             },
-            components
-          }
+            components,
+          },
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.accessToken}`,
-            'Content-Type': 'application/json'
-          }
-        }
+            Authorization: `Bearer ${this.accessToken}`,
+            "Content-Type": "application/json",
+          },
+        },
       );
 
       return {
         success: true,
-        messageId: response.data.messages[0].id
+        messageId: response.data.messages[0].id,
       };
-    } catch (error: any) {
-      console.error('WhatsApp template send error:', error.response?.data || error.message);
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      console.error(
+        "WhatsApp template send error:",
+        axiosError.response?.data || axiosError.message,
+      );
       return {
         success: false,
-        error: error.response?.data?.error?.message || error.message
+        error:
+          (axiosError.response?.data as { error?: { message?: string } })?.error
+            ?.message || axiosError.message,
       };
     }
   }
@@ -121,47 +138,53 @@ class WhatsAppService {
   async sendMediaMessage(
     to: string,
     mediaUrl: string,
-    mediaType: 'image' | 'document' | 'audio' | 'video',
-    caption?: string
+    mediaType: "image" | "document" | "audio" | "video",
+    caption?: string,
   ): Promise<WhatsAppResponse> {
     try {
-      const mediaObject: any = {
-        link: mediaUrl
+      const mediaObject: MediaObject = {
+        link: mediaUrl,
       };
 
-      if (caption && (mediaType === 'image' || mediaType === 'video')) {
+      if (caption && (mediaType === "image" || mediaType === "video")) {
         mediaObject.caption = caption;
       }
 
-      if (mediaType === 'document') {
-        mediaObject.filename = mediaUrl.split('/').pop() || 'document';
+      if (mediaType === "document") {
+        mediaObject.filename = mediaUrl.split("/").pop() || "document";
       }
 
       const response = await axios.post(
         `${this.apiUrl}/${this.phoneNumberId}/messages`,
         {
-          messaging_product: 'whatsapp',
+          messaging_product: "whatsapp",
           to: this.formatPhoneNumber(to),
           type: mediaType,
-          [mediaType]: mediaObject
+          [mediaType]: mediaObject,
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.accessToken}`,
-            'Content-Type': 'application/json'
-          }
-        }
+            Authorization: `Bearer ${this.accessToken}`,
+            "Content-Type": "application/json",
+          },
+        },
       );
 
       return {
         success: true,
-        messageId: response.data.messages[0].id
+        messageId: response.data.messages[0].id,
       };
-    } catch (error: any) {
-      console.error('WhatsApp media send error:', error.response?.data || error.message);
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      console.error(
+        "WhatsApp media send error:",
+        axiosError.response?.data || axiosError.message,
+      );
       return {
         success: false,
-        error: error.response?.data?.error?.message || error.message
+        error:
+          (axiosError.response?.data as { error?: { message?: string } })?.error
+            ?.message || axiosError.message,
       };
     }
   }
@@ -174,14 +197,14 @@ class WhatsAppService {
     studentName: string,
     surah: string,
     progress: number,
-    grade?: number
+    grade?: number,
   ): Promise<WhatsAppResponse> {
     const message = `🕌 *Laporan Hafalan - Rumah Tahfidz Baitus Shuffah*
 
 👤 *Santri:* ${studentName}
 📖 *Surah:* ${surah}
 📊 *Progress:* ${progress}%
-${grade ? `⭐ *Nilai:* ${grade}` : ''}
+${grade ? `⭐ *Nilai:* ${grade}` : ""}
 
 Alhamdulillah, putra/putri Anda menunjukkan kemajuan yang baik dalam menghafal Al-Quran.
 
@@ -198,29 +221,30 @@ _Pesan otomatis dari Sistem Rumah Tahfidz_`;
   async sendAttendanceNotification(
     parentPhone: string,
     studentName: string,
-    status: 'HADIR' | 'ALPHA' | 'IZIN' | 'SAKIT',
+    status: "HADIR" | "ALPHA" | "IZIN" | "SAKIT",
     date: string,
-    time?: string
+    time?: string,
   ): Promise<WhatsAppResponse> {
     const statusEmoji = {
-      'HADIR': '✅',
-      'ALPHA': '❌',
-      'IZIN': '📝',
-      'SAKIT': '🏥'
+      HADIR: "✅",
+      ALPHA: "❌",
+      IZIN: "📝",
+      SAKIT: "🏥",
     };
 
     const message = `🕌 *Notifikasi Kehadiran - Rumah Tahfidz Baitus Shuffah*
 
 👤 *Santri:* ${studentName}
 📅 *Tanggal:* ${date}
-${time ? `🕐 *Waktu:* ${time}` : ''}
+${time ? `🕐 *Waktu:* ${time}` : ""}
 ${statusEmoji[status]} *Status:* ${status}
 
-${status === 'HADIR' 
-  ? 'Alhamdulillah, putra/putri Anda hadir tepat waktu.' 
-  : status === 'ALPHA'
-  ? 'Putra/putri Anda tidak hadir hari ini. Mohon konfirmasi jika ada keperluan.'
-  : 'Terima kasih atas informasinya.'
+${
+  status === "HADIR"
+    ? "Alhamdulillah, putra/putri Anda hadir tepat waktu."
+    : status === "ALPHA"
+      ? "Putra/putri Anda tidak hadir hari ini. Mohon konfirmasi jika ada keperluan."
+      : "Terima kasih atas informasinya."
 }
 
 Barakallahu fiikum 🤲
@@ -238,13 +262,13 @@ _Pesan otomatis dari Sistem Rumah Tahfidz_`;
     studentName: string,
     paymentType: string,
     amount: number,
-    dueDate: string
+    dueDate: string,
   ): Promise<WhatsAppResponse> {
     const message = `🕌 *Pengingat Pembayaran - Rumah Tahfidz Baitus Shuffah*
 
 👤 *Santri:* ${studentName}
 💳 *Jenis:* ${paymentType}
-💰 *Jumlah:* Rp ${amount.toLocaleString('id-ID')}
+💰 *Jumlah:* Rp ${amount.toLocaleString("id-ID")}
 📅 *Jatuh Tempo:* ${dueDate}
 
 Mohon untuk melakukan pembayaran sebelum tanggal jatuh tempo.
@@ -273,12 +297,12 @@ _Pesan otomatis dari Sistem Rumah Tahfidz_`;
       currentSurah: string;
       averageGrade: number;
       totalHafalan: number;
-    }
+    },
   ): Promise<WhatsAppResponse> {
     const message = `🕌 *Laporan Bulanan - Rumah Tahfidz Baitus Shuffah*
 
 👤 *Santri:* ${studentName}
-📅 *Periode:* ${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
+📅 *Periode:* ${new Date().toLocaleDateString("id-ID", { month: "long", year: "numeric" })}
 
 📊 *RINGKASAN PERFORMANCE:*
 ✅ Kehadiran: ${reportData.attendanceRate}%
@@ -287,18 +311,20 @@ _Pesan otomatis dari Sistem Rumah Tahfidz_`;
 ⭐ Rata-rata Nilai: ${reportData.averageGrade}
 🎯 Total Hafalan Selesai: ${reportData.totalHafalan}
 
-${reportData.attendanceRate >= 90 
-  ? 'Mashaa Allah! Kehadiran sangat baik.' 
-  : reportData.attendanceRate >= 80
-  ? 'Kehadiran cukup baik, tingkatkan lagi.'
-  : 'Perlu peningkatan kehadiran.'
+${
+  reportData.attendanceRate >= 90
+    ? "Mashaa Allah! Kehadiran sangat baik."
+    : reportData.attendanceRate >= 80
+      ? "Kehadiran cukup baik, tingkatkan lagi."
+      : "Perlu peningkatan kehadiran."
 }
 
-${reportData.averageGrade >= 85
-  ? 'Alhamdulillah, prestasi hafalan sangat memuaskan!'
-  : reportData.averageGrade >= 75
-  ? 'Prestasi hafalan cukup baik, terus semangat!'
-  : 'Perlu bimbingan lebih intensif untuk hafalan.'
+${
+  reportData.averageGrade >= 85
+    ? "Alhamdulillah, prestasi hafalan sangat memuaskan!"
+    : reportData.averageGrade >= 75
+      ? "Prestasi hafalan cukup baik, terus semangat!"
+      : "Perlu bimbingan lebih intensif untuk hafalan."
 }
 
 Barakallahu fiikum 🤲
@@ -313,15 +339,15 @@ _Laporan otomatis dari Sistem Rumah Tahfidz_`;
    */
   private formatPhoneNumber(phone: string): string {
     // Remove all non-numeric characters
-    let cleaned = phone.replace(/\D/g, '');
-    
+    let cleaned = phone.replace(/\D/g, "");
+
     // Add country code if not present
-    if (cleaned.startsWith('0')) {
-      cleaned = '62' + cleaned.substring(1);
-    } else if (!cleaned.startsWith('62')) {
-      cleaned = '62' + cleaned;
+    if (cleaned.startsWith("0")) {
+      cleaned = "62" + cleaned.substring(1);
+    } else if (!cleaned.startsWith("62")) {
+      cleaned = "62" + cleaned;
     }
-    
+
     return cleaned;
   }
 

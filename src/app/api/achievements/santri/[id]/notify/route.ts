@@ -1,18 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { createAuditLog } from '@/lib/audit-log';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { createAuditLog } from "@/lib/audit-log";
 
 // POST handler - Send notification for an achievement
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user || !['ADMIN', 'MUSYRIF'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (
+      !session ||
+      !session.user ||
+      !["ADMIN", "MUSYRIF"].includes(session.user.role)
+    ) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const id = params.id;
@@ -33,20 +37,23 @@ export async function POST(
     });
 
     if (!achievement) {
-      return NextResponse.json({ error: 'Achievement not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Achievement not found" },
+        { status: 404 },
+      );
     }
 
     if (!achievement.isUnlocked) {
       return NextResponse.json(
-        { error: 'Cannot send notification for locked achievement' },
-        { status: 400 }
+        { error: "Cannot send notification for locked achievement" },
+        { status: 400 },
       );
     }
 
     if (achievement.notificationSent) {
       return NextResponse.json(
-        { error: 'Notification already sent' },
-        { status: 400 }
+        { error: "Notification already sent" },
+        { status: 400 },
       );
     }
 
@@ -58,12 +65,12 @@ export async function POST(
       data: {
         title: `Pencapaian Baru: ${achievement.badge.name}`,
         message: achievement.badge.unlockMessage,
-        type: 'ACHIEVEMENT',
-        priority: 'NORMAL',
-        status: 'PENDING',
-        channels: 'APP,WHATSAPP',
+        type: "ACHIEVEMENT",
+        priority: "NORMAL",
+        status: "PENDING",
+        channels: "APP,WHATSAPP",
         recipientId: achievement.santri.waliId,
-        recipientType: 'WALI',
+        recipientType: "WALI",
         metadata: JSON.stringify({
           achievementId: achievement.id,
           badgeId: achievement.badge.id,
@@ -84,8 +91,8 @@ export async function POST(
 
     // Create audit log
     await createAuditLog({
-      action: 'NOTIFY',
-      entity: 'SANTRI_ACHIEVEMENT',
+      action: "NOTIFY",
+      entity: "SANTRI_ACHIEVEMENT",
       entityId: id,
       userId: session.user.id,
       newData: JSON.stringify({ notificationId: notification.id }),
@@ -97,10 +104,10 @@ export async function POST(
       notification,
     });
   } catch (error) {
-    console.error('Error sending achievement notification:', error);
+    console.error("Error sending achievement notification:", error);
     return NextResponse.json(
-      { error: 'Failed to send achievement notification' },
-      { status: 500 }
+      { error: "Failed to send achievement notification" },
+      { status: 500 },
     );
   }
 }

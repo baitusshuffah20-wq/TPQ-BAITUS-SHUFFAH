@@ -1,28 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Fetch all active programs from database
     const programs = await prisma.program.findMany({
+      where: {
+        isActive: true, // Only fetch active programs
+      },
       orderBy: {
-        order: 'asc'
-      }
+        order: "asc",
+      },
     });
-
     return NextResponse.json({
       success: true,
-      programs
+      programs: programs,
     });
   } catch (error) {
-    console.error('Error fetching programs:', error);
+    console.error("Error fetching programs:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch programs',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: "Failed to fetch programs",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

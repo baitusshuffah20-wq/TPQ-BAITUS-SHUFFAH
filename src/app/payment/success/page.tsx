@@ -1,43 +1,50 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState, Suspense } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { Card, CardContent } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { 
-  CheckCircle, 
-  Download, 
-  Home, 
+import React, { useEffect, useState, Suspense } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  CheckCircle,
+  Download,
+  Home,
   CreditCard,
   Calendar,
   User,
   Hash,
-  ArrowRight
-} from 'lucide-react';
+  ArrowRight,
+} from "lucide-react";
 
 const PaymentSuccessPage = () => {
   const searchParams = useSearchParams();
-  const [paymentData, setPaymentData] = useState<any>(null);
+  const [paymentData, setPaymentData] = useState<{
+    orderId: string;
+    amount: number;
+    paymentType: string;
+    santriName: string;
+    period: string;
+    status: string;
+    paymentMethod: string;
+    transactionTime: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Get payment details from URL params or API
-    const orderId = searchParams.get('order_id');
-    const statusCode = searchParams.get('status_code');
-    const transactionStatus = searchParams.get('transaction_status');
+    const orderId = searchParams.get("order_id");
 
     // Mock payment data - in real app, fetch from API using order_id
     const mockPaymentData = {
-      orderId: orderId || 'SPP_1707123456_abc123',
+      orderId: orderId || "SPP_1707123456_abc123",
       amount: 500000,
-      paymentType: 'SPP',
-      santriName: 'Ahmad Fauzi',
-      santriNis: '24001',
-      paymentMethod: 'Bank Transfer',
+      paymentType: "SPP",
+      santriName: "Ahmad Fauzi",
+      santriNis: "24001",
+      paymentMethod: "Bank Transfer",
       paidAt: new Date().toISOString(),
-      reference: 'TRX001234567890',
-      status: 'PAID'
+      reference: "TRX001234567890",
+      status: "PAID",
     };
 
     setPaymentData(mockPaymentData);
@@ -45,21 +52,21 @@ const PaymentSuccessPage = () => {
   }, [searchParams]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(amount);
   };
 
   const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -104,7 +111,9 @@ const PaymentSuccessPage = () => {
                     <Hash className="h-5 w-5 text-gray-400 mr-3" />
                     <span className="text-gray-600">ID Transaksi</span>
                   </div>
-                  <span className="font-medium text-gray-900">{paymentData.reference}</span>
+                  <span className="font-medium text-gray-900">
+                    {paymentData.reference}
+                  </span>
                 </div>
 
                 <div className="flex justify-between items-center py-3 border-b border-gray-100">
@@ -113,8 +122,12 @@ const PaymentSuccessPage = () => {
                     <span className="text-gray-600">Santri</span>
                   </div>
                   <div className="text-right">
-                    <div className="font-medium text-gray-900">{paymentData.santriName}</div>
-                    <div className="text-sm text-gray-500">NIS: {paymentData.santriNis}</div>
+                    <div className="font-medium text-gray-900">
+                      {paymentData.santriName}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      NIS: {paymentData.santriNis}
+                    </div>
                   </div>
                 </div>
 
@@ -123,7 +136,9 @@ const PaymentSuccessPage = () => {
                     <CreditCard className="h-5 w-5 text-gray-400 mr-3" />
                     <span className="text-gray-600">Jenis Pembayaran</span>
                   </div>
-                  <span className="font-medium text-gray-900">{paymentData.paymentType}</span>
+                  <span className="font-medium text-gray-900">
+                    {paymentData.paymentType}
+                  </span>
                 </div>
 
                 <div className="flex justify-between items-center py-3 border-b border-gray-100">
@@ -131,7 +146,9 @@ const PaymentSuccessPage = () => {
                     <CreditCard className="h-5 w-5 text-gray-400 mr-3" />
                     <span className="text-gray-600">Metode Pembayaran</span>
                   </div>
-                  <span className="font-medium text-gray-900">{paymentData.paymentMethod}</span>
+                  <span className="font-medium text-gray-900">
+                    {paymentData.paymentMethod}
+                  </span>
                 </div>
 
                 <div className="flex justify-between items-center py-3 border-b border-gray-100">
@@ -145,7 +162,9 @@ const PaymentSuccessPage = () => {
                 </div>
 
                 <div className="flex justify-between items-center py-3 bg-green-50 px-4 rounded-lg">
-                  <span className="text-lg font-semibold text-gray-900">Total Dibayar</span>
+                  <span className="text-lg font-semibold text-gray-900">
+                    Total Dibayar
+                  </span>
                   <span className="text-2xl font-bold text-green-600">
                     {formatCurrency(paymentData.amount)}
                   </span>
@@ -169,7 +188,7 @@ const PaymentSuccessPage = () => {
                 <Download className="h-4 w-4 mr-2" />
                 Download Bukti Pembayaran
               </Button>
-              
+
               <Link href="/dashboard/wali/payments" className="w-full">
                 <Button variant="outline" className="w-full">
                   <CreditCard className="h-4 w-4 mr-2" />
@@ -189,12 +208,14 @@ const PaymentSuccessPage = () => {
 
           {/* Additional Info */}
           <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-            <h3 className="font-semibold text-blue-900 mb-2">Informasi Penting:</h3>
+            <h3 className="font-semibold text-blue-900 mb-2">
+              Informasi Penting:
+            </h3>
             <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Bukti pembayaran telah dikirim ke email yang terdaftar</li>
-              <li>• Pembayaran akan diverifikasi dalam 1x24 jam</li>
-              <li>• Simpan bukti pembayaran untuk keperluan administrasi</li>
-              <li>• Hubungi admin jika ada pertanyaan: +62 21 1234 5678</li>
+              <li>� Bukti pembayaran telah dikirim ke email yang terdaftar</li>
+              <li>� Pembayaran akan diverifikasi dalam 1x24 jam</li>
+              <li>� Simpan bukti pembayaran untuk keperluan administrasi</li>
+              <li>� Hubungi admin jika ada pertanyaan: +62 21 1234 5678</li>
             </ul>
           </div>
         </div>
@@ -205,14 +226,16 @@ const PaymentSuccessPage = () => {
 
 const PaymentSuccessPageWithSuspense = () => {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Memuat halaman...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Memuat halaman...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <PaymentSuccessPage />
     </Suspense>
   );

@@ -1,396 +1,533 @@
-'use client';
+﻿"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { 
-  CreditCard, 
-  Search, 
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "react-hot-toast";
+import {
+  CreditCard,
+  DollarSign,
+  TrendingUp,
+  Users,
+  Search,
   Filter,
   Download,
-  Plus,
   Eye,
   CheckCircle,
   XCircle,
   Clock,
-  AlertCircle
-} from 'lucide-react';
+  AlertTriangle,
+  RefreshCw,
+  Plus,
+} from "lucide-react";
 
 interface Payment {
   id: string;
-  santriName: string;
-  type: string;
   amount: number;
-  dueDate: string;
-  paidDate?: string;
-  status: 'PENDING' | 'PAID' | 'OVERDUE' | 'CANCELLED';
-  method?: string;
+  status: "PENDING" | "PAID" | "FAILED" | "CANCELLED";
+  type: "SPP" | "DONATION" | "OTHER";
+  method: "CASH" | "BANK_TRANSFER" | "E_WALLET" | "QRIS" | "CREDIT_CARD";
   reference?: string;
+  description: string;
+  paidAt?: string;
+  createdAt: string;
+  student?: {
+    id: string;
+    name: string;
+    nis: string;
+  };
+  donor?: {
+    name: string;
+    email?: string;
+  };
 }
 
-const PaymentsPage = () => {
-  const [user, setUser] = useState<any>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const router = useRouter();
+interface PaymentSummary {
+  totalAmount: number;
+  totalPaid: number;
+  totalPending: number;
+  totalFailed: number;
+  totalTransactions: number;
+  successRate: number;
+}
+
+export default function PaymentsPage() {
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [summary, setSummary] = useState<PaymentSummary>({
+    totalAmount: 0,
+    totalPaid: 0,
+    totalPending: 0,
+    totalFailed: 0,
+    totalTransactions: 0,
+    successRate: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    status: "ALL",
+    type: "ALL",
+    method: "ALL",
+    search: "",
+    dateFrom: "",
+    dateTo: "",
+  });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+  });
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      if (parsedUser.role !== 'ADMIN') {
-        router.push('/login');
-      } else {
-        setUser(parsedUser);
+    loadPayments();
+  }, [pagination.page, filters]);
+
+  const loadPayments = async () => {
+    try {
+      setLoading(true);
+
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+        ...(filters.status !== "ALL" && { status: filters.status }),
+        ...(filters.type !== "ALL" && { type: filters.type }),
+        ...(filters.method !== "ALL" && { method: filters.method }),
+        ...(filters.search && { search: filters.search }),
+        ...(filters.dateFrom && { dateFrom: filters.dateFrom }),
+        ...(filters.dateTo && { dateTo: filters.dateTo }),
+      });
+
+      const response = await fetch(`/api/payments?${params}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    } else {
-      router.push('/login');
-    }
-  }, [router]);
 
-  if (!user) {
-    return <div>Loading...</div>;
-  }
+      const data = await response.json();
 
-  // Mock data - in real app, fetch from API
-  const payments: Payment[] = [
-    {
-      id: '1',
-      santriName: 'Ahmad Fauzi',
-      type: 'SPP',
-      amount: 500000,
-      dueDate: '2024-02-15',
-      paidDate: '2024-02-10',
-      status: 'PAID',
-      method: 'BANK_TRANSFER',
-      reference: 'TRX001'
-    },
-    {
-      id: '2',
-      santriName: 'Siti Aisyah',
-      type: 'SPP',
-      amount: 500000,
-      dueDate: '2024-02-15',
-      status: 'PENDING',
-      reference: 'TRX002'
-    },
-    {
-      id: '3',
-      santriName: 'Muhammad Rizki',
-      type: 'REGISTRATION',
-      amount: 1000000,
-      dueDate: '2024-01-30',
-      status: 'OVERDUE',
-      reference: 'TRX003'
-    },
-    {
-      id: '4',
-      santriName: 'Fatimah Zahra',
-      type: 'BOOK',
-      amount: 200000,
-      dueDate: '2024-02-20',
-      paidDate: '2024-02-18',
-      status: 'PAID',
-      method: 'E_WALLET',
-      reference: 'TRX004'
+      if (data.success) {
+        setPayments(data.payments || []);
+        setSummary(
+          data.summary || {
+            totalAmount: 0,
+            totalPaid: 0,
+            totalPending: 0,
+            totalFailed: 0,
+            totalTransactions: 0,
+            successRate: 0,
+          },
+        );
+        setPagination((prev) => ({
+          ...prev,
+          total: data.pagination?.total || 0,
+          totalPages: data.pagination?.totalPages || 0,
+        }));
+      } else {
+        console.error("Failed to load payments:", data.error);
+        setPayments([]);
+      }
+    } catch (error) {
+      console.error("Error loading payments:", error);
+      toast.error("Gagal memuat data pembayaran");
+      setPayments([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
+
+  const handleExport = async () => {
+    try {
+      const params = new URLSearchParams({
+        export: "true",
+        ...(filters.status !== "ALL" && { status: filters.status }),
+        ...(filters.type !== "ALL" && { type: filters.type }),
+        ...(filters.method !== "ALL" && { method: filters.method }),
+        ...(filters.search && { search: filters.search }),
+        ...(filters.dateFrom && { dateFrom: filters.dateFrom }),
+        ...(filters.dateTo && { dateTo: filters.dateTo }),
+      });
+
+      const response = await fetch(`/api/payments?${params}`);
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `payments-${new Date().toISOString().split("T")[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        toast.success("Data berhasil diekspor");
+      } else {
+        toast.error("Gagal mengekspor data");
+      }
+    } catch (error) {
+      console.error("Error exporting payments:", error);
+      toast.error("Gagal mengekspor data");
+    }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'PAID':
+      case "PAID":
         return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'PENDING':
+      case "PENDING":
         return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'OVERDUE':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case 'CANCELLED':
+      case "FAILED":
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      case "CANCELLED":
         return <XCircle className="h-4 w-4 text-gray-500" />;
       default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
+        return <AlertTriangle className="h-4 w-4 text-gray-500" />;
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'PAID':
-        return 'bg-green-100 text-green-800';
-      case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'OVERDUE':
-        return 'bg-red-100 text-red-800';
-      case 'CANCELLED':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const getStatusBadge = (status: string) => {
+    const variants: Record<
+      string,
+      "default" | "secondary" | "destructive" | "outline"
+    > = {
+      PAID: "default",
+      PENDING: "secondary",
+      FAILED: "destructive",
+      CANCELLED: "outline",
+    };
+
+    return (
+      <Badge
+        variant={variants[status] || "outline"}
+        className="flex items-center gap-1"
+      >
+        {getStatusIcon(status)}
+        {status}
+      </Badge>
+    );
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(amount);
   };
 
-  const filteredPayments = payments.filter(payment => {
-    const matchesSearch = payment.santriName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         payment.type.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'ALL' || payment.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  const stats = {
-    total: payments.length,
-    paid: payments.filter(p => p.status === 'PAID').length,
-    pending: payments.filter(p => p.status === 'PENDING').length,
-    overdue: payments.filter(p => p.status === 'OVERDUE').length,
-    totalAmount: payments.reduce((sum, p) => sum + p.amount, 0),
-    paidAmount: payments.filter(p => p.status === 'PAID').reduce((sum, p) => sum + p.amount, 0)
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
-  const handleCreatePayment = async (paymentData: any) => {
-    try {
-      const response = await fetch('/api/payment/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type: 'spp',
-          santriId: paymentData.santriId,
-          amount: paymentData.amount,
-          paymentType: paymentData.type
-        })
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Redirect to Midtrans payment page
-        window.open(result.redirectUrl, '_blank');
-        setShowCreateModal(false);
-      } else {
-        alert('Gagal membuat pembayaran: ' + result.error);
-      }
-    } catch (error) {
-      console.error('Error creating payment:', error);
-      alert('Terjadi kesalahan saat membuat pembayaran');
-    }
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Memuat data pembayaran...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Manajemen Pembayaran
-            </h1>
-            <p className="text-gray-600">
-              Kelola pembayaran SPP dan biaya lainnya
-            </p>
-          </div>
-          <Button onClick={() => setShowCreateModal(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Buat Tagihan
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Pembayaran</h1>
+          <p className="text-gray-600">Kelola semua transaksi pembayaran</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+          <Button onClick={loadPayments}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
           </Button>
         </div>
+      </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Tagihan</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                </div>
-                <CreditCard className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Lunas</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.paid}</p>
-                </div>
-                <CheckCircle className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Pending</p>
-                  <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-                </div>
-                <Clock className="h-8 w-8 text-yellow-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Terlambat</p>
-                  <p className="text-2xl font-bold text-red-600">{stats.overdue}</p>
-                </div>
-                <AlertCircle className="h-8 w-8 text-red-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Revenue Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Total Pendapatan
-              </h3>
-              <p className="text-3xl font-bold text-teal-600">
-                {formatCurrency(stats.paidAmount)}
-              </p>
-              <p className="text-sm text-gray-500">
-                dari {formatCurrency(stats.totalAmount)} total tagihan
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Tingkat Pembayaran
-              </h3>
-              <p className="text-3xl font-bold text-blue-600">
-                {Math.round((stats.paid / stats.total) * 100)}%
-              </p>
-              <p className="text-sm text-gray-500">
-                dari total tagihan yang dibuat
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters and Search */}
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Daftar Pembayaran</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="flex-1">
-                <Input
-                  placeholder="Cari santri atau jenis pembayaran..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  leftIcon={<Search className="h-4 w-4" />}
-                />
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">
+                  Total Pembayaran
+                </p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(summary.totalAmount)}
+                </p>
               </div>
-              
-              <div className="flex gap-2">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900 bg-white"
-                >
-                  <option value="ALL">Semua Status</option>
-                  <option value="PAID">Lunas</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="OVERDUE">Terlambat</option>
-                  <option value="CANCELLED">Dibatalkan</option>
-                </select>
-                
-                <Button variant="outline">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filter
-                </Button>
-                
-                <Button variant="outline">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
+              <DollarSign className="h-8 w-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Berhasil</p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(summary.totalPaid)}
+                </p>
               </div>
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pending</p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(summary.totalPending)}
+                </p>
+              </div>
+              <Clock className="h-8 w-8 text-yellow-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">
+                  Success Rate
+                </p>
+                <p className="text-2xl font-bold">
+                  {summary.successRate.toFixed(1)}%
+                </p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-purple-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filter Pembayaran</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Status</label>
+              <select
+                value={filters.status}
+                onChange={(e) => handleFilterChange("status", e.target.value)}
+                className="w-full p-2 border rounded-md"
+              >
+                <option value="ALL">Semua Status</option>
+                <option value="PAID">Berhasil</option>
+                <option value="PENDING">Pending</option>
+                <option value="FAILED">Gagal</option>
+                <option value="CANCELLED">Dibatalkan</option>
+              </select>
             </div>
 
-            {/* Payments Table */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Tipe</label>
+              <select
+                value={filters.type}
+                onChange={(e) => handleFilterChange("type", e.target.value)}
+                className="w-full p-2 border rounded-md"
+              >
+                <option value="ALL">Semua Tipe</option>
+                <option value="SPP">SPP</option>
+                <option value="DONATION">Donasi</option>
+                <option value="OTHER">Lainnya</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Metode</label>
+              <select
+                value={filters.method}
+                onChange={(e) => handleFilterChange("method", e.target.value)}
+                className="w-full p-2 border rounded-md"
+              >
+                <option value="ALL">Semua Metode</option>
+                <option value="CASH">Tunai</option>
+                <option value="BANK_TRANSFER">Transfer Bank</option>
+                <option value="E_WALLET">E-Wallet</option>
+                <option value="QRIS">QRIS</option>
+                <option value="CREDIT_CARD">Kartu Kredit</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Dari Tanggal
+              </label>
+              <Input
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Sampai Tanggal
+              </label>
+              <Input
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => handleFilterChange("dateTo", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Cari</label>
+              <Input
+                placeholder="Cari pembayaran..."
+                value={filters.search}
+                onChange={(e) => handleFilterChange("search", e.target.value)}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Payments Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Daftar Pembayaran</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {payments.length === 0 ? (
+            <div className="text-center py-12">
+              <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Tidak ada pembayaran
+              </h3>
+              <p className="text-gray-600">
+                Belum ada data pembayaran yang sesuai dengan filter
+              </p>
+            </div>
+          ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Santri</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Jenis</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Jumlah</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Jatuh Tempo</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Aksi</th>
+                  <tr className="border-b">
+                    <th className="text-left p-3">ID</th>
+                    <th className="text-left p-3">Payer</th>
+                    <th className="text-left p-3">Tipe</th>
+                    <th className="text-left p-3">Jumlah</th>
+                    <th className="text-left p-3">Metode</th>
+                    <th className="text-left p-3">Status</th>
+                    <th className="text-left p-3">Tanggal</th>
+                    <th className="text-left p-3">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPayments.map((payment) => (
-                    <tr key={payment.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4">
-                        <div>
-                          <p className="font-medium text-gray-900">{payment.santriName}</p>
-                          <p className="text-sm text-gray-500">ID: {payment.reference}</p>
-                        </div>
+                  {payments.map((payment) => (
+                    <tr key={payment.id} className="border-b hover:bg-gray-50">
+                      <td className="p-3 font-mono text-sm">
+                        {payment.id.slice(0, 8)}
                       </td>
-                      <td className="py-3 px-4">
-                        <span className="text-sm text-gray-900">{payment.type}</span>
+                      <td className="p-3">
+                        {payment.student ? (
+                          <div>
+                            <p className="font-medium">
+                              {payment.student.name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {payment.student.nis}
+                            </p>
+                          </div>
+                        ) : payment.donor ? (
+                          <div>
+                            <p className="font-medium">{payment.donor.name}</p>
+                            <p className="text-sm text-gray-600">
+                              {payment.donor.email}
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="text-gray-500">-</span>
+                        )}
                       </td>
-                      <td className="py-3 px-4">
-                        <span className="font-medium text-gray-900">
-                          {formatCurrency(payment.amount)}
-                        </span>
+                      <td className="p-3">
+                        <Badge variant="outline">{payment.type}</Badge>
                       </td>
-                      <td className="py-3 px-4">
-                        <span className="text-sm text-gray-900">
-                          {new Date(payment.dueDate).toLocaleDateString('id-ID')}
-                        </span>
+                      <td className="p-3 font-medium">
+                        {formatCurrency(payment.amount)}
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center space-x-2">
-                          {getStatusIcon(payment.status)}
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(payment.status)}`}>
-                            {payment.status}
-                          </span>
-                        </div>
+                      <td className="p-3">{payment.method}</td>
+                      <td className="p-3">{getStatusBadge(payment.status)}</td>
+                      <td className="p-3 text-sm">
+                        {payment.paidAt
+                          ? formatDate(payment.paidAt)
+                          : formatDate(payment.createdAt)}
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="flex space-x-2">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          {payment.status === 'PENDING' && (
-                            <Button variant="outline" size="sm">
-                              Kirim Reminder
-                            </Button>
-                          )}
-                        </div>
+                      <td className="p-3">
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    </DashboardLayout>
-  );
-};
+          )}
 
-export default PaymentsPage;
+          {/* Pagination */}
+          {pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6">
+              <p className="text-sm text-gray-600">
+                Menampilkan {(pagination.page - 1) * pagination.limit + 1} -{" "}
+                {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
+                dari {pagination.total} pembayaran
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pagination.page <= 1}
+                  onClick={() =>
+                    setPagination((prev) => ({ ...prev, page: prev.page - 1 }))
+                  }
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pagination.page >= pagination.totalPages}
+                  onClick={() =>
+                    setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
+                  }
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

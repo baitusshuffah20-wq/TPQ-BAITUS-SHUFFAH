@@ -1,48 +1,54 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { WhatsAppService } from '@/lib/whatsapp-service';
-import { prisma } from '@/lib/prisma';
-import crypto from 'crypto';
+import { NextRequest, NextResponse } from "next/server";
+import { WhatsAppService } from "@/lib/whatsapp-service";
+import { prisma } from "@/lib/prisma";
+import crypto from "crypto";
 
-const WEBHOOK_VERIFY_TOKEN = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || 'your_verify_token';
-const WEBHOOK_SECRET = process.env.WHATSAPP_WEBHOOK_SECRET || 'your_webhook_secret';
+const WEBHOOK_VERIFY_TOKEN =
+  process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || "your_verify_token";
+const WEBHOOK_SECRET =
+  process.env.WHATSAPP_WEBHOOK_SECRET || "your_webhook_secret";
 
 // Verify webhook (GET request)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const mode = searchParams.get('hub.mode');
-    const token = searchParams.get('hub.verify_token');
-    const challenge = searchParams.get('hub.challenge');
+    const mode = searchParams.get("hub.mode");
+    const token = searchParams.get("hub.verify_token");
+    const challenge = searchParams.get("hub.challenge");
 
-    console.log('WhatsApp webhook verification:', { mode, token, challenge });
+    console.log("WhatsApp webhook verification:", { mode, token, challenge });
 
     if (!mode || !token || !challenge) {
       return NextResponse.json(
-        { error: 'Missing required parameters' },
-        { status: 400 }
+        { error: "Missing required parameters" },
+        { status: 400 },
       );
     }
 
-    const verificationResult = WhatsAppService.verifyWebhook(mode, token, challenge);
+    const verificationResult = WhatsAppService.verifyWebhook(
+      mode,
+      token,
+      challenge,
+    );
 
     if (verificationResult) {
-      console.log('WhatsApp webhook verified successfully');
+      console.log("WhatsApp webhook verified successfully");
       return new NextResponse(verificationResult, {
         status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { "Content-Type": "text/plain" },
       });
     } else {
-      console.log('WhatsApp webhook verification failed');
+      console.log("WhatsApp webhook verification failed");
       return NextResponse.json(
-        { error: 'Verification failed' },
-        { status: 403 }
+        { error: "Verification failed" },
+        { status: 403 },
       );
     }
   } catch (error) {
-    console.error('WhatsApp webhook verification error:', error);
+    console.error("WhatsApp webhook verification error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
@@ -52,18 +58,18 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    console.log('WhatsApp webhook received:', JSON.stringify(body, null, 2));
+    console.log("WhatsApp webhook received:", JSON.stringify(body, null, 2));
 
     // Verify webhook signature (optional but recommended)
-    const signature = request.headers.get('x-hub-signature-256');
+    const signature = request.headers.get("x-hub-signature-256");
     if (signature) {
       const bodyText = JSON.stringify(body);
       const isValid = verifyWebhookSignature(bodyText, signature);
       if (!isValid) {
-        console.log('Invalid webhook signature');
+        console.log("Invalid webhook signature");
         return NextResponse.json(
-          { error: 'Invalid signature' },
-          { status: 403 }
+          { error: "Invalid signature" },
+          { status: 403 },
         );
       }
     }
@@ -72,10 +78,10 @@ export async function POST(request: NextRequest) {
     await whatsappService.processWebhook(body);
 
     // Process auto-responses for incoming messages
-    if (body.object === 'whatsapp_business_account') {
+    if (body.object === "whatsapp_business_account") {
       for (const entry of body.entry) {
         for (const change of entry.changes) {
-          if (change.field === 'messages' && change.value.messages) {
+          if (change.field === "messages" && change.value.messages) {
             for (const message of change.value.messages) {
               await processIncomingMessage(message);
             }
@@ -87,26 +93,36 @@ export async function POST(request: NextRequest) {
     // Always return 200 to acknowledge receipt
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error('WhatsApp webhook processing error:', error);
+    console.error("WhatsApp webhook processing error:", error);
 
     // Still return 200 to avoid webhook retries
-    return NextResponse.json({ success: false }, { status: 200 });
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Terjadi kesalahan pada server",
+        error: error instanceof Error ? error.message : String(error),
+      },
+      { status: 200 },
+    );
   }
 }
 
-function verifyWebhookSignature(body: string, signature: string | null): boolean {
+function verifyWebhookSignature(
+  body: string,
+  signature: string | null,
+): boolean {
   if (!signature) return false;
-  
+
   const expectedSignature = crypto
-    .createHmac('sha256', WEBHOOK_SECRET)
+    .createHmac("sha256", WEBHOOK_SECRET)
     .update(body)
-    .digest('hex');
-  
-  const receivedSignature = signature.replace('sha256=', '');
-  
+    .digest("hex");
+
+  const receivedSignature = signature.replace("sha256=", "");
+
   return crypto.timingSafeEqual(
-    Buffer.from(expectedSignature, 'hex'),
-    Buffer.from(receivedSignature, 'hex')
+    Buffer.from(expectedSignature, "hex"),
+    Buffer.from(receivedSignature, "hex"),
   );
 }
 
@@ -126,47 +142,53 @@ async function processMessageUpdate(value: any) {
       }
     }
   } catch (error) {
-    console.error('Error processing message update:', error);
+    console.error("Error processing message update:", error);
   }
 }
 
 async function updateMessageStatus(status: any) {
   try {
     const { id, status: messageStatus, timestamp, recipient_id } = status;
-    
+
     // Update message status in database
     await prisma.whatsAppLog.updateMany({
       where: { messageId: id },
       data: {
         status: messageStatus.toUpperCase(),
-        deliveredAt: messageStatus === 'delivered' ? new Date(parseInt(timestamp) * 1000) : undefined,
-        readAt: messageStatus === 'read' ? new Date(parseInt(timestamp) * 1000) : undefined,
-        failedAt: messageStatus === 'failed' ? new Date(parseInt(timestamp) * 1000) : undefined
-      }
+        deliveredAt:
+          messageStatus === "delivered"
+            ? new Date(parseInt(timestamp) * 1000)
+            : undefined,
+        readAt:
+          messageStatus === "read"
+            ? new Date(parseInt(timestamp) * 1000)
+            : undefined,
+        failedAt:
+          messageStatus === "failed"
+            ? new Date(parseInt(timestamp) * 1000)
+            : undefined,
+      },
     });
 
     console.log(`Message ${id} status updated to ${messageStatus}`);
   } catch (error) {
-    console.error('Error updating message status:', error);
+    console.error("Error updating message status:", error);
   }
 }
 
 async function processIncomingMessage(message: any) {
   try {
     const { from, text, timestamp, type } = message;
-    
+
     // Find user by phone number
     const user = await prisma.user.findFirst({
       where: {
-        OR: [
-          { phone: from },
-          { parent: { phone: from } }
-        ]
+        OR: [{ phone: from }, { parent: { phone: from } }],
       },
       include: {
         parent: true,
-        children: true
-      }
+        children: true,
+      },
     });
 
     if (!user) {
@@ -180,10 +202,10 @@ async function processIncomingMessage(message: any) {
         senderId: user.id,
         senderPhone: from,
         messageType: type,
-        messageContent: text?.body || '',
+        messageContent: text?.body || "",
         receivedAt: new Date(parseInt(timestamp) * 1000),
-        processed: false
-      }
+        processed: false,
+      },
     });
 
     // Process message content for auto-responses
@@ -193,16 +215,20 @@ async function processIncomingMessage(message: any) {
 
     console.log(`Incoming message from ${from}: ${text?.body}`);
   } catch (error) {
-    console.error('Error processing incoming message:', error);
+    console.error("Error processing incoming message:", error);
   }
 }
 
-async function processAutoResponse(phone: string, messageText: string, user: any) {
+async function processAutoResponse(
+  phone: string,
+  messageText: string,
+  user: any,
+) {
   try {
     const whatsappService = new WhatsAppService();
 
     // Auto-response for common queries
-    if (messageText.includes('jadwal') || messageText.includes('schedule')) {
+    if (messageText.includes("jadwal") || messageText.includes("schedule")) {
       const response = `🕌 *Jadwal Rumah Tahfidz Baitus Shuffah*
 
 📅 *Senin - Jumat:*
@@ -218,9 +244,10 @@ async function processAutoResponse(phone: string, messageText: string, user: any
 Barakallahu fiikum 🤲`;
 
       await whatsappService.sendTextMessage(phone, response);
-    }
-    
-    else if (messageText.includes('pembayaran') || messageText.includes('spp')) {
+    } else if (
+      messageText.includes("pembayaran") ||
+      messageText.includes("spp")
+    ) {
       const response = `💳 *Informasi Pembayaran*
 
 🏦 *Transfer Bank:*
@@ -238,9 +265,10 @@ DANA: 081234567890
 Barakallahu fiikum 🤲`;
 
       await whatsappService.sendTextMessage(phone, response);
-    }
-    
-    else if (messageText.includes('kontak') || messageText.includes('alamat')) {
+    } else if (
+      messageText.includes("kontak") ||
+      messageText.includes("alamat")
+    ) {
       const response = `📞 *Kontak Rumah Tahfidz Baitus Shuffah*
 
 📍 *Alamat:*
@@ -259,9 +287,10 @@ Sabtu: 07:00 - 12:00
 Barakallahu fiikum 🤲`;
 
       await whatsappService.sendTextMessage(phone, response);
-    }
-    
-    else if (messageText.includes('terima kasih') || messageText.includes('syukron')) {
+    } else if (
+      messageText.includes("terima kasih") ||
+      messageText.includes("syukron")
+    ) {
       const response = `Wa iyyakum, barakallahu fiikum 🤲
 
 Semoga Allah senantiasa memberkahi putra/putri Anda dalam menghafal Al-Quran.
@@ -270,20 +299,19 @@ _Tim Rumah Tahfidz Baitus Shuffah_`;
 
       await whatsappService.sendTextMessage(phone, response);
     }
-    
+
     // Mark as processed
     await prisma.whatsAppIncoming.updateMany({
       where: {
         senderPhone: phone,
-        processed: false
+        processed: false,
       },
       data: {
         processed: true,
-        processedAt: new Date()
-      }
+        processedAt: new Date(),
+      },
     });
-
   } catch (error) {
-    console.error('Error processing auto-response:', error);
+    console.error("Error processing auto-response:", error);
   }
 }

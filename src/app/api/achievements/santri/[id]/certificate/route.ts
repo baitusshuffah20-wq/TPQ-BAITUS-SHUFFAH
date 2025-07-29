@@ -1,20 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { createAuditLog } from '@/lib/audit-log';
-import path from 'path';
-import fs from 'fs';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { createAuditLog } from "@/lib/audit-log";
+import path from "path";
+import fs from "fs";
 
 // POST handler - Generate certificate for an achievement
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user || !['ADMIN', 'MUSYRIF'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (
+      !session ||
+      !session.user ||
+      !["ADMIN", "MUSYRIF"].includes(session.user.role)
+    ) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const id = params.id;
@@ -35,20 +39,26 @@ export async function POST(
     });
 
     if (!achievement) {
-      return NextResponse.json({ error: 'Achievement not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Achievement not found" },
+        { status: 404 },
+      );
     }
 
     if (!achievement.isUnlocked) {
       return NextResponse.json(
-        { error: 'Cannot generate certificate for locked achievement' },
-        { status: 400 }
+        { error: "Cannot generate certificate for locked achievement" },
+        { status: 400 },
       );
     }
 
     if (achievement.certificateGenerated && achievement.certificateUrl) {
       return NextResponse.json(
-        { error: 'Certificate already generated', certificateUrl: achievement.certificateUrl },
-        { status: 400 }
+        {
+          error: "Certificate already generated",
+          certificateUrl: achievement.certificateUrl,
+        },
+        { status: 400 },
       );
     }
 
@@ -69,8 +79,8 @@ export async function POST(
 
     // Create audit log
     await createAuditLog({
-      action: 'GENERATE_CERTIFICATE',
-      entity: 'SANTRI_ACHIEVEMENT',
+      action: "GENERATE_CERTIFICATE",
+      entity: "SANTRI_ACHIEVEMENT",
       entityId: id,
       userId: session.user.id,
       newData: JSON.stringify({ certificateUrl }),
@@ -82,10 +92,10 @@ export async function POST(
       certificateUrl,
     });
   } catch (error) {
-    console.error('Error generating achievement certificate:', error);
+    console.error("Error generating achievement certificate:", error);
     return NextResponse.json(
-      { error: 'Failed to generate achievement certificate' },
-      { status: 500 }
+      { error: "Failed to generate achievement certificate" },
+      { status: 500 },
     );
   }
 }
@@ -93,12 +103,12 @@ export async function POST(
 // GET handler - Download certificate for an achievement
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || !session.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const id = params.id;
@@ -119,13 +129,16 @@ export async function GET(
     });
 
     if (!achievement) {
-      return NextResponse.json({ error: 'Achievement not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Achievement not found" },
+        { status: 404 },
+      );
     }
 
     if (!achievement.certificateGenerated || !achievement.certificateUrl) {
       return NextResponse.json(
-        { error: 'Certificate not generated yet' },
-        { status: 400 }
+        { error: "Certificate not generated yet" },
+        { status: 400 },
       );
     }
 
@@ -137,10 +150,10 @@ export async function GET(
       certificateUrl: achievement.certificateUrl,
     });
   } catch (error) {
-    console.error('Error downloading achievement certificate:', error);
+    console.error("Error downloading achievement certificate:", error);
     return NextResponse.json(
-      { error: 'Failed to download achievement certificate' },
-      { status: 500 }
+      { error: "Failed to download achievement certificate" },
+      { status: 500 },
     );
   }
 }

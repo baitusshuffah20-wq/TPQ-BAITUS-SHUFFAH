@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   X,
   DollarSign,
@@ -14,8 +14,8 @@ import {
   Download,
   CheckCircle,
   Clock,
-  AlertCircle
-} from 'lucide-react';
+  AlertCircle,
+} from "lucide-react";
 
 interface PaymentDetailModalProps {
   isOpen: boolean;
@@ -30,45 +30,63 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
   onClose,
   onEdit,
   onDelete,
-  payment
+  payment,
 }) => {
   if (!isOpen || !payment) return null;
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'PAID': return 'bg-green-100 text-green-800';
-      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
-      case 'OVERDUE': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "PAID":
+        return "bg-green-100 text-green-800";
+      case "PENDING":
+        return "bg-yellow-100 text-yellow-800";
+      case "OVERDUE":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'PAID': return 'Lunas';
-      case 'PENDING': return 'Menunggu Pembayaran';
-      case 'OVERDUE': return 'Terlambat';
-      default: return status;
+      case "PAID":
+        return "Lunas";
+      case "PENDING":
+        return "Menunggu Pembayaran";
+      case "OVERDUE":
+        return "Terlambat";
+      default:
+        return status;
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'PAID': return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'PENDING': return <Clock className="h-4 w-4 text-yellow-600" />;
-      case 'OVERDUE': return <AlertCircle className="h-4 w-4 text-red-600" />;
-      default: return <AlertCircle className="h-4 w-4 text-gray-600" />;
+      case "PAID":
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case "PENDING":
+        return <Clock className="h-4 w-4 text-yellow-600" />;
+      case "OVERDUE":
+        return <AlertCircle className="h-4 w-4 text-red-600" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-600" />;
     }
   };
 
   const getPaymentTypeText = (type: string) => {
     switch (type) {
-      case 'SPP': return 'SPP Bulanan';
-      case 'DAFTAR_ULANG': return 'Daftar Ulang';
-      case 'SERAGAM': return 'Seragam';
-      case 'KEGIATAN': return 'Kegiatan Khusus';
-      case 'LAINNYA': return 'Lainnya';
-      default: return type;
+      case "SPP":
+        return "SPP Bulanan";
+      case "DAFTAR_ULANG":
+        return "Daftar Ulang";
+      case "SERAGAM":
+        return "Seragam";
+      case "KEGIATAN":
+        return "Kegiatan Khusus";
+      case "LAINNYA":
+        return "Lainnya";
+      default:
+        return type;
     }
   };
 
@@ -107,9 +125,14 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
                     <h2 className="text-2xl font-bold text-gray-900">
-                      Rp {(parseFloat(payment.amount) || 0).toLocaleString('id-ID')}
+                      Rp{" "}
+                      {(parseFloat(payment.amount) || 0).toLocaleString(
+                        "id-ID",
+                      )}
                     </h2>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(payment.status)}`}>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(payment.status)}`}
+                    >
                       {getStatusText(payment.status)}
                     </span>
                   </div>
@@ -120,7 +143,9 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
                     </div>
                     <div className="flex items-center">
                       <Calendar className="h-4 w-4 mr-2" />
-                      {new Date(payment.paymentDate).toLocaleDateString('id-ID')}
+                      {new Date(payment.paymentDate).toLocaleDateString(
+                        "id-ID",
+                      )}
                     </div>
                     <div className="flex items-center">
                       <Receipt className="h-4 w-4 mr-2" />
@@ -128,7 +153,9 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
                     </div>
                     <div className="flex items-center">
                       {getStatusIcon(payment.status)}
-                      <span className="ml-2">{getStatusText(payment.status)}</span>
+                      <span className="ml-2">
+                        {getStatusText(payment.status)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -152,14 +179,19 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
                       <label className="block text-sm font-medium text-gray-500 mb-1">
                         Jenis Pembayaran
                       </label>
-                      <p className="text-gray-900">{getPaymentTypeText(payment.paymentType)}</p>
+                      <p className="text-gray-900">
+                        {getPaymentTypeText(payment.paymentType)}
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-500 mb-1">
                         Jumlah
                       </label>
                       <p className="text-2xl font-bold text-gray-900">
-                        Rp {(parseFloat(payment.amount) || 0).toLocaleString('id-ID')}
+                        Rp{" "}
+                        {(parseFloat(payment.amount) || 0).toLocaleString(
+                          "id-ID",
+                        )}
                       </p>
                     </div>
                     <div>
@@ -167,7 +199,9 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
                         Tanggal Pembayaran
                       </label>
                       <p className="text-gray-900">
-                        {new Date(payment.paymentDate).toLocaleDateString('id-ID')}
+                        {new Date(payment.paymentDate).toLocaleDateString(
+                          "id-ID",
+                        )}
                       </p>
                     </div>
                     <div>
@@ -176,7 +210,9 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
                       </label>
                       <div className="flex items-center space-x-2">
                         {getStatusIcon(payment.status)}
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(payment.status)}`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(payment.status)}`}
+                        >
                           {getStatusText(payment.status)}
                         </span>
                       </div>
@@ -194,20 +230,25 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
                       <label className="block text-sm font-medium text-gray-500 mb-1">
                         ID Pembayaran
                       </label>
-                      <p className="text-gray-900 font-mono text-sm">{payment.id}</p>
+                      <p className="text-gray-900 font-mono text-sm">
+                        {payment.id}
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-500 mb-1">
                         Tanggal Dibuat
                       </label>
                       <p className="text-gray-900">
-                        {new Date(payment.createdAt).toLocaleDateString('id-ID', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
+                        {new Date(payment.createdAt).toLocaleDateString(
+                          "id-ID",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )}
                       </p>
                     </div>
                     {payment.updatedAt !== payment.createdAt && (
@@ -216,13 +257,16 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
                           Terakhir Diupdate
                         </label>
                         <p className="text-gray-900">
-                          {new Date(payment.updatedAt).toLocaleDateString('id-ID', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
+                          {new Date(payment.updatedAt).toLocaleDateString(
+                            "id-ID",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}
                         </p>
                       </div>
                     )}
@@ -239,23 +283,34 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-gray-900">
-                        Rp {(parseFloat(payment.amount) || 0).toLocaleString('id-ID')}
+                        Rp{" "}
+                        {(parseFloat(payment.amount) || 0).toLocaleString(
+                          "id-ID",
+                        )}
                       </div>
                       <div className="text-sm text-gray-600">Total Tagihan</div>
                     </div>
                     <div className="text-center">
-                      <div className={`text-2xl font-bold ${
-                        payment.status === 'PAID' ? 'text-green-600' : 'text-yellow-600'
-                      }`}>
-                        {payment.status === 'PAID' ? 'LUNAS' : 'BELUM LUNAS'}
+                      <div
+                        className={`text-2xl font-bold ${
+                          payment.status === "PAID"
+                            ? "text-green-600"
+                            : "text-yellow-600"
+                        }`}
+                      >
+                        {payment.status === "PAID" ? "LUNAS" : "BELUM LUNAS"}
                       </div>
-                      <div className="text-sm text-gray-600">Status Pembayaran</div>
+                      <div className="text-sm text-gray-600">
+                        Status Pembayaran
+                      </div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
                         {getPaymentTypeText(payment.paymentType)}
                       </div>
-                      <div className="text-sm text-gray-600">Jenis Pembayaran</div>
+                      <div className="text-sm text-gray-600">
+                        Jenis Pembayaran
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -263,8 +318,8 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
 
               {/* Action Buttons */}
               <div className="flex justify-between pt-6 border-t border-gray-200">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={onDelete}
                   className="text-red-600 border-red-600 hover:bg-red-50"
                 >

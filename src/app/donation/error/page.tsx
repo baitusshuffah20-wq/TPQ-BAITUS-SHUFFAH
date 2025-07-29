@@ -1,15 +1,17 @@
-'use client';
+﻿"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { AlertTriangle } from 'lucide-react';
-import Link from 'next/link';
-import Button from '@/components/ui/Button';
+import React from "react";
+import { useSearchParams } from "next/navigation";
+import { AlertTriangle } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function DonationErrorPage() {
   const searchParams = useSearchParams();
-  const orderId = searchParams.get('order_id');
-  const errorMessage = searchParams.get('message') || 'Terjadi kesalahan saat memproses donasi Anda.';
+  const orderId = searchParams.get("order_id");
+  const errorMessage =
+    searchParams.get("message") ||
+    "Terjadi kesalahan saat memproses donasi Anda.";
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
@@ -19,13 +21,9 @@ export default function DonationErrorPage() {
             <AlertTriangle className="w-10 h-10 text-red-500" />
           </div>
           <h2 className="text-2xl font-bold text-gray-800">Donasi Gagal</h2>
-          <p className="text-center text-gray-600">
-            {errorMessage}
-          </p>
+          <p className="text-center text-gray-600">{errorMessage}</p>
           {orderId && (
-            <p className="text-sm text-gray-500">
-              ID Transaksi: {orderId}
-            </p>
+            <p className="text-sm text-gray-500">ID Transaksi: {orderId}</p>
           )}
         </div>
 

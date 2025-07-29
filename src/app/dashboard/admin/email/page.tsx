@@ -1,11 +1,11 @@
-'use client';
+﻿"use client";
 
-import React, { useState, useEffect } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect } from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Mail,
   Send,
@@ -20,9 +20,9 @@ import {
   TrendingUp,
   AtSign,
   Calendar,
-  Zap
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  Zap,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface EmailMessage {
   id: string;
@@ -54,15 +54,15 @@ export default function EmailDashboard() {
   const [stats, setStats] = useState<EmailStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    search: '',
-    status: '',
-    priority: '',
-    dateRange: ''
+    search: "",
+    status: "",
+    priority: "",
+    dateRange: "",
   });
   const [testEmail, setTestEmail] = useState({
-    to: '',
-    subject: '',
-    message: ''
+    to: "",
+    subject: "",
+    message: "",
   });
   const [sendingTest, setSendingTest] = useState(false);
 
@@ -77,21 +77,22 @@ export default function EmailDashboard() {
       // Simulate data for now since API might not be ready
       setMessages([
         {
-          id: '1',
-          recipient: 'parent@example.com',
-          subject: 'Progress Hafalan Ahmad',
-          content: 'Assalamu\'alaikum, berikut adalah laporan progress hafalan Ahmad...',
-          status: 'SENT',
-          messageId: 'msg_123',
-          priority: 'NORMAL',
+          id: "1",
+          recipient: "parent@example.com",
+          subject: "Progress Hafalan Ahmad",
+          content:
+            "Assalamu'alaikum, berikut adalah laporan progress hafalan Ahmad...",
+          status: "SENT",
+          messageId: "msg_123",
+          priority: "NORMAL",
           sentAt: new Date().toISOString(),
           createdAt: new Date().toISOString(),
-          user: { name: 'Admin', email: 'admin@tpq.com' }
-        }
+          user: { name: "Admin", email: "admin@tpq.com" },
+        },
       ]);
     } catch (error) {
-      console.error('Error loading email messages:', error);
-      toast.error('Gagal memuat pesan email');
+      console.error("Error loading email messages:", error);
+      toast.error("Gagal memuat pesan email");
     } finally {
       setLoading(false);
     }
@@ -107,53 +108,55 @@ export default function EmailDashboard() {
           DELIVERED: 180,
           FAILED: 10,
           BOUNCED: 5,
-          PENDING: 35
+          PENDING: 35,
         },
         byPriority: {
           NORMAL: 180,
           HIGH: 50,
           URGENT: 15,
-          LOW: 5
-        }
+          LOW: 5,
+        },
       });
     } catch (error) {
-      console.error('Error loading email stats:', error);
+      console.error("Error loading email stats:", error);
     }
   };
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleFilterChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   const sendTestEmail = async () => {
     if (!testEmail.to) {
-      toast.error('Email tujuan wajib diisi');
+      toast.error("Email tujuan wajib diisi");
       return;
     }
 
     setSendingTest(true);
     try {
-      const response = await fetch('/api/email/send', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/email/send", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          to: testEmail.to
-        })
+          to: testEmail.to,
+        }),
       });
 
       if (response.ok) {
-        toast.success('Email test berhasil dikirim');
-        setTestEmail({ to: '', subject: '', message: '' });
+        toast.success("Email test berhasil dikirim");
+        setTestEmail({ to: "", subject: "", message: "" });
         loadMessages();
         loadStats();
       } else {
         const error = await response.json();
-        toast.error(error.message || 'Gagal mengirim email test');
+        toast.error(error.message || "Gagal mengirim email test");
       }
     } catch (error) {
-      console.error('Error sending test email:', error);
-      toast.error('Gagal mengirim email test');
+      console.error("Error sending test email:", error);
+      toast.error("Gagal mengirim email test");
     } finally {
       setSendingTest(false);
     }
@@ -161,15 +164,15 @@ export default function EmailDashboard() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'SENT':
+      case "SENT":
         return <Badge variant="success">Terkirim</Badge>;
-      case 'DELIVERED':
+      case "DELIVERED":
         return <Badge variant="success">Tersampaikan</Badge>;
-      case 'PENDING':
+      case "PENDING":
         return <Badge variant="warning">Menunggu</Badge>;
-      case 'FAILED':
+      case "FAILED":
         return <Badge variant="destructive">Gagal</Badge>;
-      case 'BOUNCED':
+      case "BOUNCED":
         return <Badge variant="destructive">Bounce</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
@@ -178,13 +181,13 @@ export default function EmailDashboard() {
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
-      case 'URGENT':
+      case "URGENT":
         return <Badge variant="destructive">Urgent</Badge>;
-      case 'HIGH':
+      case "HIGH":
         return <Badge variant="warning">Tinggi</Badge>;
-      case 'NORMAL':
+      case "NORMAL":
         return <Badge variant="outline">Normal</Badge>;
-      case 'LOW':
+      case "LOW":
         return <Badge variant="secondary">Rendah</Badge>;
       default:
         return <Badge variant="outline">{priority}</Badge>;
@@ -192,12 +195,12 @@ export default function EmailDashboard() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -206,7 +209,9 @@ export default function EmailDashboard() {
       <DashboardLayout>
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">Email Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Email Dashboard
+            </h1>
           </div>
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -242,8 +247,12 @@ export default function EmailDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Email</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Total Email
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {stats.total}
+                    </p>
                   </div>
                   <div className="p-3 bg-blue-100 rounded-full">
                     <Mail className="h-6 w-6 text-blue-600" />
@@ -256,8 +265,12 @@ export default function EmailDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Terkirim</p>
-                    <p className="text-2xl font-bold text-green-600">{stats.byStatus.SENT || 0}</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Terkirim
+                    </p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {stats.byStatus.SENT || 0}
+                    </p>
                   </div>
                   <div className="p-3 bg-green-100 rounded-full">
                     <CheckCircle className="h-6 w-6 text-green-600" />
@@ -270,8 +283,12 @@ export default function EmailDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Tersampaikan</p>
-                    <p className="text-2xl font-bold text-blue-600">{stats.byStatus.DELIVERED || 0}</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Tersampaikan
+                    </p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {stats.byStatus.DELIVERED || 0}
+                    </p>
                   </div>
                   <div className="p-3 bg-blue-100 rounded-full">
                     <Eye className="h-6 w-6 text-blue-600" />
@@ -284,8 +301,12 @@ export default function EmailDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Menunggu</p>
-                    <p className="text-2xl font-bold text-yellow-600">{stats.byStatus.PENDING || 0}</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Menunggu
+                    </p>
+                    <p className="text-2xl font-bold text-yellow-600">
+                      {stats.byStatus.PENDING || 0}
+                    </p>
                   </div>
                   <div className="p-3 bg-yellow-100 rounded-full">
                     <Clock className="h-6 w-6 text-yellow-600" />
@@ -299,7 +320,10 @@ export default function EmailDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Gagal</p>
-                    <p className="text-2xl font-bold text-red-600">{(stats.byStatus.FAILED || 0) + (stats.byStatus.BOUNCED || 0)}</p>
+                    <p className="text-2xl font-bold text-red-600">
+                      {(stats.byStatus.FAILED || 0) +
+                        (stats.byStatus.BOUNCED || 0)}
+                    </p>
                   </div>
                   <div className="p-3 bg-red-100 rounded-full">
                     <AlertTriangle className="h-6 w-6 text-red-600" />
@@ -327,7 +351,9 @@ export default function EmailDashboard() {
                 <Input
                   type="email"
                   value={testEmail.to}
-                  onChange={(e) => setTestEmail(prev => ({ ...prev, to: e.target.value }))}
+                  onChange={(e) =>
+                    setTestEmail((prev) => ({ ...prev, to: e.target.value }))
+                  }
                   placeholder="admin@example.com"
                 />
               </div>
@@ -342,7 +368,7 @@ export default function EmailDashboard() {
                   ) : (
                     <Send className="h-4 w-4" />
                   )}
-                  {sendingTest ? 'Mengirim...' : 'Kirim Email Test'}
+                  {sendingTest ? "Mengirim..." : "Kirim Email Test"}
                 </Button>
               </div>
             </div>
@@ -379,15 +405,21 @@ export default function EmailDashboard() {
                           {getStatusBadge(message.status)}
                           {getPriorityBadge(message.priority)}
                         </div>
-                        <h3 className="font-medium text-gray-900 mb-1">{message.subject}</h3>
-                        <p className="text-gray-600 text-sm mb-2 line-clamp-2">{message.content}</p>
+                        <h3 className="font-medium text-gray-900 mb-1">
+                          {message.subject}
+                        </h3>
+                        <p className="text-gray-600 text-sm mb-2 line-clamp-2">
+                          {message.content}
+                        </p>
                         <div className="flex items-center gap-4 text-xs text-gray-500">
                           <span>Dikirim: {formatDate(message.createdAt)}</span>
                           {message.sentAt && (
                             <span>Terkirim: {formatDate(message.sentAt)}</span>
                           )}
                           {message.deliveredAt && (
-                            <span>Tersampaikan: {formatDate(message.deliveredAt)}</span>
+                            <span>
+                              Tersampaikan: {formatDate(message.deliveredAt)}
+                            </span>
                           )}
                           {message.user && (
                             <span>Oleh: {message.user.name}</span>

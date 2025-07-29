@@ -35,24 +35,24 @@ interface ExportData {
 
 export class ExportUtils {
   static formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(amount);
   }
 
   static formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
     });
   }
 
   static generateCSV(data: ExportData): string {
-    let csv = '';
-    
+    let csv = "";
+
     // Header
     csv += `"${data.title}"\n`;
     csv += `"Periode: ${this.formatDate(data.period.startDate)} - ${this.formatDate(data.period.endDate)}"\n`;
@@ -81,28 +81,33 @@ export class ExportUtils {
     if (data.accounts && data.accounts.length > 0) {
       csv += '"SALDO AKUN"\n';
       csv += '"Nama Akun","Tipe","Saldo"\n';
-      data.accounts.forEach(account => {
+      data.accounts.forEach((account) => {
         csv += `"${account.name}","${account.type}","${this.formatCurrency(account.balance)}"\n`;
       });
-      csv += '\n';
+      csv += "\n";
     }
 
     // Transactions by Category
-    if (data.transactionsByCategory && Object.keys(data.transactionsByCategory).length > 0) {
+    if (
+      data.transactionsByCategory &&
+      Object.keys(data.transactionsByCategory).length > 0
+    ) {
       csv += '"TRANSAKSI PER KATEGORI"\n';
       csv += '"Kategori","Pemasukan","Pengeluaran","Net"\n';
-      Object.entries(data.transactionsByCategory).forEach(([category, categoryData]) => {
-        const net = categoryData.income - categoryData.expense;
-        csv += `"${category}","${this.formatCurrency(categoryData.income)}","${this.formatCurrency(categoryData.expense)}","${this.formatCurrency(net)}"\n`;
-      });
-      csv += '\n';
+      Object.entries(data.transactionsByCategory).forEach(
+        ([category, categoryData]) => {
+          const net = categoryData.income - categoryData.expense;
+          csv += `"${category}","${this.formatCurrency(categoryData.income)}","${this.formatCurrency(categoryData.expense)}","${this.formatCurrency(net)}"\n`;
+        },
+      );
+      csv += "\n";
     }
 
     // Transactions Detail
     if (data.transactions && data.transactions.length > 0) {
       csv += '"DETAIL TRANSAKSI"\n';
       csv += '"Tanggal","Deskripsi","Tipe","Kategori","Jumlah","Akun"\n';
-      data.transactions.forEach(transaction => {
+      data.transactions.forEach((transaction) => {
         csv += `"${this.formatDate(transaction.date)}","${transaction.description}","${transaction.type}","${transaction.category}","${this.formatCurrency(transaction.amount)}","${transaction.account}"\n`;
       });
     }
@@ -256,7 +261,7 @@ export class ExportUtils {
               </div>
               <div class="summary-card">
                 <h3>Pendapatan Bersih</h3>
-                <p class="amount ${data.summary.netIncome >= 0 ? 'positive' : 'negative'}">${this.formatCurrency(data.summary.netIncome)}</p>
+                <p class="amount ${data.summary.netIncome >= 0 ? "positive" : "negative"}">${this.formatCurrency(data.summary.netIncome)}</p>
               </div>
               <div class="summary-card">
                 <h3>Total Saldo</h3>
@@ -265,7 +270,9 @@ export class ExportUtils {
             </div>
           </div>
 
-          ${data.spp ? `
+          ${
+            data.spp
+              ? `
           <div class="section">
             <div class="section-title">Ringkasan SPP</div>
             <div class="summary-grid">
@@ -291,9 +298,13 @@ export class ExportUtils {
               </div>
             </div>
           </div>
-          ` : ''}
+          `
+              : ""
+          }
 
-          ${data.accounts && data.accounts.length > 0 ? `
+          ${
+            data.accounts && data.accounts.length > 0
+              ? `
           <div class="section">
             <div class="section-title">Saldo Akun</div>
             <table>
@@ -305,19 +316,28 @@ export class ExportUtils {
                 </tr>
               </thead>
               <tbody>
-                ${data.accounts.map(account => `
+                ${data.accounts
+                  .map(
+                    (account) => `
                   <tr>
                     <td>${account.name}</td>
                     <td>${account.type}</td>
-                    <td class="text-right ${account.balance >= 0 ? 'positive' : 'negative'}">${this.formatCurrency(account.balance)}</td>
+                    <td class="text-right ${account.balance >= 0 ? "positive" : "negative"}">${this.formatCurrency(account.balance)}</td>
                   </tr>
-                `).join('')}
+                `,
+                  )
+                  .join("")}
               </tbody>
             </table>
           </div>
-          ` : ''}
+          `
+              : ""
+          }
 
-          ${data.transactionsByCategory && Object.keys(data.transactionsByCategory).length > 0 ? `
+          ${
+            data.transactionsByCategory &&
+            Object.keys(data.transactionsByCategory).length > 0
+              ? `
           <div class="section">
             <div class="section-title">Transaksi per Kategori</div>
             <table>
@@ -330,21 +350,25 @@ export class ExportUtils {
                 </tr>
               </thead>
               <tbody>
-                ${Object.entries(data.transactionsByCategory).map(([category, categoryData]) => {
-                  const net = categoryData.income - categoryData.expense;
-                  return `
+                ${Object.entries(data.transactionsByCategory)
+                  .map(([category, categoryData]) => {
+                    const net = categoryData.income - categoryData.expense;
+                    return `
                     <tr>
                       <td>${category}</td>
                       <td class="text-right positive">${this.formatCurrency(categoryData.income)}</td>
                       <td class="text-right negative">${this.formatCurrency(categoryData.expense)}</td>
-                      <td class="text-right ${net >= 0 ? 'positive' : 'negative'}">${this.formatCurrency(net)}</td>
+                      <td class="text-right ${net >= 0 ? "positive" : "negative"}">${this.formatCurrency(net)}</td>
                     </tr>
                   `;
-                }).join('')}
+                  })
+                  .join("")}
               </tbody>
             </table>
           </div>
-          ` : ''}
+          `
+              : ""
+          }
 
           <div class="footer">
             <p>Laporan ini digenerate secara otomatis oleh Sistem Manajemen TPQ Baitus Shuffah</p>
@@ -365,14 +389,14 @@ export class ExportUtils {
 
   static downloadCSV(data: ExportData, filename: string) {
     const csv = this.generateCSV(data);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `${filename}.csv`);
-      link.style.visibility = 'hidden';
+      link.setAttribute("href", url);
+      link.setAttribute("download", `${filename}.csv`);
+      link.style.visibility = "hidden";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -381,14 +405,14 @@ export class ExportUtils {
 
   static downloadHTML(data: ExportData, filename: string) {
     const html = this.generateHTML(data);
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
-    const link = document.createElement('a');
-    
+    const blob = new Blob([html], { type: "text/html;charset=utf-8;" });
+    const link = document.createElement("a");
+
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `${filename}.html`);
-      link.style.visibility = 'hidden';
+      link.setAttribute("href", url);
+      link.setAttribute("download", `${filename}.html`);
+      link.style.visibility = "hidden";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -397,7 +421,7 @@ export class ExportUtils {
 
   static printReport(data: ExportData) {
     const html = this.generateHTML(data);
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     if (printWindow) {
       printWindow.document.write(html);
       printWindow.document.close();

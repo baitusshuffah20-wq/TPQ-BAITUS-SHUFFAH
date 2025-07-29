@@ -1,12 +1,12 @@
-'use client';
+﻿"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  TrendingUp, 
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  TrendingUp,
   TrendingDown,
   DollarSign,
   Calendar,
@@ -14,13 +14,13 @@ import {
   Save,
   X,
   Upload,
-  Tag
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  Tag,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface TransactionFormData {
   id?: string;
-  type: 'INCOME' | 'EXPENSE';
+  type: "INCOME" | "EXPENSE";
   category: string;
   amount: number;
   description: string;
@@ -43,65 +43,66 @@ interface TransactionFormProps {
 }
 
 const INCOME_CATEGORIES = [
-  'SPP',
-  'DONATION',
-  'REGISTRATION_FEE',
-  'EVENT_INCOME',
-  'GRANT',
-  'OTHER_INCOME'
+  "SPP",
+  "DONATION",
+  "REGISTRATION_FEE",
+  "EVENT_INCOME",
+  "GRANT",
+  "OTHER_INCOME",
 ];
 
 const EXPENSE_CATEGORIES = [
-  'SALARY',
-  'UTILITIES',
-  'SUPPLIES',
-  'MAINTENANCE',
-  'TRANSPORTATION',
-  'FOOD',
-  'EQUIPMENT',
-  'OTHER_EXPENSE'
+  "SALARY",
+  "UTILITIES",
+  "SUPPLIES",
+  "MAINTENANCE",
+  "TRANSPORTATION",
+  "FOOD",
+  "EQUIPMENT",
+  "OTHER_EXPENSE",
 ];
 
 const CATEGORY_LABELS = {
   // Income
-  SPP: 'SPP Santri',
-  DONATION: 'Donasi',
-  REGISTRATION_FEE: 'Biaya Pendaftaran',
-  EVENT_INCOME: 'Pendapatan Acara',
-  GRANT: 'Hibah',
-  OTHER_INCOME: 'Pendapatan Lainnya',
+  SPP: "SPP Santri",
+  DONATION: "Donasi",
+  REGISTRATION_FEE: "Biaya Pendaftaran",
+  EVENT_INCOME: "Pendapatan Acara",
+  GRANT: "Hibah",
+  OTHER_INCOME: "Pendapatan Lainnya",
   // Expense
-  SALARY: 'Gaji Ustadz/Staff',
-  UTILITIES: 'Listrik & Air',
-  SUPPLIES: 'Perlengkapan',
-  MAINTENANCE: 'Pemeliharaan',
-  TRANSPORTATION: 'Transportasi',
-  FOOD: 'Konsumsi',
-  EQUIPMENT: 'Peralatan',
-  OTHER_EXPENSE: 'Pengeluaran Lainnya'
+  SALARY: "Gaji Ustadz/Staff",
+  UTILITIES: "Listrik & Air",
+  SUPPLIES: "Perlengkapan",
+  MAINTENANCE: "Pemeliharaan",
+  TRANSPORTATION: "Transportasi",
+  FOOD: "Konsumsi",
+  EQUIPMENT: "Peralatan",
+  OTHER_EXPENSE: "Pengeluaran Lainnya",
 };
 
-export default function TransactionForm({ 
-  transaction, 
-  onSubmit, 
-  onCancel, 
+export default function TransactionForm({
+  transaction,
+  onSubmit,
+  onCancel,
   isLoading = false,
-  currentUserId
+  currentUserId,
 }: TransactionFormProps) {
   const [formData, setFormData] = useState<TransactionFormData>({
-    type: transaction?.type || 'INCOME',
-    category: transaction?.category || '',
+    type: transaction?.type || "INCOME",
+    category: transaction?.category || "",
     amount: transaction?.amount || 0,
-    description: transaction?.description || '',
-    reference: transaction?.reference || '',
-    accountId: transaction?.accountId || '',
-    santriId: transaction?.santriId || '',
-    donationId: transaction?.donationId || '',
-    paymentId: transaction?.paymentId || '',
-    transactionDate: transaction?.transactionDate || new Date().toISOString().split('T')[0],
+    description: transaction?.description || "",
+    reference: transaction?.reference || "",
+    accountId: transaction?.accountId || "",
+    santriId: transaction?.santriId || "",
+    donationId: transaction?.donationId || "",
+    paymentId: transaction?.paymentId || "",
+    transactionDate:
+      transaction?.transactionDate || new Date().toISOString().split("T")[0],
     attachments: transaction?.attachments || [],
     tags: transaction?.tags || [],
-    ...transaction
+    ...transaction,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -118,23 +119,23 @@ export default function TransactionForm({
   const loadSelectData = async () => {
     try {
       setLoadingData(true);
-      
+
       // Load accounts
-      const accountsResponse = await fetch('/api/financial/accounts');
+      const accountsResponse = await fetch("/api/financial/accounts");
       if (accountsResponse.ok) {
         const accountsData = await accountsResponse.json();
         setAccounts(accountsData.accounts || []);
       }
 
       // Load santri for SPP transactions
-      const santriResponse = await fetch('/api/santri');
+      const santriResponse = await fetch("/api/santri");
       if (santriResponse.ok) {
         const santriData = await santriResponse.json();
         setSantriList(santriData.santri || []);
       }
     } catch (error) {
-      console.error('Error loading select data:', error);
-      toast.error('Gagal memuat data dropdown');
+      console.error("Error loading select data:", error);
+      toast.error("Gagal memuat data dropdown");
     } finally {
       setLoadingData(false);
     }
@@ -145,34 +146,34 @@ export default function TransactionForm({
 
     // Type validation
     if (!formData.type) {
-      newErrors.type = 'Tipe transaksi wajib dipilih';
+      newErrors.type = "Tipe transaksi wajib dipilih";
     }
 
     // Category validation
     if (!formData.category) {
-      newErrors.category = 'Kategori wajib dipilih';
+      newErrors.category = "Kategori wajib dipilih";
     }
 
     // Amount validation
     if (!formData.amount || formData.amount <= 0) {
-      newErrors.amount = 'Jumlah harus lebih dari 0';
+      newErrors.amount = "Jumlah harus lebih dari 0";
     }
 
     // Description validation
     if (!formData.description) {
-      newErrors.description = 'Deskripsi wajib diisi';
+      newErrors.description = "Deskripsi wajib diisi";
     } else if (formData.description.length < 5) {
-      newErrors.description = 'Deskripsi minimal 5 karakter';
+      newErrors.description = "Deskripsi minimal 5 karakter";
     }
 
     // Account validation
     if (!formData.accountId) {
-      newErrors.accountId = 'Akun keuangan wajib dipilih';
+      newErrors.accountId = "Akun keuangan wajib dipilih";
     }
 
     // Transaction date validation
     if (!formData.transactionDate) {
-      newErrors.transactionDate = 'Tanggal transaksi wajib diisi';
+      newErrors.transactionDate = "Tanggal transaksi wajib diisi";
     }
 
     setErrors(newErrors);
@@ -181,50 +182,54 @@ export default function TransactionForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
-      toast.error('Mohon perbaiki kesalahan pada form');
+      toast.error("Mohon perbaiki kesalahan pada form");
       return;
     }
 
     try {
       const submitData = {
         ...formData,
-        createdBy: currentUserId
+        createdBy: currentUserId,
       };
       await onSubmit(submitData);
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'number' ? parseFloat(value) || 0 : value
+      [name]: type === "number" ? parseFloat(value) || 0 : value,
     }));
 
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
 
     // Reset category when type changes
-    if (name === 'type') {
-      setFormData(prev => ({ ...prev, category: '' }));
+    if (name === "type") {
+      setFormData((prev) => ({ ...prev, category: "" }));
     }
   };
 
   const getCategories = () => {
-    return formData.type === 'INCOME' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+    return formData.type === "INCOME" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -245,32 +250,34 @@ export default function TransactionForm({
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          {formData.type === 'INCOME' ? (
+          {formData.type === "INCOME" ? (
             <TrendingUp className="h-6 w-6 text-green-600" />
           ) : (
             <TrendingDown className="h-6 w-6 text-red-600" />
           )}
-          {isEdit ? 'Edit Transaksi' : 'Tambah Transaksi Baru'}
+          {isEdit ? "Edit Transaksi" : "Tambah Transaksi Baru"}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Transaction Type */}
           <div className="border-b pb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Tipe Transaksi</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Tipe Transaksi
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                  formData.type === 'INCOME'
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-gray-300 hover:border-green-300'
+                  formData.type === "INCOME"
+                    ? "border-green-500 bg-green-50"
+                    : "border-gray-300 hover:border-green-300"
                 }`}
               >
                 <input
                   type="radio"
                   name="type"
                   value="INCOME"
-                  checked={formData.type === 'INCOME'}
+                  checked={formData.type === "INCOME"}
                   onChange={handleChange}
                   className="sr-only"
                   disabled={isLoading}
@@ -284,16 +291,16 @@ export default function TransactionForm({
 
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                  formData.type === 'EXPENSE'
-                    ? 'border-red-500 bg-red-50'
-                    : 'border-gray-300 hover:border-red-300'
+                  formData.type === "EXPENSE"
+                    ? "border-red-500 bg-red-50"
+                    : "border-gray-300 hover:border-red-300"
                 }`}
               >
                 <input
                   type="radio"
                   name="type"
                   value="EXPENSE"
-                  checked={formData.type === 'EXPENSE'}
+                  checked={formData.type === "EXPENSE"}
                   onChange={handleChange}
                   className="sr-only"
                   disabled={isLoading}
@@ -312,7 +319,9 @@ export default function TransactionForm({
 
           {/* Transaction Details */}
           <div className="border-b pb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Detail Transaksi</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Detail Transaksi
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -322,13 +331,17 @@ export default function TransactionForm({
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.category ? 'border-red-500' : ''}`}
+                  className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.category ? "border-red-500" : ""}`}
                   disabled={isLoading}
                 >
                   <option value="">Pilih Kategori</option>
                   {getCategories().map((category) => (
                     <option key={category} value={category}>
-                      {CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS]}
+                      {
+                        CATEGORY_LABELS[
+                          category as keyof typeof CATEGORY_LABELS
+                        ]
+                      }
                     </option>
                   ))}
                 </select>
@@ -351,7 +364,7 @@ export default function TransactionForm({
                     placeholder="0"
                     min="0"
                     step="1000"
-                    className={`pl-10 ${errors.amount ? 'border-red-500' : ''}`}
+                    className={`pl-10 ${errors.amount ? "border-red-500" : ""}`}
                     disabled={isLoading}
                   />
                 </div>
@@ -371,18 +384,22 @@ export default function TransactionForm({
                   name="accountId"
                   value={formData.accountId}
                   onChange={handleChange}
-                  className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.accountId ? 'border-red-500' : ''}`}
+                  className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.accountId ? "border-red-500" : ""}`}
                   disabled={isLoading}
                 >
                   <option value="">Pilih Akun</option>
-                  {accounts.filter(acc => acc.isActive).map((account) => (
-                    <option key={account.id} value={account.id}>
-                      {account.name} ({account.type})
-                    </option>
-                  ))}
+                  {accounts
+                    .filter((acc) => acc.isActive)
+                    .map((account) => (
+                      <option key={account.id} value={account.id}>
+                        {account.name} ({account.type})
+                      </option>
+                    ))}
                 </select>
                 {errors.accountId && (
-                  <p className="text-red-500 text-xs mt-1">{errors.accountId}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.accountId}
+                  </p>
                 )}
               </div>
 
@@ -395,15 +412,17 @@ export default function TransactionForm({
                   name="transactionDate"
                   value={formData.transactionDate}
                   onChange={handleChange}
-                  className={errors.transactionDate ? 'border-red-500' : ''}
+                  className={errors.transactionDate ? "border-red-500" : ""}
                   disabled={isLoading}
                 />
                 {errors.transactionDate && (
-                  <p className="text-red-500 text-xs mt-1">{errors.transactionDate}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.transactionDate}
+                  </p>
                 )}
               </div>
 
-              {formData.category === 'SPP' && (
+              {formData.category === "SPP" && (
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Santri (untuk SPP)
@@ -434,12 +453,14 @@ export default function TransactionForm({
                   value={formData.description}
                   onChange={handleChange}
                   rows={3}
-                  className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.description ? 'border-red-500' : ''}`}
+                  className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.description ? "border-red-500" : ""}`}
                   placeholder="Deskripsi detail transaksi..."
                   disabled={isLoading}
                 />
                 {errors.description && (
-                  <p className="text-red-500 text-xs mt-1">{errors.description}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.description}
+                  </p>
                 )}
               </div>
 
@@ -461,27 +482,40 @@ export default function TransactionForm({
 
           {/* Preview */}
           <div className="border-t pt-6">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Preview Transaksi:</h4>
-            <div className={`p-4 rounded-lg ${formData.type === 'INCOME' ? 'bg-green-50' : 'bg-red-50'}`}>
+            <h4 className="text-sm font-medium text-gray-700 mb-3">
+              Preview Transaksi:
+            </h4>
+            <div
+              className={`p-4 rounded-lg ${formData.type === "INCOME" ? "bg-green-50" : "bg-red-50"}`}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {formData.type === 'INCOME' ? (
+                  {formData.type === "INCOME" ? (
                     <TrendingUp className="h-6 w-6 text-green-600" />
                   ) : (
                     <TrendingDown className="h-6 w-6 text-red-600" />
                   )}
                   <div>
                     <p className="font-medium text-gray-900">
-                      {CATEGORY_LABELS[formData.category as keyof typeof CATEGORY_LABELS] || 'Kategori'}
+                      {CATEGORY_LABELS[
+                        formData.category as keyof typeof CATEGORY_LABELS
+                      ] || "Kategori"}
                     </p>
-                    <p className="text-sm text-gray-600">{formData.description || 'Deskripsi'}</p>
+                    <p className="text-sm text-gray-600">
+                      {formData.description || "Deskripsi"}
+                    </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className={`text-lg font-bold ${formData.type === 'INCOME' ? 'text-green-600' : 'text-red-600'}`}>
-                    {formData.type === 'EXPENSE' ? '-' : '+'}{formatCurrency(formData.amount)}
+                  <p
+                    className={`text-lg font-bold ${formData.type === "INCOME" ? "text-green-600" : "text-red-600"}`}
+                  >
+                    {formData.type === "EXPENSE" ? "-" : "+"}
+                    {formatCurrency(formData.amount)}
                   </p>
-                  <p className="text-sm text-gray-500">{formData.transactionDate}</p>
+                  <p className="text-sm text-gray-500">
+                    {formData.transactionDate}
+                  </p>
                 </div>
               </div>
             </div>
@@ -509,7 +543,7 @@ export default function TransactionForm({
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              {isLoading ? 'Menyimpan...' : (isEdit ? 'Update' : 'Simpan')}
+              {isLoading ? "Menyimpan..." : isEdit ? "Update" : "Simpan"}
             </Button>
           </div>
         </form>

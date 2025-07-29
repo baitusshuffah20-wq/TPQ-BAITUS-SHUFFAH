@@ -1,0 +1,72 @@
+{
+  "expo": {
+    "name": "TPQ Wali Santri",
+    "slug": "tpq-wali-santri",
+    "version": "1.0.0",
+    "runtimeVersion": "exposdk:53.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1e40af"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tpqbaitusshuffah.wali",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "UIBackgroundModes": ["background-fetch", "remote-notification"]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1e40af"
+      },
+      "package": "com.tpqbaitusshuffah.wali",
+      "versionCode": 1,
+      "permissions": [
+        "NOTIFICATIONS",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "VIBRATE"
+      ],
+      "newArchEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-notifications",
+      "expo-secure-store",
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/Inter-Regular.ttf",
+            "./assets/fonts/Inter-Medium.ttf",
+            "./assets/fonts/Inter-SemiBold.ttf",
+            "./assets/fonts/Inter-Bold.ttf"
+          ]
+        }
+      ]
+    ],
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#1e40af",
+      "androidMode": "default",
+      "androidCollapsedTitle": "TPQ Baitus Shuffah"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "3473f204-8ee5-4d41-9d9f-03c61ef145c4"
+      }
+    },
+    "owner": "riananas0",
+    "jsEngine": "hermes"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "santriId": "cmdeg7tzx000aebjneq9ivomd",
+  "halaqahId": "cmdfll8x00001uif8jlwsih9x",
+  "assessorId": "cmdeg7tpn0001ebjnth10djeu",
+  "assessments": [
+    {
+      "type": "QURAN",
+      "category": "Hafalan Baru",
+      "surah": "Al-Fatihah",
+      "ayahStart": 1,
+      "ayahEnd": 7,
+      "score": 85,
+      "notes": "Bacaan sudah lancar",
+      "strengths": "Hafalan kuat",
+      "improvements": "Perlu perbaikan tajwid"
+    },
+    {
+      "type": "TAHSIN",
+      "category": "Bacaan & Tajwid",
+      "score": 80,
+      "notes": "Tajwid cukup baik",
+      "strengths": "Makharijul huruf benar",
+      "improvements": "Perlu latihan lebih"
+    },
+    {
+      "type": "AKHLAQ",
+      "category": "Perilaku & Adab",
+      "score": 90,
+      "notes": "Akhlaq sangat baik",
+      "strengths": "Sopan dan santun",
+      "improvements": "Pertahankan"
+    }
+  ]
+}
