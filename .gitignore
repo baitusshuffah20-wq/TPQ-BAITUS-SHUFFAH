@@ -1,1 +1,85 @@
-node_modules
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+/builds
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+.env
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# database
+/prisma/dev.db
+/prisma/dev.db-journal
+
+# uploads
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# cache files
+.next/cache/
+.next/static/webpack/
+.next/server/
+.next/types/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db
+
+# Mobile app builds
+/mobile-app/dist/
+/mobile-app/node_modules/
+/mobile-app/.expo/
+
+# Documentation and analysis files
+.codemate/
+.zencoder/
+
+# Test files
+test-*.js
+test-*.html
+test-*.json
+test-*.md
+
+# Backup files
+backup_*.ps1
+*.backup.*
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
