@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
   CreditCard,
   Users,
@@ -21,34 +24,34 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
+  Mail,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 interface Subscription {
   id: string;
-  studentId: string;
-  planType: string;
-  amount: number;
-  status: string;
-  billingCycle: string;
-  nextBillingDate: string;
-  autoRenewal: boolean;
+  email: string;
+  name?: string;
+  isActive: boolean;
   createdAt: string;
-  student: {
+  updatedAt: string;
+  userId?: string;
+  user?: {
     id: string;
     name: string;
     email: string;
+    phone?: string;
   };
-  billings: any[];
 }
 
 export default function SubscriptionsPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    status: "",
+    isActive: "",
     search: "",
-    billingCycle: "",
   });
   const [pagination, setPagination] = useState({
     page: 1,
@@ -57,9 +60,27 @@ export default function SubscriptionsPage() {
     totalPages: 0,
   });
 
+  // Redirect if not authenticated or not admin
   useEffect(() => {
+    if (status === "loading") return; // Still loading
+
+    if (status === "unauthenticated") {
+      router.push("/login");
+      return;
+    }
+
+    if (session?.user?.role !== "ADMIN") {
+      router.push("/dashboard");
+      return;
+    }
+  }, [session, status, router]);
+
+  useEffect(() => {
+    if (status === "loading") return; // Don't load data while authentication is loading
+    if (status === "unauthenticated" || session?.user?.role !== "ADMIN") return;
+
     loadSubscriptions();
-  }, [pagination.page, filters]);
+  }, [pagination.page, filters, session, status]);
 
   const loadSubscriptions = async () => {
     try {
@@ -69,10 +90,8 @@ export default function SubscriptionsPage() {
         limit: pagination.limit.toString(),
       });
 
-      if (filters.status) queryParams.append("status", filters.status);
+      if (filters.isActive) queryParams.append("isActive", filters.isActive);
       if (filters.search) queryParams.append("search", filters.search);
-      if (filters.billingCycle)
-        queryParams.append("billingCycle", filters.billingCycle);
 
       const response = await fetch(
         `/api/subscriptions?${queryParams.toString()}`,
@@ -121,13 +140,7 @@ export default function SubscriptionsPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("id-ID", {
@@ -137,81 +150,48 @@ export default function SubscriptionsPage() {
     });
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      ACTIVE: {
-        variant: "success" as const,
-        icon: CheckCircle,
-        label: "Active",
-      },
-      TRIAL: { variant: "warning" as const, icon: Clock, label: "Trial" },
-      PAUSED: { variant: "warning" as const, icon: Pause, label: "Paused" },
-      CANCELLED: {
-        variant: "destructive" as const,
-        icon: X,
-        label: "Cancelled",
-      },
-      EXPIRED: {
-        variant: "destructive" as const,
-        icon: AlertTriangle,
-        label: "Expired",
-      },
-    };
 
-    const config =
-      statusConfig[status as keyof typeof statusConfig] || statusConfig.ACTIVE;
-    const Icon = config.icon;
 
-    return (
-      <Badge variant={config.variant} className="flex items-center gap-1">
-        <Icon className="h-3 w-3" />
-        {config.label}
-      </Badge>
-    );
-  };
 
-  const getBillingCycleBadge = (cycle: string) => {
-    const cycleConfig = {
-      MONTHLY: { label: "Bulanan", color: "bg-blue-100 text-blue-800" },
-      QUARTERLY: { label: "Triwulan", color: "bg-green-100 text-green-800" },
-      YEARLY: { label: "Tahunan", color: "bg-purple-100 text-purple-800" },
-    };
-
-    const config =
-      cycleConfig[cycle as keyof typeof cycleConfig] || cycleConfig.MONTHLY;
-
-    return (
-      <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}
-      >
-        {config.label}
-      </span>
-    );
-  };
 
   // Calculate overview stats
   const overviewStats = {
     total: subscriptions.length,
-    active: subscriptions.filter((s) => s.status === "ACTIVE").length,
-    trial: subscriptions.filter((s) => s.status === "TRIAL").length,
-    paused: subscriptions.filter((s) => s.status === "PAUSED").length,
-    totalRevenue: subscriptions
-      .filter((s) => s.status === "ACTIVE")
-      .reduce((sum, s) => sum + s.amount, 0),
+    active: subscriptions.filter((s) => s.isActive).length,
+    inactive: subscriptions.filter((s) => !s.isActive).length,
+    withUser: subscriptions.filter((s) => s.user).length,
+    totalSubscribers: subscriptions.length,
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Subscription Management
-          </h1>
-          <p className="text-gray-600">
-            Kelola subscription SPP bulanan santri
-          </p>
+  // Show loading while authentication is being checked
+  if (status === "loading") {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
         </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Don't render anything if not authenticated (will redirect)
+  if (status === "unauthenticated" || session?.user?.role !== "ADMIN") {
+    return null;
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Subscription Management
+            </h1>
+            <p className="text-gray-600">
+              Kelola subscription SPP bulanan santri
+            </p>
+          </div>
         <div className="flex items-center gap-3">
           <Button
             onClick={loadSubscriptions}
@@ -255,7 +235,7 @@ export default function SubscriptionsPage() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Active</p>
+                <p className="text-sm text-gray-600">Aktif</p>
                 <p className="text-xl font-bold text-gray-900">
                   {overviewStats.active}
                 </p>
@@ -267,13 +247,13 @@ export default function SubscriptionsPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Clock className="h-5 w-5 text-yellow-600" />
+              <div className="p-2 bg-red-100 rounded-lg">
+                <X className="h-5 w-5 text-red-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Trial</p>
+                <p className="text-sm text-gray-600">Tidak Aktif</p>
                 <p className="text-xl font-bold text-gray-900">
-                  {overviewStats.trial}
+                  {overviewStats.inactive}
                 </p>
               </div>
             </div>
@@ -283,13 +263,13 @@ export default function SubscriptionsPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Pause className="h-5 w-5 text-orange-600" />
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Users className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Paused</p>
+                <p className="text-sm text-gray-600">Dengan User</p>
                 <p className="text-xl font-bold text-gray-900">
-                  {overviewStats.paused}
+                  {overviewStats.withUser}
                 </p>
               </div>
             </div>
@@ -300,12 +280,12 @@ export default function SubscriptionsPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <DollarSign className="h-5 w-5 text-purple-600" />
+                <Mail className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Revenue</p>
+                <p className="text-sm text-gray-600">Total Subscribers</p>
                 <p className="text-lg font-bold text-gray-900">
-                  {formatCurrency(overviewStats.totalRevenue)}
+                  {overviewStats.totalSubscribers}
                 </p>
               </div>
             </div>
@@ -333,34 +313,15 @@ export default function SubscriptionsPage() {
             </div>
 
             <select
-              value={filters.status}
+              value={filters.isActive}
               onChange={(e) =>
-                setFilters((prev) => ({ ...prev, status: e.target.value }))
+                setFilters((prev) => ({ ...prev, isActive: e.target.value }))
               }
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Semua Status</option>
-              <option value="ACTIVE">Active</option>
-              <option value="TRIAL">Trial</option>
-              <option value="PAUSED">Paused</option>
-              <option value="CANCELLED">Cancelled</option>
-              <option value="EXPIRED">Expired</option>
-            </select>
-
-            <select
-              value={filters.billingCycle}
-              onChange={(e) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  billingCycle: e.target.value,
-                }))
-              }
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Semua Siklus</option>
-              <option value="MONTHLY">Bulanan</option>
-              <option value="QUARTERLY">Triwulan</option>
-              <option value="YEARLY">Tahunan</option>
+              <option value="true">Aktif</option>
+              <option value="false">Tidak Aktif</option>
             </select>
           </div>
         </CardContent>
@@ -409,22 +370,33 @@ export default function SubscriptionsPage() {
                   key={subscription.id}
                   className="flex items-center gap-4 p-4 border rounded-lg hover:shadow-sm transition-shadow"
                 >
-                  {/* Student Info */}
+                  {/* Subscription Info */}
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h4 className="font-medium text-gray-900">
-                        {subscription.student.name}
+                        {subscription.name || subscription.email}
                       </h4>
-                      {getStatusBadge(subscription.status)}
-                      {getBillingCycleBadge(subscription.billingCycle)}
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          subscription.isActive
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {subscription.isActive ? "Aktif" : "Tidak Aktif"}
+                      </span>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <span>Plan: {subscription.planType}</span>
-                      <span>�</span>
-                      <span>{formatCurrency(subscription.amount)}</span>
-                      <span>�</span>
+                      <span>Email: {subscription.email}</span>
+                      {subscription.user && (
+                        <>
+                          <span>•</span>
+                          <span>User: {subscription.user.name}</span>
+                        </>
+                      )}
+                      <span>•</span>
                       <span>
-                        Next: {formatDate(subscription.nextBillingDate)}
+                        Dibuat: {formatDate(subscription.createdAt)}
                       </span>
                     </div>
                   </div>
@@ -442,10 +414,10 @@ export default function SubscriptionsPage() {
                       <Eye className="h-3 w-3" />
                     </Button>
 
-                    {subscription.status === "ACTIVE" && (
+                    {subscription.isActive && (
                       <Button
                         onClick={() =>
-                          handleSubscriptionAction(subscription.id, "pause")
+                          handleSubscriptionAction(subscription.id, "deactivate")
                         }
                         variant="outline"
                         size="sm"
@@ -455,10 +427,10 @@ export default function SubscriptionsPage() {
                       </Button>
                     )}
 
-                    {subscription.status === "PAUSED" && (
+                    {!subscription.isActive && (
                       <Button
                         onClick={() =>
-                          handleSubscriptionAction(subscription.id, "resume")
+                          handleSubscriptionAction(subscription.id, "activate")
                         }
                         variant="outline"
                         size="sm"
@@ -521,6 +493,7 @@ export default function SubscriptionsPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

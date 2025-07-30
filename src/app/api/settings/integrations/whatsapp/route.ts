@@ -55,21 +55,19 @@ export async function POST(request: NextRequest) {
 
     // Upsert each setting
     for (const setting of settings) {
-      await prisma.systemSetting.upsert({
+      await prisma.siteSetting.upsert({
         where: {
-          category_key: {
-            category: setting.category,
-            key: setting.key,
-          },
+          key: `${setting.category}_${setting.key}`,
         },
         update: {
           value: setting.value,
           updatedAt: new Date(),
         },
         create: {
-          category: setting.category,
-          key: setting.key,
+          key: `${setting.category}_${setting.key}`,
           value: setting.value,
+          category: setting.category,
+          label: `WhatsApp ${setting.key.replace("_", " ")}`,
           description: `WhatsApp ${setting.key.replace("_", " ")}`,
         },
       });
@@ -103,7 +101,7 @@ export async function POST(request: NextRequest) {
 // GET /api/settings/integrations/whatsapp - Get WhatsApp configuration
 export async function GET(request: NextRequest) {
   try {
-    const settings = await prisma.systemSetting.findMany({
+    const settings = await prisma.siteSetting.findMany({
       where: {
         category: "whatsapp",
       },
@@ -142,6 +140,6 @@ export async function GET(request: NextRequest) {
 
 // Helper function to get setting value
 function getSettingValue(settings: any[], key: string): string | null {
-  const setting = settings.find((s) => s.key === key);
+  const setting = settings.find((s) => s.key === `whatsapp_${key}`);
   return setting ? setting.value : null;
 }

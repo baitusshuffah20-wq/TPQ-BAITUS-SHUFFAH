@@ -42,6 +42,18 @@ const DialogContext = React.createContext<{
   onOpenChange: () => {},
 });
 
+export const DialogTrigger: React.FC<{
+  children: React.ReactNode;
+  asChild?: boolean;
+  onClick?: () => void;
+}> = ({ children, onClick }) => {
+  return (
+    <div onClick={onClick} style={{ display: 'inline-block' }}>
+      {children}
+    </div>
+  );
+};
+
 export const Dialog: React.FC<DialogProps> = ({
   open,
   onOpenChange,

@@ -10,12 +10,9 @@ import {
   BookOpen,
   Building,
   Check,
-  CreditCard,
   GraduationCap,
   Heart,
   Loader2,
-  QrCode,
-  Smartphone,
   Target,
   TrendingUp,
   Users,
@@ -39,12 +36,7 @@ interface DonationCategory {
   isActive?: boolean;
 }
 
-interface PaymentMethod {
-  id: string;
-  name: string;
-  icon: React.ElementType;
-  description: string;
-}
+
 
 // Map icon strings to Lucide components
 const iconMap: Record<string, React.ElementType> = {
@@ -62,7 +54,7 @@ const DonationSection = () => {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedPayment, setSelectedPayment] = useState("bank");
+
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [donationCategories, setDonationCategories] = useState<
@@ -337,26 +329,7 @@ const DonationSection = () => {
     fetchDonationCategories();
   }, []);
 
-  const paymentMethods: PaymentMethod[] = [
-    {
-      id: "bank",
-      name: "Transfer Bank",
-      icon: CreditCard,
-      description: "BCA, Mandiri, BNI, BRI",
-    },
-    {
-      id: "ewallet",
-      name: "E-Wallet",
-      icon: Smartphone,
-      description: "GoPay, OVO, DANA, ShopeePay",
-    },
-    {
-      id: "qris",
-      name: "QRIS",
-      icon: QrCode,
-      description: "Scan QR Code untuk pembayaran",
-    },
-  ];
+
 
   const quickAmounts = [50000, 100000, 250000, 500000, 1000000];
 
@@ -889,39 +862,7 @@ const DonationSection = () => {
                     </div>
                   </div>
 
-                  {/* Payment Methods */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-3">
-                      Metode Pembayaran
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {paymentMethods.map((method) => (
-                        <div
-                          key={method.id}
-                          className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                            selectedPayment === method.id
-                              ? "border-teal-500 bg-teal-50"
-                              : "border-gray-200 hover:border-teal-300 hover:bg-teal-50/50"
-                          }`}
-                          onClick={() => setSelectedPayment(method.id)}
-                        >
-                          <div className="flex items-center">
-                            <div className="mr-3">
-                              <method.icon className="h-5 w-5 text-teal-500" />
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-gray-900">
-                                {method.name}
-                              </h4>
-                              <p className="text-xs text-gray-500">
-                                {method.description}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+
 
                   {/* Submit Button */}
                   <div className="pt-4">

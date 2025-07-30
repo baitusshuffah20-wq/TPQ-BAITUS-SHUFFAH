@@ -5,6 +5,12 @@ import {
   NotificationChannel,
 } from "@/lib/notification-service";
 import { prisma } from "@/lib/prisma";
+import {
+  NOTIFICATION_TEMPLATES,
+  getTemplateById,
+  getTemplatesByCategory,
+  getAllCategories
+} from "@/lib/notification-templates";
 
 // GET /api/notifications/templates - Get notification templates
 export async function GET(request: NextRequest) {
@@ -12,15 +18,54 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type");
     const isActive = searchParams.get("isActive");
+    const source = searchParams.get("source"); // 'predefined' or 'database'
+    const category = searchParams.get("category");
+    const search = searchParams.get("search");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
 
+    // If requesting predefined templates
+    if (source === "predefined") {
+      let templates = NOTIFICATION_TEMPLATES;
+
+      // Filter by category
+      if (category) {
+        templates = getTemplatesByCategory(category);
+      }
+
+      // Filter by search
+      if (search) {
+        templates = templates.filter(template =>
+          template.name.toLowerCase().includes(search.toLowerCase()) ||
+          template.description.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+
+      // Pagination
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedTemplates = templates.slice(startIndex, endIndex);
+
+      return NextResponse.json({
+        success: true,
+        templates: paginatedTemplates,
+        total: templates.length,
+        page,
+        limit,
+        categories: getAllCategories(),
+      });
+    }
+
+    // Get database templates
     const where: any = {};
-    if (type) where.type = type;
+    // Note: database NotificationTemplate model doesn't have 'type' field
+    // if (type) where.type = type;
     if (isActive !== null) where.isActive = isActive === "true";
 
     const templates = await prisma.notificationTemplate.findMany({
       where,
       include: {
-        creator: {
+        createdBy: {
           select: {
             id: true,
             name: true,

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 
 // Define types for settings
 interface SiteSettings {
@@ -83,6 +83,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState<number>(0);
   const maxRetries = 3;
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchSettings = async () => {
     try {
@@ -91,9 +92,19 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
 
       console.log("Fetching settings...");
 
-      // Add timeout to the fetch request
+      // Cancel any existing request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      // Create new AbortController
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      abortControllerRef.current = controller;
+
+      const timeoutId = setTimeout(() => {
+        console.log("Settings fetch timeout, aborting request");
+        controller.abort();
+      }, 15000); // 15 second timeout
 
       const response = await fetch("/api/settings?public=true", {
         signal: controller.signal,
@@ -269,10 +280,18 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     } catch (err) {
       console.error("Error fetching settings:", err);
+
+      // Handle AbortError specifically
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.log("Settings fetch was aborted (timeout or component unmount)");
+        setError("Request was cancelled");
+        return; // Don't retry on abort and don't set loading to false here
+      }
+
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
       setError(errorMessage);
 
-      // Implement retry logic
+      // Implement retry logic for non-abort errors
       if (retryCount < maxRetries) {
         console.log(
           `Retrying settings fetch (${retryCount + 1}/${maxRetries})...`,
@@ -284,19 +303,21 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
         setTimeout(fetchSettings, retryDelay);
       } else {
         console.log("Max retries reached, using default settings");
-        // Log error to server if available
-        try {
-          fetch("/api/error-logger", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              message: `Settings fetch failed after ${maxRetries} retries: ${errorMessage}`,
-              severity: "ERROR",
-              context: "SettingsProvider",
-            }),
-          }).catch((e) => console.error("Failed to log error:", e));
-        } catch (logError) {
-          console.error("Failed to log error:", logError);
+        // Log error to server if available (but don't log abort errors)
+        if (!(err instanceof Error && err.name === 'AbortError')) {
+          try {
+            fetch("/api/error-logger", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                message: `Settings fetch failed after ${maxRetries} retries: ${errorMessage}`,
+                severity: "ERROR",
+                context: "SettingsProvider",
+              }),
+            }).catch((e) => console.error("Failed to log error:", e));
+          } catch (logError) {
+            console.error("Failed to log error:", logError);
+          }
         }
       }
     } finally {
@@ -311,6 +332,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
     window.addEventListener("settings-updated", fetchSettings);
 
     return () => {
+      // Cleanup: abort any ongoing request and remove event listener
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
       window.removeEventListener("settings-updated", fetchSettings);
     };
   }, []);

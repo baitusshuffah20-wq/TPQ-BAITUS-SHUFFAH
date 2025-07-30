@@ -49,6 +49,7 @@ import {
 } from "lucide-react";
 
 interface DragDropBuilderProps {
+  appType: "wali" | "musyrif";
   onSave: (components: ComponentData[]) => void;
   onPreview: (components: ComponentData[]) => void;
   onExport: (components: ComponentData[]) => void;
@@ -61,6 +62,74 @@ interface SortableComponentProps {
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
 }
+
+// Container Component that can accept nested components
+interface ContainerComponentProps {
+  component: ComponentData;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+  onDelete: (id: string) => void;
+  onAddChild?: (parentId: string, childComponent: ComponentData) => void;
+}
+
+const ContainerComponent: React.FC<ContainerComponentProps> = ({
+  component,
+  isSelected,
+  onSelect,
+  onDelete,
+  onAddChild,
+}) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `container-${component.id}`,
+    data: {
+      type: "container",
+      parentId: component.id,
+    },
+  });
+
+  const definition = COMPONENT_DEFINITIONS.find(
+    (def) => def.type === component.type,
+  );
+  if (!definition) return null;
+
+  const PreviewComponent = definition.previewComponent;
+  const children = component.children || [];
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`relative ${
+        isOver ? "bg-blue-50 border-2 border-dashed border-blue-300" : ""
+      }`}
+    >
+      <PreviewComponent props={component.props} />
+
+      {/* Drop zone for nested components */}
+      <div className="min-h-[40px] p-2">
+        {children.length === 0 ? (
+          <div className="text-center text-gray-400 text-sm py-4 border-2 border-dashed border-gray-200 rounded">
+            Drop components here
+          </div>
+        ) : (
+          <SortableContext
+            items={children.map((c) => c.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {children.map((child) => (
+              <SortableComponent
+                key={child.id}
+                component={child}
+                isSelected={isSelected}
+                onSelect={onSelect}
+                onDelete={onDelete}
+              />
+            ))}
+          </SortableContext>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const SortableComponent: React.FC<SortableComponentProps> = ({
   component,
@@ -89,6 +158,7 @@ const SortableComponent: React.FC<SortableComponentProps> = ({
   if (!definition) return null;
 
   const PreviewComponent = definition.previewComponent;
+  const isContainer = definition.defaultProps?.isContainer || false;
 
   return (
     <motion.div
@@ -111,7 +181,16 @@ const SortableComponent: React.FC<SortableComponentProps> = ({
       }}
     >
       <div className="p-2">
-        <PreviewComponent props={component.props} />
+        {isContainer ? (
+          <ContainerComponent
+            component={component}
+            isSelected={isSelected}
+            onSelect={onSelect}
+            onDelete={onDelete}
+          />
+        ) : (
+          <PreviewComponent props={component.props} />
+        )}
       </div>
 
       {/* Component Controls */}
@@ -231,6 +310,7 @@ const DroppableCanvas: React.FC<DroppableCanvasProps> = ({
 };
 
 export const DragDropBuilder: React.FC<DragDropBuilderProps> = ({
+  appType,
   onSave,
   onPreview,
   onExport,
@@ -347,9 +427,41 @@ export const DragDropBuilder: React.FC<DragDropBuilderProps> = ({
           id: `${definition.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           type: definition.type,
           props: { ...definition.defaultProps },
+          children: [],
         };
 
         const newComponents = [...builderState.components, newComponent];
+        setBuilderState((prev) => ({
+          ...prev,
+          components: newComponents,
+          selectedComponentId: newComponent.id,
+        }));
+        addToHistory(newComponents);
+      }
+
+      // Handle dropping from component library to container
+      if (active.data.current?.definition && over.data?.current?.type === "container") {
+        const definition = active.data.current.definition as ComponentDefinition;
+        const parentId = over.data.current.parentId;
+
+        const newComponent: ComponentData = {
+          id: `${definition.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          type: definition.type,
+          props: { ...definition.defaultProps },
+          children: [],
+          parentId: parentId,
+        };
+
+        const newComponents = builderState.components.map(component => {
+          if (component.id === parentId) {
+            return {
+              ...component,
+              children: [...(component.children || []), newComponent]
+            };
+          }
+          return component;
+        });
+
         setBuilderState((prev) => ({
           ...prev,
           components: newComponents,
@@ -486,55 +598,58 @@ export const DragDropBuilder: React.FC<DragDropBuilderProps> = ({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex h-full bg-gray-50 min-h-[600px]">
-        {/* Component Library */}
-        <div className="w-64 bg-white border-r border-gray-200 flex-shrink-0">
-          <ComponentLibrary />
-        </div>
-
-        {/* Main Canvas Area */}
-        <div className="flex-1 flex flex-col bg-white">
-          {/* Toolbar */}
-          <div className="border-b border-gray-200 bg-white">
-            <CanvasToolbar
-              onPreview={handlePreview}
-              onExport={handleExport}
-              onSave={handleSave}
-              onLoad={handleLoad}
-              onUndo={undo}
-              onRedo={redo}
-              canUndo={historyIndex > 0}
-              canRedo={historyIndex < history.length - 1}
-              zoom={builderState.zoom}
-              onZoomChange={(zoom) =>
-                setBuilderState((prev) => ({ ...prev, zoom }))
-              }
-              canvasSize={builderState.canvasSize}
-              onCanvasSizeChange={(size) =>
-                setBuilderState((prev) => ({ ...prev, canvasSize: size }))
-              }
-            />
+      <div className="h-full bg-gray-50 min-h-[600px] overflow-hidden">
+        {/* Main Layout Grid */}
+        <div className="grid grid-cols-12 h-full gap-0">
+          {/* Component Library - Collapsible */}
+          <div className="col-span-2 bg-white border-r border-gray-200 min-w-0 overflow-hidden">
+            <ComponentLibrary appType={appType} />
           </div>
 
-          {/* Canvas */}
-          <div className="flex-1 bg-gray-100">
-            <DroppableCanvas
-              components={builderState.components}
-              selectedComponentId={builderState.selectedComponentId}
-              onComponentSelect={handleComponentSelect}
-              onComponentDelete={handleComponentDelete}
-              canvasSize={builderState.canvasSize}
-              zoom={builderState.zoom}
+          {/* Main Canvas Area */}
+          <div className="col-span-7 flex flex-col bg-white min-w-0">
+            {/* Toolbar */}
+            <div className="border-b border-gray-200 bg-white flex-shrink-0">
+              <CanvasToolbar
+                onPreview={handlePreview}
+                onExport={handleExport}
+                onSave={handleSave}
+                onLoad={handleLoad}
+                onUndo={undo}
+                onRedo={redo}
+                canUndo={historyIndex > 0}
+                canRedo={historyIndex < history.length - 1}
+                zoom={builderState.zoom}
+                onZoomChange={(zoom) =>
+                  setBuilderState((prev) => ({ ...prev, zoom }))
+                }
+                canvasSize={builderState.canvasSize}
+                onCanvasSizeChange={(size) =>
+                  setBuilderState((prev) => ({ ...prev, canvasSize: size }))
+                }
+              />
+            </div>
+
+            {/* Canvas */}
+            <div className="flex-1 bg-gray-100 overflow-auto">
+              <DroppableCanvas
+                components={builderState.components}
+                selectedComponentId={builderState.selectedComponentId}
+                onComponentSelect={handleComponentSelect}
+                onComponentDelete={handleComponentDelete}
+                canvasSize={builderState.canvasSize}
+                zoom={builderState.zoom}
+              />
+            </div>
+          </div>
+
+          {/* Property Panel */}
+          <div className="col-span-3 bg-white border-l border-gray-200 min-w-0 overflow-hidden">
+            <PropertyPanel
+              component={selectedComponent}
+              onUpdate={handleComponentUpdate}
             />
           </div>
-        </div>
-
-        {/* Property Panel */}
-        <div className="w-80 bg-white border-l border-gray-200 flex-shrink-0">
-          <PropertyPanel
-            component={selectedComponent}
-            onUpdate={handleComponentUpdate}
-          />
         </div>
       </div>
 

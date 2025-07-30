@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,12 +30,6 @@ import {
 } from "lucide-react";
 
 // Type definitions
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
 
 interface SummaryCard {
   title: string;
@@ -103,41 +98,50 @@ const iconMap = {
 };
 
 const AnalyticsPage = () => {
-  const [user, setUser] = useState<User | null>(null);
   const [timeRange, setTimeRange] = useState("30d");
   const [isLoading, setIsLoading] = useState(false);
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
     null,
   );
 
+  // Redirect if not authenticated or not admin
   useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      if (parsedUser.role !== "ADMIN") {
-        router.push("/login");
-      } else {
-        setUser(parsedUser);
-      }
-    } else {
+    if (status === "loading") return; // Still loading
+
+    if (status === "unauthenticated") {
       router.push("/login");
+      return;
     }
-  }, [router]);
+
+    if (session?.user?.role !== "ADMIN") {
+      router.push("/dashboard");
+      return;
+    }
+  }, [session, status, router]);
 
   useEffect(() => {
-    if (user) {
+    if (session?.user?.role === "ADMIN") {
       fetchData();
     }
-  }, [user, timeRange]);
+  }, [session, timeRange]);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
       const res = await fetch(`/api/analytics?timeRange=${timeRange}`);
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
       const data = await res.json();
+
       if (data.success) {
         setAnalyticsData(data.data);
+      } else {
+        console.error("API returned error:", data.message);
       }
     } catch (error) {
       console.error("Failed to fetch analytics data", error);
@@ -146,8 +150,23 @@ const AnalyticsPage = () => {
     }
   };
 
-  if (!user) {
-    return <div>Loading...</div>;
+  // Show loading while checking authentication
+  if (status === "loading") {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-teal-600" />
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Don't render if not authenticated or not admin
+  if (status === "unauthenticated" || session?.user?.role !== "ADMIN") {
+    return null;
   }
 
   const refreshData = () => {

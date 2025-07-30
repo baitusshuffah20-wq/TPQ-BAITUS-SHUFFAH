@@ -91,6 +91,9 @@ export async function PUT(
         isActive: data.isActive,
         config: data.config,
         fees: data.fees,
+        description: data.description,
+        logo: data.logo,
+        sortOrder: data.sortOrder,
       },
     });
 

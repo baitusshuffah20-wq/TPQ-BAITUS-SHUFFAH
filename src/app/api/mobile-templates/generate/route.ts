@@ -42,8 +42,9 @@ function generateReactNativeCode(
         />`;
 
         case "container":
+          const containerChildren = component.children || [];
           return `<View style={styles.container_${component.id}}>
-          {/* Add child components here */}
+          ${containerChildren.map(child => renderComponent(child)).join('\n          ')}
         </View>`;
 
         case "attendance-card":
@@ -55,6 +56,88 @@ function generateReactNativeCode(
           <View style={styles.statusBadge_${component.id}}>
             <Text style={styles.statusText}>${component.props.status}</Text>
           </View>
+        </View>`;
+
+        case "attendance-summary-card":
+          return `<View style={styles.attendanceSummaryCard_${component.id}}>
+          <View>
+            <Text style={styles.studentName}>${component.props.studentName}</Text>
+            <Text style={styles.dateTime}>${component.props.date} • ${component.props.time}</Text>
+          </View>
+          <View style={styles.statusBadge_${component.id}}>
+            <Text style={styles.statusText}>${component.props.status}</Text>
+          </View>
+        </View>`;
+
+        case "menu-grid":
+          return `<View style={styles.menuGrid_${component.id}}>
+          ${component.props.menuItems.map((item: any, index: number) => `
+            <TouchableOpacity key={${index}} style={styles.menuItem_${component.id}}>
+              <Text style={styles.menuIcon}>${item.icon}</Text>
+              ${component.props.showLabels ? `<Text style={styles.menuLabel}>${item.label}</Text>` : ''}
+            </TouchableOpacity>
+          `).join('')}
+        </View>`;
+
+        case "bottom-navigation":
+          return `<View style={styles.bottomNavigation_${component.id}}>
+          ${component.props.items.map((item: any, index: number) => `
+            <TouchableOpacity key={${index}} style={styles.navItem_${component.id}}>
+              <Text style={[styles.navIcon, { color: '${item.active ? component.props.activeColor : component.props.inactiveColor}' }]}>${item.icon}</Text>
+              ${component.props.showLabels ? `<Text style={[styles.navLabel, { color: '${item.active ? component.props.activeColor : component.props.inactiveColor}' }]}>${item.label}</Text>` : ''}
+            </TouchableOpacity>
+          `).join('')}
+        </View>`;
+
+        case "header-menu":
+          return `<View style={styles.headerMenu_${component.id}}>
+          <View style={styles.headerLeft}>
+            ${component.props.showLogo ? `<Text style={styles.logoIcon}>${component.props.logoIcon}</Text>` : ''}
+            <Text style={styles.headerTitle}>${component.props.title}</Text>
+          </View>
+          <View style={styles.headerRight}>
+            ${component.props.showNotification ? `<TouchableOpacity><Text style={styles.headerIcon}>🔔</Text></TouchableOpacity>` : ''}
+            ${component.props.showProfile ? `<TouchableOpacity><Text style={styles.headerIcon}>👤</Text></TouchableOpacity>` : ''}
+          </View>
+        </View>`;
+
+        case "icon-button":
+          return `<TouchableOpacity style={styles.iconButton_${component.id}}>
+          <Text style={styles.buttonIcon}>${component.props.icon}</Text>
+          ${component.props.showLabel ? `<Text style={styles.buttonLabel}>${component.props.label}</Text>` : ''}
+        </TouchableOpacity>`;
+
+        case "floating-action-button":
+          return `<TouchableOpacity style={styles.floatingActionButton_${component.id}}>
+          <Text style={styles.fabIcon}>${component.props.icon}</Text>
+        </TouchableOpacity>`;
+
+        case "wallet-card":
+          return `<View style={styles.walletCard_${component.id}}>
+          <Text style={styles.walletTitle}>${component.props.cardTitle}</Text>
+          <Text style={styles.walletBalance}>${component.props.currency} ${component.props.balance?.toLocaleString()}</Text>
+          <View style={styles.walletButtons}>
+            ${component.props.showTopUp ? `<TouchableOpacity style={styles.walletButton_${component.id}}><Text style={styles.walletButtonText}>Top Up</Text></TouchableOpacity>` : ''}
+            ${component.props.showWithdraw ? `<TouchableOpacity style={styles.walletButton_${component.id}}><Text style={styles.walletButtonText}>Withdraw</Text></TouchableOpacity>` : ''}
+          </View>
+        </View>`;
+
+        case "donation-card":
+          const progress = (component.props.currentAmount / component.props.targetAmount) * 100;
+          return `<View style={styles.donationCard_${component.id}}>
+          <Text style={styles.donationTitle}>${component.props.title}</Text>
+          <Text style={styles.donationDescription}>${component.props.description}</Text>
+          ${component.props.showProgress ? `
+          <View style={styles.donationProgress}>
+            <View style={styles.donationProgressBar}>
+              <View style={[styles.donationProgressFill, { width: '${Math.min(progress, 100)}%' }]} />
+            </View>
+            <Text style={styles.donationProgressText}>${progress.toFixed(1)}% tercapai</Text>
+          </View>
+          ` : ''}
+          <TouchableOpacity style={styles.donationButton_${component.id}}>
+            <Text style={styles.donationButtonText}>Donasi Sekarang</Text>
+          </TouchableOpacity>
         </View>`;
 
         case "progress-tracker":
@@ -164,6 +247,172 @@ function generateReactNativeCode(
     fontWeight: '500',
   },`;
 
+        case "attendance-summary-card":
+          return `  attendanceSummaryCard_${component.id}: {
+    backgroundColor: '${component.props.backgroundColor || "#ffffff"}',
+    borderRadius: ${component.props.borderRadius || 12},
+    padding: 16,
+    marginVertical: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  studentName: {
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  dateTime: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  statusBadge_${component.id}: {
+    backgroundColor: '${component.props.status === "Hadir" ? "#22c55e" : component.props.status === "Tidak Hadir" ? "#ef4444" : "#f59e0b"}',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  statusText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
+  },`;
+
+        case "menu-grid":
+          return `  menuGrid_${component.id}: {
+    backgroundColor: '${component.props.backgroundColor}',
+    borderRadius: ${component.props.borderRadius},
+    padding: 16,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  menuItem_${component.id}: {
+    width: '${100 / component.props.columns - 2}%',
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    marginBottom: ${component.props.spacing},
+  },
+  menuIcon: {
+    fontSize: 24,
+    marginBottom: ${component.props.showLabels ? 8 : 0},
+  },
+  menuLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#374151',
+    textAlign: 'center',
+  },`;
+
+        case "bottom-navigation":
+          return `  bottomNavigation_${component.id}: {
+    backgroundColor: '${component.props.backgroundColor}',
+    height: ${component.props.height},
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    paddingVertical: 8,
+  },
+  navItem_${component.id}: {
+    alignItems: 'center',
+  },
+  navIcon: {
+    fontSize: 20,
+    marginBottom: ${component.props.showLabels ? 4 : 0},
+  },
+  navLabel: {
+    fontSize: 10,
+    fontWeight: '400',
+  },`;
+
+        case "header-menu":
+          return `  headerMenu_${component.id}: {
+    backgroundColor: '${component.props.backgroundColor}',
+    height: ${component.props.height},
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoIcon: {
+    fontSize: 24,
+    marginRight: 12,
+    color: '${component.props.textColor}',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '${component.props.textColor}',
+  },
+  headerIcon: {
+    fontSize: 20,
+    color: '${component.props.textColor}',
+    marginLeft: 16,
+  },`;
+
+        case "icon-button":
+          const sizeMap = {
+            small: { padding: '8px 12px', fontSize: 14, iconSize: 16 },
+            medium: { padding: '12px 16px', fontSize: 16, iconSize: 18 },
+            large: { padding: '16px 20px', fontSize: 18, iconSize: 20 },
+          };
+          const buttonSize = sizeMap[component.props.size as keyof typeof sizeMap] || sizeMap.medium;
+          return `  iconButton_${component.id}: {
+    backgroundColor: '${component.props.backgroundColor}',
+    borderRadius: ${component.props.borderRadius},
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonIcon: {
+    fontSize: ${buttonSize.iconSize},
+    color: '${component.props.textColor}',
+    marginRight: ${component.props.showLabel ? 8 : 0},
+  },
+  buttonLabel: {
+    fontSize: ${buttonSize.fontSize},
+    fontWeight: '500',
+    color: '${component.props.textColor}',
+  },`;
+
+        case "floating-action-button":
+          return `  floatingActionButton_${component.id}: {
+    position: 'absolute',
+    bottom: 16,
+    ${component.props.position === 'bottom-right' ? 'right: 16,' :
+      component.props.position === 'bottom-left' ? 'left: 16,' :
+      'alignSelf: "center",'}
+    width: ${component.props.size},
+    height: ${component.props.size},
+    backgroundColor: '${component.props.backgroundColor}',
+    borderRadius: ${component.props.size / 2},
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  fabIcon: {
+    fontSize: 20,
+    color: '#ffffff',
+  },`;
+
         case "progress-tracker":
           return `  progressTracker_${component.id}: {
     padding: 16,
@@ -197,6 +446,93 @@ function generateReactNativeCode(
     marginTop: 4,
     fontSize: 12,
     color: '#6b7280',
+  },`;
+
+        case "wallet-card":
+          return `  walletCard_${component.id}: {
+    backgroundColor: '${component.props.backgroundColor}',
+    padding: 20,
+    borderRadius: 12,
+    marginVertical: 8,
+    minHeight: 120,
+  },
+  walletTitle: {
+    fontSize: 14,
+    color: '${component.props.textColor}',
+    marginBottom: 8,
+  },
+  walletBalance: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '${component.props.textColor}',
+    marginBottom: 16,
+  },
+  walletButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  walletButton_${component.id}: {
+    backgroundColor: '${component.props.buttonColor}',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  walletButtonText: {
+    fontSize: 12,
+    color: '#000',
+    fontWeight: '500',
+  },`;
+
+        case "donation-card":
+          return `  donationCard_${component.id}: {
+    backgroundColor: '${component.props.backgroundColor}',
+    borderWidth: 1,
+    borderColor: '${component.props.borderColor}',
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 8,
+    minHeight: 140,
+  },
+  donationTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  donationDescription: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 12,
+  },
+  donationProgress: {
+    marginBottom: 12,
+  },
+  donationProgressBar: {
+    backgroundColor: '#f3f4f6',
+    borderRadius: 4,
+    height: 8,
+    overflow: 'hidden',
+    marginBottom: 4,
+  },
+  donationProgressFill: {
+    backgroundColor: '${component.props.progressColor}',
+    height: '100%',
+  },
+  donationProgressText: {
+    fontSize: 10,
+    color: '#6b7280',
+    marginTop: 4,
+  },
+  donationButton_${component.id}: {
+    backgroundColor: '${component.props.progressColor}',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  donationButtonText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#ffffff',
   },`;
 
         default:

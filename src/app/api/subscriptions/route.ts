@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { SubscriptionService } from "@/lib/subscription-service";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/subscriptions - Get subscriptions
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== "ADMIN") {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
     const { searchParams } = new URL(request.url);
-    const studentId = searchParams.get("studentId");
-    const status = searchParams.get("status");
+    const isActive = searchParams.get("isActive");
+    const search = searchParams.get("search");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
 
@@ -15,20 +25,22 @@ export async function GET(request: NextRequest) {
 
     // Build where clause
     const whereClause: any = {};
-    if (studentId) whereClause.studentId = studentId;
-    if (status) whereClause.status = status;
+    if (isActive !== null && isActive !== "") {
+      whereClause.isActive = isActive === "true";
+    }
+    if (search) {
+      whereClause.OR = [
+        { email: { contains: search, mode: "insensitive" } },
+        { name: { contains: search, mode: "insensitive" } },
+      ];
+    }
 
     const [subscriptions, total] = await Promise.all([
       prisma.subscription.findMany({
         where: whereClause,
         include: {
-          student: {
+          user: {
             select: { id: true, name: true, email: true, phone: true },
-          },
-          billings: {
-            where: { status: "PENDING" },
-            orderBy: { dueDate: "asc" },
-            take: 1,
           },
         },
         orderBy: { createdAt: "desc" },
@@ -66,6 +78,15 @@ export async function GET(request: NextRequest) {
 // POST /api/subscriptions - Create subscription
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== "ADMIN") {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const {
       studentId,

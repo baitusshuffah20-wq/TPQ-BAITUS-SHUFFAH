@@ -4,14 +4,25 @@ import { prisma } from "@/lib/prisma";
 export const NotificationType = {
   PAYMENT_REMINDER: "PAYMENT_REMINDER",
   PAYMENT_CONFIRMATION: "PAYMENT_CONFIRMATION",
+  PAYMENT_OVERDUE: "PAYMENT_OVERDUE",
   SPP_OVERDUE: "SPP_OVERDUE",
   ATTENDANCE_ALERT: "ATTENDANCE_ALERT",
+  ATTENDANCE_CONFIRMATION: "ATTENDANCE_CONFIRMATION",
   HAFALAN_PROGRESS: "HAFALAN_PROGRESS",
+  ACHIEVEMENT: "ACHIEVEMENT",
+  TARGET_REMINDER: "TARGET_REMINDER",
+  TARGET_OVERDUE: "TARGET_OVERDUE",
+  PROGRESS_UPDATE: "PROGRESS_UPDATE",
+  BIRTHDAY_REMINDER: "BIRTHDAY_REMINDER",
+  EVENT_REMINDER: "EVENT_REMINDER",
+  EXAM_REMINDER: "EXAM_REMINDER",
+  GRADE_REPORT: "GRADE_REPORT",
   SYSTEM_ANNOUNCEMENT: "SYSTEM_ANNOUNCEMENT",
   ACCOUNT_UPDATE: "ACCOUNT_UPDATE",
   REPORT_READY: "REPORT_READY",
   MAINTENANCE_NOTICE: "MAINTENANCE_NOTICE",
   EMERGENCY_ALERT: "EMERGENCY_ALERT",
+  GENERAL: "GENERAL",
 } as const;
 
 // Notification Priorities
@@ -88,19 +99,32 @@ export class NotificationService {
   // Create a new notification
   static async createNotification(data: CreateNotificationData) {
     try {
+      // Validate createdBy exists if provided
+      let validCreatedBy = null;
+      if (data.createdBy && data.createdBy !== "system") {
+        const creatorExists = await prisma.user.findUnique({
+          where: { id: data.createdBy },
+          select: { id: true },
+        });
+        if (creatorExists) {
+          validCreatedBy = data.createdBy;
+        }
+      }
+
       const notification = await prisma.notification.create({
         data: {
+          userId: data.recipientId || data.createdBy, // Use recipientId as userId
           title: data.title,
           message: data.message,
           type: data.type,
-          priority: data.priority || NotificationPriority.NORMAL,
-          status: NotificationStatus.PENDING,
-          channels: data.channels.join(","),
+          priority: data.priority || "NORMAL",
+          status: "PENDING",
+          channels: Array.isArray(data.channels) ? data.channels.join(",") : data.channels || "IN_APP",
           recipientId: data.recipientId,
           recipientType: data.recipientType,
           metadata: data.metadata ? JSON.stringify(data.metadata) : null,
           scheduledAt: data.scheduledAt,
-          createdBy: data.createdBy,
+          createdBy: validCreatedBy,
         },
       });
 
@@ -447,9 +471,15 @@ export class NotificationService {
     try {
       return await prisma.notification.findMany({
         where: {
-          recipientId: userId,
-          channels: {
-            contains: NotificationChannel.IN_APP,
+          userId: userId,
+        },
+        include: {
+          creator: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
           },
         },
         orderBy: { createdAt: "desc" },
@@ -478,15 +508,14 @@ export class NotificationService {
   // Get notification statistics
   static async getNotificationStats(userId?: string) {
     try {
-      const where = userId ? { recipientId: userId } : {};
+      const where = userId ? { userId: userId } : {};
 
       const [total, unread, byType, byStatus] = await Promise.all([
         prisma.notification.count({ where }),
         prisma.notification.count({
           where: {
             ...where,
-            readAt: null,
-            channels: { contains: NotificationChannel.IN_APP },
+            isRead: false,
           },
         }),
         prisma.notification.groupBy({

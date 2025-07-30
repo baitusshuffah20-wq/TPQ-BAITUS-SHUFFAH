@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
 import {
   Users,
@@ -16,11 +17,35 @@ import {
   TrendingUp,
   Award,
   Target,
+  Loader2,
+  Wallet,
+  DollarSign,
 } from "lucide-react";
+
+interface DashboardStats {
+  totalSantri: number;
+  activeHalaqah: number;
+  completedHafalan: number;
+  attendanceRate: number;
+  monthlyEarnings: number;
+  walletBalance: number;
+}
+
+interface RecentActivity {
+  id: string;
+  type: "HAFALAN" | "ATTENDANCE" | "EARNING";
+  description: string;
+  date: string;
+  status: string;
+}
 
 const MusyrifDashboard = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   // Check authentication and role
   useEffect(() => {
@@ -33,14 +58,58 @@ const MusyrifDashboard = () => {
       router.push("/dashboard");
       return;
     }
+
+    if (status === "authenticated" && session?.user.role === "MUSYRIF") {
+      fetchDashboardData();
+    }
   }, [session, status, router]);
 
-  if (status === "loading") {
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch dashboard stats
+      const [statsResponse, walletResponse] = await Promise.all([
+        fetch("/api/musyrif/dashboard/stats"),
+        fetch("/api/musyrif/wallet"),
+      ]);
+
+      if (!statsResponse.ok || !walletResponse.ok) {
+        throw new Error("Failed to fetch dashboard data");
+      }
+
+      const statsData = await statsResponse.json();
+      const walletData = await walletResponse.json();
+
+      if (statsData.success && walletData.success) {
+        setStats({
+          totalSantri: statsData.data.totalSantri || 0,
+          activeHalaqah: statsData.data.activeHalaqah || 0,
+          completedHafalan: statsData.data.completedHafalan || 0,
+          attendanceRate: statsData.data.attendanceRate || 0,
+          monthlyEarnings: walletData.data.monthlyEarnings || 0,
+          walletBalance: walletData.data.balance || 0,
+        });
+
+        setRecentActivities(statsData.data.recentActivities || []);
+      } else {
+        throw new Error("Invalid response data");
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      setError(error instanceof Error ? error.message : "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (status === "loading" || loading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-96">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+            <Loader2 className="h-12 w-12 animate-spin text-teal-600 mx-auto mb-4" />
             <p className="text-gray-600">Memuat dashboard...</p>
           </div>
         </div>
@@ -53,99 +122,70 @@ const MusyrifDashboard = () => {
     return null;
   }
 
-  // Mock data for Musyrif
-  const stats = [
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Error</h3>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <Button onClick={fetchDashboardData} variant="outline">
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Create stats cards from real data
+  const statsCards = stats ? [
     {
       title: "Santri Binaan",
-      value: "25",
-      change: "+2",
-      changeType: "increase",
+      value: stats.totalSantri.toString(),
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
     },
     {
       title: "Halaqah Aktif",
-      value: "3",
-      change: "0",
-      changeType: "stable",
+      value: stats.activeHalaqah.toString(),
       icon: BookOpen,
       color: "text-teal-600",
       bgColor: "bg-teal-50",
     },
     {
-      title: "Hafalan Selesai Bulan Ini",
-      value: "12",
-      change: "+4",
-      changeType: "increase",
+      title: "Hafalan Selesai",
+      value: stats.completedHafalan.toString(),
       icon: GraduationCap,
       color: "text-green-600",
       bgColor: "bg-green-50",
     },
     {
       title: "Tingkat Kehadiran",
-      value: "92%",
-      change: "+3%",
-      changeType: "increase",
+      value: `${stats.attendanceRate}%`,
       icon: Calendar,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
     },
-  ];
+    {
+      title: "Penghasilan Bulan Ini",
+      value: `Rp ${stats.monthlyEarnings.toLocaleString('id-ID')}`,
+      icon: DollarSign,
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50",
+    },
+    {
+      title: "Saldo Wallet",
+      value: `Rp ${stats.walletBalance.toLocaleString('id-ID')}`,
+      icon: Wallet,
+      color: "text-indigo-600",
+      bgColor: "bg-indigo-50",
+    },
+  ] : [];
 
-  const recentHafalan = [
-    {
-      id: 1,
-      santriName: "Ahmad Fauzi",
-      surah: "Al-Baqarah",
-      ayah: "1-10",
-      status: "APPROVED",
-      grade: 85,
-      date: "2024-02-10",
-    },
-    {
-      id: 2,
-      santriName: "Siti Aisyah",
-      surah: "Ali Imran",
-      ayah: "1-20",
-      status: "PENDING",
-      grade: null,
-      date: "2024-02-11",
-    },
-    {
-      id: 3,
-      santriName: "Muhammad Rizki",
-      surah: "An-Nisa",
-      ayah: "1-15",
-      status: "NEEDS_IMPROVEMENT",
-      grade: 65,
-      date: "2024-02-09",
-    },
-  ];
 
-  const todaySchedule = [
-    {
-      id: 1,
-      time: "08:00 - 09:30",
-      halaqah: "Halaqah Al-Fatihah",
-      location: "Ruang A",
-      participants: 8,
-    },
-    {
-      id: 2,
-      time: "10:00 - 11:30",
-      halaqah: "Halaqah Al-Baqarah",
-      location: "Ruang B",
-      participants: 10,
-    },
-    {
-      id: 3,
-      time: "14:00 - 15:30",
-      halaqah: "Halaqah Ali Imran",
-      location: "Ruang C",
-      participants: 7,
-    },
-  ];
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -188,7 +228,7 @@ const MusyrifDashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat) => {
+          {statsCards.map((stat) => {
             const Icon = stat.icon;
             return (
               <Card
@@ -204,17 +244,6 @@ const MusyrifDashboard = () => {
                       <p className="text-2xl font-bold text-gray-900">
                         {stat.value}
                       </p>
-                      {stat.change !== "0" && (
-                        <div className="flex items-center mt-2">
-                          <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                          <span className="text-sm font-medium text-green-600">
-                            {stat.change}
-                          </span>
-                          <span className="text-sm text-gray-500 ml-1">
-                            dari bulan lalu
-                          </span>
-                        </div>
-                      )}
                     </div>
                     <div className={`p-3 rounded-lg ${stat.bgColor}`}>
                       <Icon className={`h-6 w-6 ${stat.color}`} />
@@ -226,88 +255,54 @@ const MusyrifDashboard = () => {
           })}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Hafalan */}
+        <div className="grid grid-cols-1 gap-6">
+          {/* Recent Activities */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Award className="h-5 w-5 mr-2 text-teal-600" />
-                Hafalan Terbaru
+                <Clock className="h-5 w-5 mr-2 text-teal-600" />
+                Aktivitas Terbaru
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentHafalan.map((hafalan) => (
-                  <div
-                    key={hafalan.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="flex-1">
-                      <h4 className="text-sm font-medium text-gray-900">
-                        {hafalan.santriName}
-                      </h4>
-                      <p className="text-xs text-gray-500">
-                        {hafalan.surah} ayat {hafalan.ayah}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {new Date(hafalan.date).toLocaleDateString("id-ID")}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {hafalan.grade && (
-                        <span className="text-sm font-medium text-gray-900">
-                          {hafalan.grade}
-                        </span>
-                      )}
+                {recentActivities.length > 0 ? (
+                  recentActivities.map((activity) => (
+                    <div
+                      key={activity.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">
+                          {activity.description}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {activity.type}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {new Date(activity.date).toLocaleDateString("id-ID")}
+                        </p>
+                      </div>
                       <div className="flex items-center space-x-1">
-                        {getStatusIcon(hafalan.status)}
+                        {getStatusIcon(activity.status)}
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(hafalan.status)}`}
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}
                         >
-                          {hafalan.status}
+                          {activity.status}
                         </span>
                       </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">Belum ada aktivitas terbaru</p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Today's Schedule */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Calendar className="h-5 w-5 mr-2 text-teal-600" />
-                Jadwal Hari Ini
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {todaySchedule.map((schedule) => (
-                  <div
-                    key={schedule.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">
-                        {schedule.halaqah}
-                      </h4>
-                      <p className="text-xs text-gray-500">
-                        {schedule.time} • {schedule.location}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-teal-600">
-                        {schedule.participants}
-                      </p>
-                      <p className="text-xs text-gray-500">santri</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Quick Actions */}

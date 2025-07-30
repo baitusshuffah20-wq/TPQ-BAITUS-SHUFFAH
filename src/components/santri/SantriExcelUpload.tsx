@@ -241,12 +241,12 @@ export default function SantriExcelUpload({
 
       if (
         !santriData.gender ||
-        !["MALE", "FEMALE"].includes(santriData.gender)
+        !["LAKI_LAKI", "PEREMPUAN"].includes(santriData.gender)
       ) {
         errors.push({
           row: rowNumber,
           field: "Jenis Kelamin",
-          message: "Jenis kelamin harus MALE atau FEMALE",
+          message: "Jenis kelamin harus LAKI_LAKI atau PEREMPUAN",
         });
       }
 

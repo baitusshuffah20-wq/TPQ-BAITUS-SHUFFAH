@@ -24,21 +24,21 @@ The `DonationForm` component is a React functional component used to collect and
 - Collects personal information: **Name**, **Email**, **Phone Number**, and an optional **Message**.
 - Supports anonymous donations via a checkbox, which disables personal info fields if checked.
 
-### 4. Payment Method
+### 4. Cart Integration
 
-- Lists available payment options (Bank Transfer, E-Wallet, QRIS), each with its icon and description.
-- Allows the user to select their preferred payment method visually.
+- Uses UniversalCart and UniversalCheckout components for payment processing.
+- Payment method selection is handled in the checkout flow, not in the donation form.
 
 ### 5. Summary Section
 
 - Provides a concise summary of the donation category and the entered donation amount.
 
-### 6. Submission & API Workflow
+### 6. Submission & Cart Workflow
 
 - On form submission, validates amount, category, and donor information.
 - Creates a "cart" for the donation by posting to a `/api/cart/donation` endpoint (with local cart ID management via `localStorage`).
-- Initiates the payment process by posting to `/api/payment/cart`, passing cart ID and donor information.
-- On successful response, notifies the user and redirects to the payment page.
+- Transitions to cart view where users can review items and proceed to checkout.
+- Payment method selection and processing is handled in the UniversalCheckout component.
 - Error handling via toast notifications and custom error handler hooks.
 - Disables the submit button and shows a loading indicator while processing.
 

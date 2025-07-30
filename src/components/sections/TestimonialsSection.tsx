@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Star, Quote, ChevronLeft, ChevronRight, Loader } from "lucide-react";
+import { safeFetch, formatErrorForUser } from "@/lib/api-utils";
 
 interface Testimonial {
   id: string;
@@ -24,19 +25,55 @@ const TestimonialsSection = () => {
     const fetchTestimonials = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/testimonials");
-        const data = await response.json();
+        setError(null); // Clear any previous errors
 
+        // Use safeFetch for better error handling
+        const response = await safeFetch("/api/testimonials");
+
+        if (!response.success) {
+          console.error("Error fetching testimonials:", response.error);
+          console.log("Using fallback mock data...");
+
+          // Use fallback data
+          setTestimonials([
+            {
+              id: "1",
+              authorName: "Ahmad Fauzi",
+              authorRole: "SANTRI",
+              rating: 5,
+              content:
+                "Alhamdulillah, berkat bimbingan ustadz-ustadz yang sabar dan metode pembelajaran yang efektif, saya berhasil menyelesaikan hafalan 30 juz dalam waktu 2,5 tahun. Pengalaman yang sangat berharga dan mengubah hidup saya.",
+              isFeatured: true,
+              createdAt: new Date().toISOString(),
+            },
+            {
+              id: "2",
+              authorName: "Siti Aisyah",
+              authorRole: "WALI",
+              rating: 5,
+              content:
+                "Anak saya sangat senang belajar di sini. Selain hafalan Al-Quran, akhlaknya juga semakin baik. Para ustadz sangat perhatian dan komunikatif dengan orang tua. Sistem pembelajaran yang modern namun tetap menjaga nilai-nilai tradisional.",
+              isFeatured: true,
+              createdAt: new Date().toISOString(),
+            },
+          ]);
+
+          setError(formatErrorForUser(response.error || "Failed to load testimonials"));
+          setLoading(false);
+          return;
+        }
+
+        const data = response.data;
         if (data.success) {
           setTestimonials(data.testimonials);
         } else {
-          throw new Error("Failed to fetch testimonials");
+          throw new Error(data.error || "Failed to fetch testimonials");
         }
       } catch (err) {
         console.error("Error fetching testimonials:", err);
-        setError("Failed to load testimonials");
+        console.log("Using fallback mock data...");
 
-        // Fallback data if needed
+        // Use fallback data
         setTestimonials([
           {
             id: "1",
@@ -59,6 +96,11 @@ const TestimonialsSection = () => {
             createdAt: new Date().toISOString(),
           },
         ]);
+
+        const errorMessage = formatErrorForUser(err instanceof Error ? err.message : String(err));
+        setError(errorMessage);
+
+
       } finally {
         setLoading(false);
       }

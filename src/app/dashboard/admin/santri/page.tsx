@@ -29,7 +29,7 @@ interface SantriData {
   name: string;
   birthDate: string;
   birthPlace: string;
-  gender: "MALE" | "FEMALE";
+  gender: "LAKI_LAKI" | "PEREMPUAN";
   address: string;
   phone?: string;
   email?: string;
@@ -80,7 +80,7 @@ interface SantriFormData {
   name: string;
   birthDate: string;
   birthPlace: string;
-  gender: "MALE" | "FEMALE";
+  gender: "LAKI_LAKI" | "PEREMPUAN";
   address: string;
   phone?: string;
   email?: string;
@@ -150,12 +150,13 @@ export default function SantriPage() {
       const data = await response.json();
 
       if (data.success) {
-        setSantri(data.santri);
+        setSantri(data.data || []);
       } else {
         throw new Error(data.message || "Gagal memuat data santri");
       }
     } catch (error) {
       console.error("Error loading santri:", error);
+      setSantri([]); // Ensure santri is always an array
       alert("Gagal memuat data santri");
     } finally {
       setLoading(false);
@@ -340,7 +341,7 @@ export default function SantriPage() {
   };
 
   // Apply filters on client side for better UX
-  const filteredSantri = santri.filter((s) => {
+  const filteredSantri = (santri || []).filter((s) => {
     const matchesSearch =
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.nis.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -390,7 +391,7 @@ export default function SantriPage() {
   };
 
   const getGenderLabel = (gender: string) => {
-    return gender === "L" ? "Laki-laki" : "Perempuan";
+    return gender === "LAKI_LAKI" ? "Laki-laki" : "Perempuan";
   };
 
   const calculateAge = (birthDate: string) => {
@@ -472,7 +473,7 @@ export default function SantriPage() {
                 <div>
                   <p className="text-sm text-gray-600">Santri Aktif</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {santri.filter((s) => s.status === "ACTIVE").length}
+                    {(santri || []).filter((s) => s.status === "ACTIVE").length}
                   </p>
                 </div>
               </div>
@@ -488,7 +489,7 @@ export default function SantriPage() {
                 <div>
                   <p className="text-sm text-gray-600">Lulus</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {santri.filter((s) => s.status === "GRADUATED").length}
+                    {(santri || []).filter((s) => s.status === "GRADUATED").length}
                   </p>
                 </div>
               </div>
@@ -505,7 +506,7 @@ export default function SantriPage() {
                   <p className="text-sm text-gray-600">Santri Baru</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {
-                      santri.filter((s) => {
+                      (santri || []).filter((s) => {
                         const enrollDate = new Date(s.enrollmentDate);
                         const thisMonth = new Date();
                         return (

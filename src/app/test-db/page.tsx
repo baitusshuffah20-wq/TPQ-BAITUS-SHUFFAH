@@ -10,6 +10,8 @@ import {
   Database,
   Loader2,
 } from "lucide-react";
+import { useAuth } from "@/components/providers/AuthProvider";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 interface TestResult {
   name: string;
@@ -20,8 +22,28 @@ interface TestResult {
 }
 
 export default function TestDatabasePage() {
+  const { user } = useAuth();
   const [results, setResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+
+  // Check if user has admin role
+  if (!user || user.role !== "ADMIN") {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Akses Ditolak
+            </h3>
+            <p className="text-gray-600">
+              Hanya administrator yang dapat mengakses halaman Database Test.
+            </p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const runTest = async (testName: string, testFn: () => Promise<any>) => {
     const startTime = Date.now();

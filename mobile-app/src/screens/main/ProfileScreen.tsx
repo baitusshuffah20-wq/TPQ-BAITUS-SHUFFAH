@@ -177,7 +177,7 @@ const ProfileScreen: React.FC = () => {
           <View style={styles.santriInfo}>
             <View style={styles.santriAvatar}>
               <Ionicons
-                name={santri.gender === "MALE" ? "person" : "person-outline"}
+                name={santri.gender === "LAKI_LAKI" ? "person" : "person-outline"}
                 size={24}
                 color={colors.primary}
               />

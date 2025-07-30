@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,87 +10,128 @@ import {
   Users,
   Calendar,
   Clock,
-  Plus,
-  Edit,
   Eye,
   MapPin,
   Target,
   TrendingUp,
   Award,
+  AlertCircle,
+  CheckCircle,
 } from "lucide-react";
+
+interface HalaqahData {
+  id: string;
+  name: string;
+  description: string;
+  level: string;
+  capacity: number;
+  currentStudents: number;
+  room: string;
+  schedule: string;
+  schedules: Array<{
+    id: string;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    room: string;
+  }>;
+  status: string;
+  averageProgress: number;
+  capacityPercentage: number;
+  isNearCapacity: boolean;
+  totalSessions: number;
+  santri: Array<{
+    id: string;
+    nis: string;
+    name: string;
+    status: string;
+    enrollmentDate: string;
+  }>;
+  musyrif: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+  } | null;
+}
+
+interface SummaryData {
+  totalHalaqah: number;
+  totalStudents: number;
+  totalCapacity: number;
+  averageProgress: number;
+  capacityUtilization: number;
+}
 
 const MusyrifHalaqahPage = () => {
   const { user } = useAuth();
-  const [selectedHalaqah, setSelectedHalaqah] = useState<string | null>(null);
+  const [halaqahList, setHalaqahList] = useState<HalaqahData[]>([]);
+  const [summary, setSummary] = useState<SummaryData>({
+    totalHalaqah: 0,
+    totalStudents: 0,
+    totalCapacity: 0,
+    averageProgress: 0,
+    capacityUtilization: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data for halaqah managed by this musyrif
-  const halaqahList = [
-    {
-      id: "1",
-      name: "Halaqah Al-Fatihah",
-      level: "Pemula",
-      schedule: "Senin, Rabu, Jumat",
-      time: "08:00 - 09:30",
-      location: "Ruang A",
-      capacity: 15,
-      currentStudents: 12,
-      targetSurah: "Al-Fatihah - Al-Baqarah",
-      description: "Halaqah untuk santri pemula yang baru memulai hafalan",
-      students: [
-        { id: "1", name: "Ahmad Fauzi", progress: 75 },
-        { id: "2", name: "Siti Aisyah", progress: 60 },
-        { id: "3", name: "Muhammad Ali", progress: 80 },
-      ],
-    },
-    {
-      id: "2",
-      name: "Halaqah Al-Baqarah",
-      level: "Menengah",
-      schedule: "Selasa, Kamis, Sabtu",
-      time: "10:00 - 11:30",
-      location: "Ruang B",
-      capacity: 12,
-      currentStudents: 10,
-      targetSurah: "Al-Baqarah - Ali Imran",
-      description: "Halaqah untuk santri yang sudah menguasai juz pertama",
-      students: [
-        { id: "4", name: "Muhammad Rizki", progress: 85 },
-        { id: "5", name: "Fatimah Zahra", progress: 70 },
-        { id: "6", name: "Abdullah Rahman", progress: 90 },
-      ],
-    },
-    {
-      id: "3",
-      name: "Halaqah Ali Imran",
-      level: "Lanjutan",
-      schedule: "Senin, Rabu, Jumat",
-      time: "14:00 - 15:30",
-      location: "Ruang C",
-      capacity: 10,
-      currentStudents: 8,
-      targetSurah: "Ali Imran - An-Nisa",
-      description: "Halaqah untuk santri tingkat lanjutan",
-      students: [
-        { id: "7", name: "Umar Faruq", progress: 95 },
-        { id: "8", name: "Khadijah Binti", progress: 88 },
-      ],
-    },
-  ];
+  // Fetch halaqah data from API
+  useEffect(() => {
+    const fetchHalaqahData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  const totalStudents = halaqahList.reduce(
-    (acc, h) => acc + h.currentStudents,
-    0,
-  );
-  const totalCapacity = halaqahList.reduce((acc, h) => acc + h.capacity, 0);
-  const averageProgress =
-    halaqahList.reduce((acc, h) => {
-      const halaqahAvg =
-        h.students.reduce((sum, s) => sum + s.progress, 0) / h.students.length;
-      return acc + halaqahAvg;
-    }, 0) / halaqahList.length;
+        const response = await fetch("/api/musyrif/halaqah");
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Failed to fetch halaqah data");
+        }
+
+        if (result.success) {
+          setHalaqahList(result.data || []);
+          setSummary(result.summary || {
+            totalHalaqah: 0,
+            totalStudents: 0,
+            totalCapacity: 0,
+            averageProgress: 0,
+            capacityUtilization: 0,
+          });
+        } else {
+          throw new Error(result.message || "Failed to load halaqah data");
+        }
+      } catch (error) {
+        console.error("Error fetching halaqah data:", error);
+        setError(error instanceof Error ? error.message : "Unknown error occurred");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user?.role === "MUSYRIF") {
+      fetchHalaqahData();
+    }
+  }, [user]);
+
+  // Helper functions
+  const formatLevel = (level: string) => {
+    switch (level.toUpperCase()) {
+      case "BEGINNER":
+        return "Pemula";
+      case "INTERMEDIATE":
+        return "Menengah";
+      case "ADVANCED":
+        return "Lanjutan";
+      default:
+        return level;
+    }
+  };
 
   const getLevelColor = (level: string) => {
-    switch (level) {
+    const formattedLevel = formatLevel(level);
+    switch (formattedLevel) {
       case "Pemula":
         return "bg-blue-100 text-blue-800";
       case "Menengah":
@@ -109,23 +150,63 @@ const MusyrifHalaqahPage = () => {
     return "text-green-600";
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Memuat data halaqah...</p>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Gagal Memuat Data</h3>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <Button onClick={() => window.location.reload()}>
+                Coba Lagi
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
+        {/* Header - Removed "Buat Halaqah Baru" button */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Manajemen Halaqah
+              Halaqah Saya
             </h1>
             <p className="text-gray-600">
-              Kelola halaqah dan jadwal pembelajaran
+              Halaqah yang dijadwalkan untuk Anda
             </p>
           </div>
-          <Button className="mt-4 sm:mt-0">
-            <Plus className="h-4 w-4 mr-2" />
-            Buat Halaqah Baru
-          </Button>
+          {halaqahList.length > 0 && (
+            <div className="mt-4 sm:mt-0 flex items-center space-x-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <span className="text-sm text-gray-600">
+                {halaqahList.length} halaqah aktif
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -141,7 +222,7 @@ const MusyrifHalaqahPage = () => {
                     Total Halaqah
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {halaqahList.length}
+                    {summary.totalHalaqah}
                   </p>
                 </div>
               </div>
@@ -159,10 +240,10 @@ const MusyrifHalaqahPage = () => {
                     Total Santri
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {totalStudents}
+                    {summary.totalStudents}
                   </p>
                   <p className="text-xs text-gray-500">
-                    dari {totalCapacity} kapasitas
+                    dari {summary.totalCapacity} kapasitas
                   </p>
                 </div>
               </div>
@@ -180,7 +261,7 @@ const MusyrifHalaqahPage = () => {
                     Rata-rata Progress
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {Math.round(averageProgress)}%
+                    {summary.averageProgress}%
                   </p>
                 </div>
               </div>
@@ -195,154 +276,179 @@ const MusyrifHalaqahPage = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">
-                    Sesi Minggu Ini
+                    Kapasitas Terisi
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">18</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {summary.capacityUtilization}%
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
+        {/* Empty State */}
+        {halaqahList.length === 0 && (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Belum Ada Halaqah
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Anda belum dijadwalkan untuk mengajar halaqah manapun.
+                Silakan hubungi admin untuk mendapatkan jadwal halaqah.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Halaqah List */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {halaqahList.map((halaqah) => (
-            <Card
-              key={halaqah.id}
-              className="hover:shadow-lg transition-shadow"
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{halaqah.name}</CardTitle>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getLevelColor(halaqah.level)}`}
-                  >
-                    {halaqah.level}
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Basic Info */}
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center text-gray-600">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      {halaqah.schedule}
-                    </div>
-                    <div className="flex items-center text-gray-600">
-                      <Clock className="h-4 w-4 mr-2" />
-                      {halaqah.time}
-                    </div>
-                    <div className="flex items-center text-gray-600">
-                      <MapPin className="h-4 w-4 mr-2" />
-                      {halaqah.location}
-                    </div>
-                    <div className="flex items-center text-gray-600">
-                      <Target className="h-4 w-4 mr-2" />
-                      {halaqah.targetSurah}
-                    </div>
+        {halaqahList.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {halaqahList.map((halaqah) => (
+              <Card
+                key={halaqah.id}
+                className="hover:shadow-lg transition-shadow"
+              >
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">{halaqah.name}</CardTitle>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getLevelColor(halaqah.level)}`}
+                    >
+                      {formatLevel(halaqah.level)}
+                    </span>
                   </div>
-
-                  {/* Capacity */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium text-gray-600">
-                        Kapasitas
-                      </span>
-                      <span
-                        className={`text-sm font-semibold ${getCapacityColor(halaqah.currentStudents, halaqah.capacity)}`}
-                      >
-                        {halaqah.currentStudents}/{halaqah.capacity}
-                      </span>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Basic Info */}
+                    <div className="grid grid-cols-1 gap-3 text-sm">
+                      <div className="flex items-center text-gray-600">
+                        <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">{halaqah.schedule || "Jadwal belum diatur"}</span>
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">{halaqah.room || "Ruang belum ditentukan"}</span>
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <Target className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">Level {formatLevel(halaqah.level)}</span>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-teal-600 h-2 rounded-full"
-                        style={{
-                          width: `${(halaqah.currentStudents / halaqah.capacity) * 100}%`,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
 
-                  {/* Description */}
-                  <p className="text-sm text-gray-600">{halaqah.description}</p>
-
-                  {/* Top Students */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">
-                      Santri Terbaik
-                    </h4>
-                    <div className="space-y-2">
-                      {halaqah.students.slice(0, 3).map((student) => (
-                        <div
-                          key={student.id}
-                          className="flex items-center justify-between text-sm"
+                    {/* Capacity */}
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-600">
+                          Kapasitas Santri
+                        </span>
+                        <span
+                          className={`text-sm font-semibold ${getCapacityColor(halaqah.currentStudents, halaqah.capacity)}`}
                         >
-                          <span className="text-gray-700">{student.name}</span>
-                          <div className="flex items-center">
-                            <div className="w-16 bg-gray-200 rounded-full h-1.5 mr-2">
-                              <div
-                                className="bg-teal-600 h-1.5 rounded-full"
-                                style={{ width: `${student.progress}%` }}
-                              ></div>
+                          {halaqah.currentStudents}/{halaqah.capacity}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full ${
+                            halaqah.isNearCapacity ? "bg-yellow-500" : "bg-teal-600"
+                          }`}
+                          style={{
+                            width: `${halaqah.capacityPercentage}%`,
+                          }}
+                        ></div>
+                      </div>
+                      {halaqah.isNearCapacity && (
+                        <p className="text-xs text-yellow-600 mt-1">
+                          Kapasitas hampir penuh
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Description */}
+                    {halaqah.description && (
+                      <p className="text-sm text-gray-600">{halaqah.description}</p>
+                    )}
+
+                    {/* Santri List */}
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">
+                        Daftar Santri ({halaqah.santri.length})
+                      </h4>
+                      {halaqah.santri.length > 0 ? (
+                        <div className="space-y-2 max-h-32 overflow-y-auto">
+                          {halaqah.santri.slice(0, 5).map((santri) => (
+                            <div
+                              key={santri.id}
+                              className="flex items-center justify-between text-sm py-1"
+                            >
+                              <div className="flex-1">
+                                <span className="text-gray-700 font-medium">{santri.name}</span>
+                                <span className="text-gray-500 text-xs ml-2">({santri.nis})</span>
+                              </div>
+                              <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                                Aktif
+                              </span>
                             </div>
-                            <span className="text-gray-600 text-xs">
-                              {student.progress}%
-                            </span>
-                          </div>
+                          ))}
+                          {halaqah.santri.length > 5 && (
+                            <p className="text-xs text-gray-500 text-center py-1">
+                              +{halaqah.santri.length - 5} santri lainnya
+                            </p>
+                          )}
                         </div>
-                      ))}
+                      ) : (
+                        <p className="text-sm text-gray-500 italic">
+                          Belum ada santri terdaftar
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Actions - Only view actions, no edit permissions */}
+                    <div className="flex space-x-2 pt-4 border-t border-gray-200">
+                      <Button variant="outline" size="sm" className="flex-1">
+                        <Eye className="h-4 w-4 mr-2" />
+                        Detail Santri
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Lihat Jadwal
+                      </Button>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
-                  {/* Actions */}
-                  <div className="flex space-x-2 pt-4 border-t border-gray-200">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Detail
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
-                    <Button size="sm" className="flex-1">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Jadwal
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Aksi Cepat</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Button variant="outline" className="h-20 flex-col">
-                <Plus className="h-6 w-6 mb-2" />
-                <span className="text-sm">Buat Halaqah</span>
-              </Button>
-              <Button variant="outline" className="h-20 flex-col">
-                <Calendar className="h-6 w-6 mb-2" />
-                <span className="text-sm">Atur Jadwal</span>
-              </Button>
-              <Button variant="outline" className="h-20 flex-col">
-                <Users className="h-6 w-6 mb-2" />
-                <span className="text-sm">Kelola Santri</span>
-              </Button>
-              <Button variant="outline" className="h-20 flex-col">
-                <Award className="h-6 w-6 mb-2" />
-                <span className="text-sm">Evaluasi</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Quick Actions - Only view actions for musyrif */}
+        {halaqahList.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Aksi Cepat</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <Button variant="outline" className="h-20 flex-col">
+                  <Users className="h-6 w-6 mb-2" />
+                  <span className="text-sm">Lihat Santri</span>
+                </Button>
+                <Button variant="outline" className="h-20 flex-col">
+                  <Calendar className="h-6 w-6 mb-2" />
+                  <span className="text-sm">Jadwal Saya</span>
+                </Button>
+                <Button variant="outline" className="h-20 flex-col">
+                  <Award className="h-6 w-6 mb-2" />
+                  <span className="text-sm">Penilaian</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   );

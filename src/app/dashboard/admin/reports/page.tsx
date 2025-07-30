@@ -2,11 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import ReportGenerator from "@/lib/report-generator";
+import ScheduleReportDialog from "@/components/admin/ScheduleReportDialog";
+import ScheduledReportsList from "@/components/admin/ScheduledReportsList";
 import {
   FileText,
   Download,
@@ -41,29 +46,38 @@ interface ReportTemplate {
 }
 
 const ReportsPage = () => {
-  const [user, setUser] = useState<any>(null);
+  const { data: session, status } = useSession();
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [reportGenerator] = useState(new ReportGenerator());
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [selectedReportForSchedule, setSelectedReportForSchedule] = useState<{
+    reportType: string;
+    reportName: string;
+  } | null>(null);
   const router = useRouter();
 
+  // Check authentication and role
   useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      if (parsedUser.role !== "ADMIN") {
-        router.push("/login");
-      } else {
-        setUser(parsedUser);
-      }
-    } else {
+    if (status === "unauthenticated") {
       router.push("/login");
+      return;
     }
-  }, [router]);
 
-  if (!user) {
+    if (status === "authenticated" && session?.user.role !== "ADMIN") {
+      router.push("/dashboard");
+      return;
+    }
+  }, [session, status, router]);
+
+  if (status === "loading") {
     return <div>Loading...</div>;
+  }
+
+  // If user is not admin, don't render anything (redirect will happen)
+  if (status === "authenticated" && session?.user.role !== "ADMIN") {
+    return null;
   }
 
   const reportTemplates: ReportTemplate[] = [
@@ -95,8 +109,8 @@ const ReportsPage = () => {
       description: "Ringkasan pendapatan, pembayaran SPP, dan donasi",
       category: "financial",
       icon: DollarSign,
-      color: "text-teal-600",
-      bgColor: "bg-teal-50",
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50",
       estimatedTime: "3-4 menit",
       lastGenerated: "2024-02-09",
     },
@@ -195,36 +209,80 @@ const ReportsPage = () => {
     setIsGenerating(reportId);
 
     try {
+      let apiResponse: any;
       let blob: Blob;
 
+      // Fetch data from appropriate API endpoint
       switch (reportId) {
+        case "financial-summary":
+          apiResponse = await fetch("/api/financial/reports?reportType=summary");
+          break;
+        case "spp-reports":
+          apiResponse = await fetch("/api/financial/reports?reportType=spp");
+          break;
+        case "transaction-reports":
+          apiResponse = await fetch("/api/financial/reports?reportType=transactions");
+          break;
+        case "outstanding-payments":
+          apiResponse = await fetch("/api/financial/reports?reportType=outstanding");
+          break;
+        case "collection-rates":
+          apiResponse = await fetch("/api/financial/reports?reportType=collection");
+          break;
+        case "salary-reports":
+          apiResponse = await fetch("/api/admin/salary-reports");
+          break;
+        case "database-audit":
+          apiResponse = await fetch("/api/audit/database");
+          break;
         case "student-progress":
-          blob = await reportGenerator.generateStudentReport({
-            name: "Ahmad Fauzi",
-            averageGrade: 85,
-            completedSurah: 15,
-          });
+          // Use financial summary for now, can be extended later
+          apiResponse = await fetch("/api/financial/reports?reportType=summary");
           break;
         case "class-summary":
-          blob = await reportGenerator.generateClassReport({
-            totalStudents: 62,
-            averageGrade: 87,
-            totalHafalan: 188,
-          });
+          // Use financial summary for now, can be extended later
+          apiResponse = await fetch("/api/financial/reports?reportType=summary");
           break;
+        default:
+          // For other reports, use financial summary as default
+          apiResponse = await fetch("/api/financial/reports?reportType=summary");
+      }
+
+      if (!apiResponse.ok) {
+        throw new Error(`API Error: ${apiResponse.status} ${apiResponse.statusText}`);
+      }
+
+      const reportData = await apiResponse.json();
+
+      if (!reportData.success) {
+        throw new Error(reportData.message || "Failed to fetch report data");
+      }
+
+      // Generate PDF based on report type and data
+      switch (reportId) {
         case "financial-summary":
           blob = await reportGenerator.generateFinancialReport({
-            totalRevenue: 31000000,
-            sppPayments: 24000000,
-            donations: 7000000,
+            totalRevenue: reportData.report.summary.totalIncome || 0,
+            sppPayments: reportData.report.spp.collectedAmount || 0,
+            donations: reportData.report.summary.totalIncome - reportData.report.spp.collectedAmount || 0,
+            reportData: reportData.report,
+          });
+          break;
+        case "salary-reports":
+          blob = await reportGenerator.generateClassReport({
+            totalStudents: reportData.data.summary.uniqueMusyrif || 0,
+            averageGrade: Math.round(reportData.data.summary.totalEarnings / reportData.data.summary.totalSessions) || 0,
+            totalHafalan: reportData.data.summary.totalSessions || 0,
+            reportData: reportData.data,
           });
           break;
         default:
-          // For other reports, generate a generic report
+          // Generate generic report with actual data
           blob = await reportGenerator.generateClassReport({
             totalStudents: 62,
             averageGrade: 87,
             totalHafalan: 188,
+            reportData: reportData,
           });
       }
 
@@ -235,16 +293,50 @@ const ReportsPage = () => {
       a.download = `${reportId}-${new Date().toISOString().slice(0, 10)}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
+
+      console.log(`✅ Report ${reportId} generated successfully`);
     } catch (error) {
       console.error("Error generating report:", error);
-      alert("Terjadi kesalahan saat generate report");
+      alert(`Terjadi kesalahan saat generate report: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsGenerating(null);
     }
   };
 
   const scheduleReport = (reportId: string) => {
-    alert(`Fitur schedule report untuk ${reportId} akan segera tersedia`);
+    const report = reportTemplates.find(r => r.id === reportId);
+    if (report) {
+      setSelectedReportForSchedule({
+        reportType: reportId,
+        reportName: report.name,
+      });
+      setScheduleDialogOpen(true);
+    }
+  };
+
+  const handleScheduleSubmit = async (scheduleData: any) => {
+    try {
+      const response = await fetch("/api/admin/scheduled-reports", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(scheduleData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert("Report scheduled successfully!");
+        setScheduleDialogOpen(false);
+        setSelectedReportForSchedule(null);
+      } else {
+        alert(`Error scheduling report: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Error scheduling report:", error);
+      alert("Error scheduling report. Please try again.");
+    }
   };
 
   const shareReport = (reportId: string) => {
@@ -258,7 +350,7 @@ const ReportsPage = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-              <FileText className="h-8 w-8 mr-3 text-teal-600" />
+              <FileText className="h-8 w-8 mr-3 text-blue-600" />
               Advanced Reports
             </h1>
             <p className="text-gray-600">
@@ -266,16 +358,21 @@ const ReportsPage = () => {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">
-              <Calendar className="h-4 w-4 mr-2" />
-              Schedule Reports
-            </Button>
             <Button>
               <Download className="h-4 w-4 mr-2" />
               Bulk Export
             </Button>
           </div>
         </div>
+
+        {/* Tabs */}
+        <Tabs defaultValue="generate" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="generate">Generate Reports</TabsTrigger>
+            <TabsTrigger value="scheduled">Scheduled Reports</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="generate" className="space-y-6">
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -324,11 +421,11 @@ const ReportsPage = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Templates</p>
-                  <p className="text-2xl font-bold text-teal-600">
+                  <p className="text-2xl font-bold text-orange-600">
                     {reportTemplates.length}
                   </p>
                 </div>
-                <FileSpreadsheet className="h-8 w-8 text-teal-600" />
+                <FileSpreadsheet className="h-8 w-8 text-orange-600" />
               </div>
             </CardContent>
           </Card>
@@ -354,7 +451,7 @@ const ReportsPage = () => {
                     onClick={() => setSelectedCategory(category.id)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       selectedCategory === category.id
-                        ? "bg-teal-600 text-white"
+                        ? "bg-blue-600 text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                   >
@@ -370,7 +467,7 @@ const ReportsPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredReports.map((report) => {
             const Icon = report.icon;
-            const isGenerating = isGenerating === report.id;
+            const isCurrentlyGenerating = isGenerating === report.id;
 
             return (
               <Card
@@ -423,11 +520,11 @@ const ReportsPage = () => {
                   <div className="flex space-x-2">
                     <Button
                       onClick={() => generateReport(report.id)}
-                      disabled={isGenerating}
+                      disabled={isCurrentlyGenerating}
                       className="flex-1"
                       size="sm"
                     >
-                      {isGenerating ? (
+                      {isCurrentlyGenerating ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           Generating...
@@ -539,6 +636,26 @@ const ReportsPage = () => {
             </div>
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="scheduled" className="space-y-6">
+            <ScheduledReportsList />
+          </TabsContent>
+        </Tabs>
+
+        {/* Schedule Report Dialog */}
+        {selectedReportForSchedule && (
+          <ScheduleReportDialog
+            isOpen={scheduleDialogOpen}
+            onClose={() => {
+              setScheduleDialogOpen(false);
+              setSelectedReportForSchedule(null);
+            }}
+            reportType={selectedReportForSchedule.reportType}
+            reportName={selectedReportForSchedule.reportName}
+            onSchedule={handleScheduleSubmit}
+          />
+        )}
       </div>
     </DashboardLayout>
   );

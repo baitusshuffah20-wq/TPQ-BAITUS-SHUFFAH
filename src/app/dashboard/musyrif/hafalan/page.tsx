@@ -119,15 +119,13 @@ const MusyrifHafalanPage = () => {
         console.log("Loaded hafalan data:", processedData);
       } else {
         console.error("Failed to load hafalan data:", data.message);
-        // Fallback to mock data if API fails
-        console.log("Using mock data as fallback");
-        setHafalanList(hafalanSubmissions);
+        setError("Gagal memuat data hafalan: " + data.message);
+        setHafalanList([]);
       }
     } catch (error) {
       console.error("Error loading hafalan data:", error);
-      // Fallback to mock data if API fails
-      console.log("Using mock data as fallback due to error");
-      setHafalanList(hafalanSubmissions);
+      setError("Terjadi kesalahan saat memuat data hafalan");
+      setHafalanList([]);
     } finally {
       setLoading(false);
     }
@@ -200,60 +198,7 @@ const MusyrifHafalanPage = () => {
     );
   }
 
-  // Mock data for fallback
-  const hafalanSubmissions: HafalanSubmission[] = [
-    {
-      id: "1",
-      santriId: "1",
-      santriName: "Ahmad Fauzi",
-      santriNis: "24001",
-      santriPhoto: null,
-      surahId: 2,
-      surahName: "Al-Baqarah",
-      ayahStart: 1,
-      ayahEnd: 10,
-      type: "SETORAN",
-      status: "PENDING",
-      audioUrl: "https://example.com/audio1.mp3",
-      submittedAt: "2024-02-12T08:30:00Z",
-    },
-    {
-      id: "2",
-      santriId: "2",
-      santriName: "Siti Aisyah",
-      santriNis: "24002",
-      santriPhoto: null,
-      surahId: 3,
-      surahName: "Ali Imran",
-      ayahStart: 1,
-      ayahEnd: 20,
-      type: "SETORAN",
-      status: "APPROVED",
-      grade: 85,
-      notes: "Bacaan sudah baik, tajwid perlu diperbaiki sedikit",
-      audioUrl: "https://example.com/audio2.mp3",
-      submittedAt: "2024-02-11T09:00:00Z",
-      reviewedAt: "2024-02-11T14:30:00Z",
-    },
-    {
-      id: "3",
-      santriId: "3",
-      santriName: "Muhammad Rizki",
-      santriNis: "24003",
-      santriPhoto: null,
-      surahId: 1,
-      surahName: "Al-Fatihah",
-      ayahStart: 1,
-      ayahEnd: 7,
-      type: "MURAJAAH",
-      status: "NEEDS_IMPROVEMENT",
-      grade: 65,
-      notes: "Perlu latihan lebih untuk makhorijul huruf",
-      audioUrl: "https://example.com/audio3.mp3",
-      submittedAt: "2024-02-10T10:15:00Z",
-      reviewedAt: "2024-02-10T16:20:00Z",
-    },
-  ];
+
 
   const getStatusIcon = (status: string) => {
     switch (status) {

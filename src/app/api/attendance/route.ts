@@ -2,15 +2,28 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { NotificationTriggerService } from "@/lib/notification-triggers";
 import { AchievementEngine } from "@/lib/achievement-engine";
+import { requireAuth, ApiResponse } from "@/lib/auth-middleware";
+import { hasPermission } from "@/lib/permissions";
 
-// GET /api/attendance - Get attendance records
+// GET /api/attendance - Get attendance records based on user permissions
 export async function GET(request: NextRequest) {
   try {
     console.log("🔄 API attendance called");
 
+    // Check authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
+    // Check permission
+    if (!hasPermission(authResult.role, 'attendance:view')) {
+      return ApiResponse.forbidden("Access denied to attendance data");
+    }
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "50"); // Increase default limit
+    const limit = parseInt(searchParams.get("limit") || "50");
     const santriId = searchParams.get("santriId");
     const halaqahId = searchParams.get("halaqahId");
     const status = searchParams.get("status");
@@ -26,20 +39,57 @@ export async function GET(request: NextRequest) {
       dateFrom,
       dateTo,
     });
+    console.log("User role:", authResult.role, "User ID:", authResult.id);
 
     const skip = (page - 1) * limit;
 
-    // Build where clause
+    // Build where clause with role-based filtering
     const where: any = {};
 
-    if (santriId) {
-      where.santriId = santriId;
+    // Apply role-based filtering
+    if (authResult.role === 'MUSYRIF') {
+      // Musyrif can only see attendance for santri in their halaqah
+      const musyrifHalaqah = await prisma.halaqah.findMany({
+        where: { musyrifId: authResult.id },
+        select: { id: true }
+      });
+
+      const halaqahIds = musyrifHalaqah.map(h => h.id);
+
+      if (halaqahIds.length === 0) {
+        return ApiResponse.success([], "No attendance found - no halaqah assigned");
+      }
+
+      where.halaqahId = { in: halaqahIds };
+      console.log("Musyrif access: filtering by halaqahIds =", halaqahIds);
+    } else if (authResult.role === 'SANTRI') {
+      // Santri can only see their own attendance
+      where.santriId = authResult.id;
+    } else if (authResult.role === 'WALI') {
+      // Wali can see attendance of their children
+      const children = await prisma.santri.findMany({
+        where: { waliId: authResult.id },
+        select: { id: true }
+      });
+
+      const childrenIds = children.map(c => c.id);
+
+      if (childrenIds.length === 0) {
+        return ApiResponse.success([], "No attendance found - no children assigned");
+      }
+
+      where.santriId = { in: childrenIds };
+    } else if (authResult.role === 'ADMIN') {
+      // Admin can see all attendance, apply requested filters
+      if (halaqahId) {
+        where.halaqahId = halaqahId;
+      }
+      if (santriId) {
+        where.santriId = santriId;
+      }
     }
 
-    if (halaqahId) {
-      where.halaqahId = halaqahId;
-    }
-
+    // Apply common filters (only if not already set by role-based filtering)
     if (status) {
       where.status = status;
     }
@@ -133,9 +183,20 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/attendance - Create attendance record
+// POST /api/attendance - Create attendance record (Musyrif and Admin can create)
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication and permission
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
+    // Check permission
+    if (!hasPermission(authResult.role, 'attendance:create')) {
+      return ApiResponse.forbidden("Access denied to create attendance");
+    }
+
     const body = await request.json();
     const {
       santriId,
@@ -152,15 +213,33 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validation
-    if (!santriId || !halaqahId || !musyrifId || !date || !status) {
-      return NextResponse.json(
-        {
-          success: false,
-          message:
-            "Santri ID, Halaqah ID, Musyrif ID, date, and status are required",
-        },
-        { status: 400 },
-      );
+    if (!santriId || !halaqahId || !date || !status) {
+      return ApiResponse.error("Santri ID, Halaqah ID, date, and status are required");
+    }
+
+    // For musyrif, validate they can only create attendance for their own halaqah
+    let finalMusyrifId = musyrifId;
+    if (authResult.role === 'MUSYRIF') {
+      // Verify the halaqah belongs to the musyrif
+      const halaqah = await prisma.halaqah.findUnique({
+        where: { id: halaqahId }
+      });
+
+      if (!halaqah || halaqah.musyrifId !== authResult.id) {
+        return ApiResponse.forbidden("You can only create attendance for your own halaqah");
+      }
+
+      // Use the authenticated musyrif's ID
+      finalMusyrifId = authResult.id;
+
+      // Verify the santri is in the musyrif's halaqah
+      const santri = await prisma.santri.findUnique({
+        where: { id: santriId }
+      });
+
+      if (!santri || santri.halaqahId !== halaqahId) {
+        return ApiResponse.forbidden("Santri is not in your halaqah");
+      }
     }
 
     // Check if attendance record already exists for this date
@@ -175,13 +254,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingAttendance) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Attendance record already exists for this date",
-        },
-        { status: 400 },
-      );
+      return ApiResponse.error("Attendance record already exists for this date");
     }
 
     // Create attendance record
@@ -189,7 +262,7 @@ export async function POST(request: NextRequest) {
       data: {
         santriId,
         halaqahId,
-        musyrifId,
+        musyrifId: finalMusyrifId,
         date: new Date(date),
         status,
         checkInTime: checkInTime ? new Date(checkInTime) : null,

@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { AchievementEngine } from "@/lib/achievement-engine";
+import { requireAuth, ApiResponse } from "@/lib/auth-middleware";
+import { hasPermission } from "@/lib/permissions";
 
-// GET /api/hafalan - Get all hafalan
+// GET /api/hafalan - Get hafalan (Admin can see all, Musyrif only their santri)
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication and permission
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
+    // Check permission
+    if (!hasPermission(authResult.role, 'hafalan:view')) {
+      return ApiResponse.forbidden("Access denied to hafalan data");
+    }
     const { searchParams } = new URL(request.url);
     const santriId = searchParams.get("santriId");
     const musyrifId = searchParams.get("musyrifId");
@@ -14,12 +26,27 @@ export async function GET(request: NextRequest) {
 
     const where: any = {};
 
-    if (santriId) {
-      where.santriId = santriId;
-    }
+    // Role-based filtering
+    if (authResult.role === 'MUSYRIF') {
+      // Musyrif can only see hafalan for santri in their halaqah
+      where.santri = {
+        halaqah: {
+          musyrifId: authResult.id
+        }
+      };
+      console.log("Musyrif access: filtering hafalan for santri in their halaqah");
+    } else if (authResult.role === 'ADMIN') {
+      // Admin can see all hafalan, apply requested filters
+      if (santriId) {
+        where.santriId = santriId;
+      }
 
-    if (musyrifId) {
-      where.musyrifId = musyrifId;
+      if (musyrifId) {
+        where.musyrifId = musyrifId;
+      }
+    } else {
+      // Other roles have limited access
+      return ApiResponse.forbidden("Access denied to hafalan data");
     }
 
     if (status && status !== "ALL") {
@@ -78,9 +105,19 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/hafalan - Create new hafalan
+// POST /api/hafalan - Create new hafalan (Admin and Musyrif can create for their santri)
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication and permission
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
+    // Check permission
+    if (!hasPermission(authResult.role, 'hafalan:create')) {
+      return ApiResponse.forbidden("Access denied to create hafalan");
+    }
     const body = await request.json();
     const {
       santriId,
@@ -101,13 +138,28 @@ export async function POST(request: NextRequest) {
       !surahName ||
       !ayahStart ||
       !ayahEnd ||
-      !type ||
-      !musyrifId
+      !type
     ) {
-      return NextResponse.json(
-        { success: false, message: "Semua field wajib diisi" },
-        { status: 400 },
-      );
+      return ApiResponse.error("Semua field wajib diisi");
+    }
+
+    // For musyrif, validate they can only create hafalan for santri in their halaqah
+    let finalMusyrifId = musyrifId;
+    if (authResult.role === 'MUSYRIF') {
+      // Verify the santri is in the musyrif's halaqah
+      const santri = await prisma.santri.findUnique({
+        where: { id: santriId },
+        include: { halaqah: true }
+      });
+
+      if (!santri || santri.halaqah?.musyrifId !== authResult.id) {
+        return ApiResponse.forbidden("You can only create hafalan for santri in your halaqah");
+      }
+
+      // Use the authenticated musyrif's ID
+      finalMusyrifId = authResult.id;
+    } else if (!musyrifId) {
+      return ApiResponse.error("Musyrif ID is required");
     }
 
     // Check if santri exists
@@ -122,16 +174,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if musyrif exists
-    const musyrif = await prisma.user.findUnique({
-      where: { id: musyrifId, role: "MUSYRIF" },
-    });
+    // Check if musyrif exists (only for admin)
+    if (authResult.role === 'ADMIN' && finalMusyrifId) {
+      const musyrif = await prisma.user.findUnique({
+        where: { id: finalMusyrifId, role: "MUSYRIF" },
+      });
 
-    if (!musyrif) {
-      return NextResponse.json(
-        { success: false, message: "Musyrif tidak ditemukan" },
-        { status: 400 },
-      );
+      if (!musyrif) {
+        return ApiResponse.error("Musyrif tidak ditemukan");
+      }
     }
 
     // Create hafalan
@@ -145,7 +196,7 @@ export async function POST(request: NextRequest) {
         type,
         status,
         notes,
-        musyrifId,
+        musyrifId: finalMusyrifId,
       },
       include: {
         santri: {

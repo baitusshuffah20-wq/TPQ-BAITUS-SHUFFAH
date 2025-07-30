@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleDatabaseError } from "@/lib/errorHandler";
 import mysql from "mysql2/promise";
@@ -14,6 +16,24 @@ const dbConfig = {
 export async function GET() {
   let mysqlConnection;
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // Only allow ADMIN role to access database test
+    if (session.user.role !== "ADMIN") {
+      return NextResponse.json(
+        { success: false, message: "Access denied. Only administrators can access database test." },
+        { status: 403 }
+      );
+    }
+
     console.log("🔄 Starting comprehensive database test...");
 
     // Test database connection

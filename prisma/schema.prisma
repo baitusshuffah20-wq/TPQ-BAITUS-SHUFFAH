@@ -21,13 +21,16 @@ model User {
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   attendanceAsMusyrif   Attendance[]           @relation("MusyrifAttendance")
+  musyrifAttendance     MusyrifAttendance[]    @relation("MusyrifAttendanceRecord")
   auditLogs             AuditLog[]
+  errorLogs             ErrorLog[]
   cartItems             CartItem[]
   productCartItems      ProductCartItem[]      @relation("ProductCartItems")
   donationsConfirmed    Donation[]             @relation("DonationConfirmer")
   emailMessages         EmailMessage[]
   emailTemplates        EmailTemplate[]
   reportsGenerated      FinancialReport[]      @relation("ReportGenerator")
+  scheduledReports      ScheduledReport[]      @relation("ScheduledReportCreator")
   hafalanAsMusyrif      Hafalan[]              @relation("MusyrifHafalan")
   musyrif               Musyrif[]
   notificationTemplates NotificationTemplate[]
@@ -44,6 +47,12 @@ model User {
   whatsappLogs          WhatsAppLog[]          @relation("WhatsAppLogs")
   whatsappMessages      WhatsAppMessage[]
   behaviorRecords       Behavior[]             @relation("BehaviorRecorder")
+  campaignsCreated      DonationCampaign[]     @relation("CampaignCreator")
+  campaignUpdatesCreated CampaignUpdate[]      @relation("CampaignUpdateCreator")
+
+  // Salary System Relations
+  earningsApproved      MusyrifEarning[]       @relation("EarningApprover")
+  withdrawalsApproved   MusyrifWithdrawal[]    @relation("WithdrawalApprover")
 
   @@map("users")
 }
@@ -106,6 +115,12 @@ model Musyrif {
   halaqah          Halaqah? @relation("MusyrifHalaqah")
   user             User?    @relation(fields: [userId], references: [id])
 
+  // Salary & Wallet Relations
+  salaryRates      MusyrifSalaryRate[] @relation("MusyrifSalaryRates")
+  wallet           MusyrifWallet?      @relation("MusyrifWallet")
+  earnings         MusyrifEarning[]    @relation("MusyrifEarnings")
+  withdrawals      MusyrifWithdrawal[] @relation("MusyrifWithdrawals")
+
   @@index([userId], map: "musyrif_userId_fkey")
   @@map("musyrif")
 }
@@ -123,6 +138,8 @@ model Halaqah {
   updatedAt   DateTime          @updatedAt
   musyrifId   String?           @unique
   attendance  Attendance[]
+  musyrifAttendance MusyrifAttendance[] @relation("MusyrifAttendanceHalaqah")
+  qrCodeSessions QRCodeSession[] @relation("QRCodeSessions")
   musyrif     Musyrif?          @relation("MusyrifHalaqah", fields: [musyrifId], references: [id])
   schedules   HalaqahSchedule[]
   santri      Santri[]          @relation("SantriHalaqah")
@@ -218,6 +235,53 @@ model Attendance {
   @@map("attendance")
 }
 
+model MusyrifAttendance {
+  id           String    @id @default(cuid())
+  date         DateTime
+  status       String    // PRESENT, ABSENT, LATE
+  checkInTime  DateTime?
+  checkOutTime DateTime?
+  notes        String?
+  sessionType  String    @default("REGULAR") // REGULAR, EXTRA, MAKEUP
+  qrCodeUsed   String?   // QR code that was scanned
+  latitude     Float?
+  longitude    Float?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  musyrifId    String
+  halaqahId    String
+  halaqah      Halaqah   @relation("MusyrifAttendanceHalaqah", fields: [halaqahId], references: [id])
+  musyrif      User      @relation("MusyrifAttendanceRecord", fields: [musyrifId], references: [id])
+
+  // Salary Relations
+  earnings     MusyrifEarning[] @relation("AttendanceEarnings")
+
+  @@unique([musyrifId, halaqahId, date])
+  @@index([halaqahId])
+  @@index([musyrifId])
+  @@map("musyrif_attendance")
+}
+
+model QRCodeSession {
+  id          String    @id @default(cuid())
+  halaqahId   String
+  sessionDate DateTime
+  sessionType String    @default("REGULAR")
+  qrCode      String    @unique
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime
+  createdBy   String
+  usageCount  Int       @default(0)
+  maxUsage    Int       @default(1)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  halaqah     Halaqah   @relation("QRCodeSessions", fields: [halaqahId], references: [id])
+
+  @@index([halaqahId])
+  @@index([qrCode])
+  @@map("qr_code_sessions")
+}
+
 model Payment {
   id            String        @id @default(cuid())
   type          String
@@ -294,6 +358,21 @@ model AuditLog {
 
   @@index([userId], map: "audit_logs_userId_fkey")
   @@map("audit_logs")
+}
+
+model ErrorLog {
+  id        String   @id @default(cuid())
+  message   String   @db.Text
+  stack     String?  @db.Text
+  level     String   @default("ERROR") // ERROR, WARNING, INFO
+  source    String?
+  url       String?
+  userAgent String?  @db.Text
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@map("error_logs")
 }
 
 model News {
@@ -505,20 +584,33 @@ model NotificationTemplate {
 }
 
 model Notification {
-  id        String    @id @default(cuid())
-  userId    String
-  title     String
-  content   String
-  isRead    Boolean   @default(false)
-  readAt    DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  createdBy String
-  creator   User      @relation("NotificationCreator", fields: [createdBy], references: [id])
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String    @id @default(cuid())
+  userId        String
+  title         String
+  message       String    @db.Text // Changed from content to message and made it TEXT
+  type          String?   // Added type field for notification categorization
+  priority      String?   @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  status        String?   @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
+  channels      String?   // Comma-separated list of channels: IN_APP,EMAIL,WHATSAPP,SMS
+  recipientId   String?   // ID of the recipient (can be different from userId)
+  recipientType String?   // Type of recipient: SANTRI, WALI, MUSYRIF, ADMIN
+  relatedId     String?   // Added relatedId for linking to related records
+  metadata      String?   @db.Text // Added metadata field for additional data
+  scheduledAt   DateTime? // When to send the notification
+  sentAt        DateTime? // When the notification was sent
+  isRead        Boolean   @default(false)
+  readAt        DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  createdBy     String?   // Made optional since system can create notifications
+  creator       User?     @relation("NotificationCreator", fields: [createdBy], references: [id])
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([createdBy], map: "notifications_createdBy_fkey")
   @@index([userId], map: "notifications_userId_fkey")
+  @@index([userId, isRead], map: "notifications_userId_isRead_idx")
+  @@index([status], map: "notifications_status_idx")
+  @@index([scheduledAt], map: "notifications_scheduledAt_idx")
   @@map("notifications")
 }
 
@@ -544,22 +636,29 @@ model Transaction {
   date              DateTime
   reference         String?
   status            String          @default("COMPLETED")
+  paymentMethod     String?         // GATEWAY, BANK_TRANSFER, CASH
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   accountId         String
   createdById       String
   santriId          String?
   paymentId         String?
+  paymentGatewayId  String?         // Reference to PaymentGateway
+  bankAccountId     String?         // Reference to BankAccount for manual transfers
   account           FinancialAccount @relation(fields: [accountId], references: [id])
   createdBy         User            @relation("TransactionCreator", fields: [createdById], references: [id])
   payment           Payment?        @relation(fields: [paymentId], references: [id])
   santri            Santri?         @relation("SantriTransactions", fields: [santriId], references: [id])
   sppRecord         SPPRecord?      @relation("SPPTransaction")
+  paymentGateway    PaymentGateway? @relation("PaymentGatewayTransactions", fields: [paymentGatewayId], references: [id])
+  bankAccount       BankAccount?    @relation("BankAccountTransactions", fields: [bankAccountId], references: [id])
 
   @@index([accountId], map: "transactions_accountId_fkey")
   @@index([createdById], map: "transactions_createdById_fkey")
   @@index([paymentId], map: "transactions_paymentId_fkey")
   @@index([santriId], map: "transactions_santriId_fkey")
+  @@index([paymentGatewayId], map: "transactions_paymentGatewayId_fkey")
+  @@index([bankAccountId], map: "transactions_bankAccountId_fkey")
   @@map("transactions")
 }
 
@@ -578,6 +677,28 @@ model FinancialReport {
 
   @@index([generatedBy], map: "financial_reports_generatedBy_fkey")
   @@map("financial_reports")
+}
+
+model ScheduledReport {
+  id           String   @id @default(cuid())
+  reportType   String   // financial-summary, spp-reports, etc.
+  reportName   String
+  frequency    String   // DAILY, WEEKLY, MONTHLY
+  scheduleTime String   // HH:MM format
+  recipients   String   // JSON array of email addresses
+  filters      String   // JSON object for report filters
+  isActive     Boolean  @default(true)
+  lastRunDate  DateTime?
+  nextRunDate  DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdBy    String
+  creator      User     @relation("ScheduledReportCreator", fields: [createdBy], references: [id])
+
+  @@index([createdBy], map: "scheduled_reports_createdBy_fkey")
+  @@index([nextRunDate], map: "scheduled_reports_nextRunDate_idx")
+  @@index([isActive], map: "scheduled_reports_isActive_idx")
+  @@map("scheduled_reports")
 }
 
 model Product {
@@ -694,47 +815,110 @@ model PaymentTransaction {
 }
 
 model DonationCategory {
-  id          String     @id @default(cuid())
-  title       String     @map("name")
-  slug        String
+  id          String            @id @default(cuid())
+  title       String            @map("name")
+  slug        String            @unique
   description String?
-  target      Int        @default(0)
-  collected   Int        @default(0)
+  target      Int               @default(0)
+  collected   Int               @default(0)
   icon        String?
   color       String?
   bgColor     String?
-  urgent      Boolean    @default(false)
-  isActive    Boolean    @default(true)
-  order       Int        @default(0)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  urgent      Boolean           @default(false)
+  isActive    Boolean           @default(true)
+  order       Int               @default(0)
+  image       String?           // Featured image for category
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
   donations   Donation[]
+  campaigns   DonationCampaign[]
 
   @@map("donation_categories")
 }
 
-model Donation {
+model DonationCampaign {
+  id            String    @id @default(cuid())
+  title         String
+  slug          String    @unique
+  description   String?   @db.Text
+  shortDesc     String?   // Short description for cards
+  content       String?   @db.Text // Rich content/story
+  target        Float     @default(0)
+  collected     Float     @default(0)
+  startDate     DateTime  @default(now())
+  endDate       DateTime?
+  status        String    @default("ACTIVE") // ACTIVE, PAUSED, COMPLETED, CANCELLED
+  priority      Int       @default(0) // Higher number = higher priority
+  featured      Boolean   @default(false)
+  urgent        Boolean   @default(false)
+  image         String?   // Main campaign image
+  gallery       Json?     // Array of additional images
+  videoUrl      String?   // YouTube/Vimeo URL
+  location      String?   // Campaign location if applicable
+  beneficiaries Int?      // Number of people who will benefit
+  tags          Json?     // Array of tags for filtering
+  seoTitle      String?
+  seoDesc       String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  categoryId    String?
+  createdById   String
+  category      DonationCategory? @relation(fields: [categoryId], references: [id])
+  createdBy     User      @relation("CampaignCreator", fields: [createdById], references: [id])
+  donations     Donation[]
+  updates       CampaignUpdate[]
+
+  @@index([categoryId], map: "donation_campaigns_categoryId_fkey")
+  @@index([createdById], map: "donation_campaigns_createdById_fkey")
+  @@index([status], map: "donation_campaigns_status_idx")
+  @@index([featured], map: "donation_campaigns_featured_idx")
+  @@map("donation_campaigns")
+}
+
+model CampaignUpdate {
   id          String    @id @default(cuid())
-  amount      Float
-  donorName   String
-  donorEmail  String?
-  donorPhone  String?
-  purpose     String
-  message     String?
-  isAnonymous Boolean   @default(false) // Added field
-  status      String    @default("PENDING")
-  paymentMethod String?
-  reference   String?
-  confirmedAt DateTime?
-  confirmedBy String?
-  categoryId  String?
+  title       String
+  content     String    @db.Text
+  image       String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  category    DonationCategory? @relation(fields: [categoryId], references: [id])
-  confirmer   User?     @relation("DonationConfirmer", fields: [confirmedBy], references: [id])
+  campaignId  String
+  createdById String
+  campaign    DonationCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  createdBy   User      @relation("CampaignUpdateCreator", fields: [createdById], references: [id])
+
+  @@index([campaignId], map: "campaign_updates_campaignId_fkey")
+  @@index([createdById], map: "campaign_updates_createdById_fkey")
+  @@map("campaign_updates")
+}
+
+model Donation {
+  id            String    @id @default(cuid())
+  amount        Float
+  donorName     String
+  donorEmail    String?
+  donorPhone    String?
+  purpose       String
+  message       String?
+  isAnonymous   Boolean   @default(false)
+  status        String    @default("PENDING") // PENDING, PAID, CANCELLED, REFUNDED
+  paymentMethod String?
+  reference     String?   // Payment reference/transaction ID
+  confirmedAt   DateTime?
+  confirmedBy   String?
+  categoryId    String?
+  campaignId    String?   // New field for campaign donations
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  category      DonationCategory? @relation(fields: [categoryId], references: [id])
+  campaign      DonationCampaign? @relation(fields: [campaignId], references: [id])
+  confirmer     User?     @relation("DonationConfirmer", fields: [confirmedBy], references: [id])
 
   @@index([categoryId], map: "donations_categoryId_fkey")
+  @@index([campaignId], map: "donations_campaignId_fkey")
   @@index([confirmedBy], map: "donations_confirmedBy_fkey")
+  @@index([status], map: "donations_status_idx")
   @@map("donations")
 }
 
@@ -849,4 +1033,146 @@ model Behavior {
   @@index([halaqahId], map: "behavior_halaqahId_fkey")
   @@index([recordedBy], map: "behavior_recordedBy_fkey")
   @@map("behavior")
+}
+
+model PaymentGateway {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  type          String   // BANK_TRANSFER, E_WALLET, QRIS, VIRTUAL_ACCOUNT, CREDIT_CARD
+  provider      String   // MIDTRANS, XENDIT, DOKU, etc.
+  isActive      Boolean  @default(true)
+  config        Json     // Configuration data (API keys, etc.)
+  fees          Json     // Fee structure
+  description   String?  // Description of the payment method
+  logo          String?  // Logo URL
+  sortOrder     Int      @default(0) // For ordering in UI
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  transactions  Transaction[] @relation("PaymentGatewayTransactions")
+
+  @@map("payment_gateways")
+}
+
+model BankAccount {
+  id            String   @id @default(cuid())
+  bankName      String   // Nama Bank (BCA, BNI, BRI, etc.)
+  accountNumber String   // Nomor Rekening
+  accountName   String   // Nama Pemilik Rekening
+  branch        String?  // Cabang Bank
+  isActive      Boolean  @default(true)
+  isDefault     Boolean  @default(false) // Rekening utama
+  description   String?  // Keterangan tambahan
+  logo          String?  // Logo bank
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  transactions  Transaction[] @relation("BankAccountTransactions")
+
+  @@map("bank_accounts")
+}
+
+// ===== SALARY & WALLET SYSTEM MODELS =====
+
+model MusyrifSalaryRate {
+  id            String   @id @default(cuid())
+  musyrifId     String
+  ratePerSession Decimal @db.Decimal(10, 2)
+  ratePerHour   Decimal  @db.Decimal(10, 2)
+  effectiveDate DateTime @db.Date
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  musyrif       Musyrif  @relation("MusyrifSalaryRates", fields: [musyrifId], references: [id], onDelete: Cascade)
+
+  @@map("musyrif_salary_rates")
+}
+
+model MusyrifWallet {
+  id              String   @id @default(cuid())
+  musyrifId       String   @unique
+  balance         Decimal  @default(0.00) @db.Decimal(12, 2)
+  totalEarned     Decimal  @default(0.00) @db.Decimal(12, 2)
+  totalWithdrawn  Decimal  @default(0.00) @db.Decimal(12, 2)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  musyrif         Musyrif  @relation("MusyrifWallet", fields: [musyrifId], references: [id], onDelete: Cascade)
+  earnings        MusyrifEarning[]
+  withdrawals     MusyrifWithdrawal[]
+
+  @@map("musyrif_wallets")
+}
+
+model MusyrifEarning {
+  id               String   @id @default(cuid())
+  musyrifId        String
+  attendanceId     String
+  amount           Decimal  @db.Decimal(10, 2)
+  calculationType  CalculationType
+  sessionDuration  Int?     // dalam menit
+  rate             Decimal  @db.Decimal(10, 2)
+  status           EarningStatus @default(PENDING)
+  approvedBy       String?
+  approvedAt       DateTime?
+  notes            String?  @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  musyrif          Musyrif  @relation("MusyrifEarnings", fields: [musyrifId], references: [id], onDelete: Cascade, map: "earnings_musyrif_fkey")
+  attendance       MusyrifAttendance @relation("AttendanceEarnings", fields: [attendanceId], references: [id], onDelete: Cascade, map: "earnings_attendance_fkey")
+  approver         User?    @relation("EarningApprover", fields: [approvedBy], references: [id], map: "earnings_approver_fkey")
+  wallet           MusyrifWallet @relation(fields: [musyrifId], references: [musyrifId], map: "earnings_wallet_fkey")
+
+  @@map("musyrif_earnings")
+}
+
+model MusyrifWithdrawal {
+  id              String   @id @default(cuid())
+  musyrifId       String
+  amount          Decimal  @db.Decimal(10, 2)
+  bankAccount     String
+  bankName        String
+  accountHolder   String
+  status          WithdrawalStatus @default(PENDING)
+  requestedAt     DateTime @default(now())
+  approvedBy      String?
+  approvedAt      DateTime?
+  completedAt     DateTime?
+  rejectionReason String?  @db.Text
+  notes           String?  @db.Text
+
+  // Relations
+  musyrif         Musyrif  @relation("MusyrifWithdrawals", fields: [musyrifId], references: [id], onDelete: Cascade, map: "withdrawals_musyrif_fkey")
+  approver        User?    @relation("WithdrawalApprover", fields: [approvedBy], references: [id], map: "withdrawals_approver_fkey")
+  wallet          MusyrifWallet @relation(fields: [musyrifId], references: [musyrifId], map: "withdrawals_wallet_fkey")
+
+  @@map("musyrif_withdrawals")
+}
+
+// ===== ENUMS FOR SALARY SYSTEM =====
+
+enum CalculationType {
+  PER_SESSION
+  PER_HOUR
+}
+
+enum EarningStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
 }

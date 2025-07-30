@@ -7,13 +7,13 @@ import { createAuditLog } from "@/lib/audit-log";
 
 // Schema for news validation
 const newsSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  content: z.string().min(1, "Content is required"),
-  imageUrl: z.string().optional(),
-  isPublished: z.boolean().default(true),
-  publishDate: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  category: z.string().optional(),
+  title: z.string().min(1, "Judul wajib diisi"),
+  excerpt: z.string().min(1, "Ringkasan wajib diisi"),
+  content: z.string().min(1, "Konten wajib diisi"),
+  image: z.string().optional(),
+  category: z.string().min(1, "Kategori wajib diisi"),
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]),
+  featured: z.boolean().default(false),
 });
 
 // GET handler - Get a specific news
@@ -86,12 +86,13 @@ export async function PUT(
       where: { id },
       data: {
         title: data.title,
+        excerpt: data.excerpt,
         content: data.content,
-        imageUrl: data.imageUrl,
-        isPublished: data.isPublished,
-        publishDate: data.publishDate ? new Date(data.publishDate) : undefined,
-        tags: data.tags,
+        image: data.image,
         category: data.category,
+        status: data.status,
+        featured: data.featured,
+        publishedAt: data.status === "PUBLISHED" ? new Date() : null,
         updatedAt: new Date(),
       },
     });

@@ -43,7 +43,11 @@ interface NotificationTemplate {
 
 export default function NotificationTemplatesPage() {
   const [templates, setTemplates] = useState<NotificationTemplate[]>([]);
+  const [predefinedTemplates, setPredefinedTemplates] = useState<any[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPredefined, setShowPredefined] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [filters, setFilters] = useState({
     search: "",
     type: "",
@@ -55,13 +59,21 @@ export default function NotificationTemplatesPage() {
 
   useEffect(() => {
     loadTemplates();
+    loadPredefinedTemplates();
   }, [filters]);
+
+  useEffect(() => {
+    if (showPredefined) {
+      loadPredefinedTemplates();
+    }
+  }, [selectedCategory, filters.search, showPredefined]);
 
   const loadTemplates = async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
-      if (filters.type) params.append("type", filters.type);
+      // Remove type filter since database model doesn't have type field
+      // if (filters.type) params.append("type", filters.type);
       if (filters.isActive) params.append("isActive", filters.isActive);
 
       const response = await fetch(`/api/notifications/templates?${params}`);
@@ -76,6 +88,26 @@ export default function NotificationTemplatesPage() {
       toast.error("Gagal memuat template notifikasi");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPredefinedTemplates = async () => {
+    try {
+      const params = new URLSearchParams();
+      params.append("source", "predefined");
+      if (selectedCategory !== "ALL") params.append("category", selectedCategory);
+      if (filters.search) params.append("search", filters.search);
+
+      const response = await fetch(`/api/notifications/templates?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setPredefinedTemplates(data.templates || []);
+        if (data.categories) {
+          setCategories(data.categories);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading predefined templates:", error);
     }
   };
 
@@ -99,6 +131,53 @@ export default function NotificationTemplatesPage() {
     } catch (error) {
       console.error("Error setting up templates:", error);
       toast.error("Gagal membuat template default");
+    }
+  };
+
+  const sendPredefinedNotification = async (template: any) => {
+    const recipientId = prompt("Masukkan ID penerima:");
+    if (!recipientId) return;
+
+    const recipientType = prompt("Masukkan tipe penerima (SANTRI/WALI/MUSYRIF/ADMIN):", "SANTRI");
+    if (!recipientType) return;
+
+    // Collect variables
+    const variables: Record<string, string> = {};
+    if (template.variables && template.variables.length > 0) {
+      for (const variable of template.variables) {
+        const value = prompt(`Masukkan nilai untuk ${variable}:`);
+        if (value) {
+          variables[variable] = value;
+        }
+      }
+    }
+
+    try {
+      const response = await fetch("/api/notifications/templates/predefined", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          templateId: template.id,
+          recipientId,
+          recipientType,
+          variables,
+          createdBy: "admin-user",
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success("Notifikasi berhasil dikirim!");
+        console.log("Notification sent:", data);
+      } else {
+        const error = await response.json();
+        toast.error(error.message || "Gagal mengirim notifikasi");
+      }
+    } catch (error) {
+      console.error("Error sending notification:", error);
+      toast.error("Terjadi kesalahan saat mengirim notifikasi");
     }
   };
 
@@ -318,6 +397,30 @@ export default function NotificationTemplatesPage() {
           </nav>
         </div>
 
+        {/* Template Type Tabs */}
+        <div className="flex gap-4 mb-6">
+          <button
+            onClick={() => setShowPredefined(true)}
+            className={`px-4 py-2 rounded-md font-medium ${
+              showPredefined
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            Template Bawaan ({predefinedTemplates.length})
+          </button>
+          <button
+            onClick={() => setShowPredefined(false)}
+            className={`px-4 py-2 rounded-md font-medium ${
+              !showPredefined
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            Template Kustom ({templates.length})
+          </button>
+        </div>
+
         {/* Filters */}
         <Card>
           <CardHeader>
@@ -328,6 +431,25 @@ export default function NotificationTemplatesPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {showPredefined && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Kategori
+                  </label>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="ALL">Semua Kategori</option>
+                    {categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Cari Template
@@ -389,25 +511,33 @@ export default function NotificationTemplatesPage() {
         {/* Templates List */}
         <Card>
           <CardHeader>
-            <CardTitle>Daftar Template ({filteredTemplates.length})</CardTitle>
+            <CardTitle>
+              {showPredefined ? "Template Bawaan" : "Template Kustom"} (
+              {showPredefined ? predefinedTemplates.length : filteredTemplates.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {filteredTemplates.length === 0 ? (
+            {(showPredefined ? predefinedTemplates : filteredTemplates).length === 0 ? (
               <div className="text-center py-8">
                 <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600 mb-4">
-                  Belum ada template notifikasi
+                  {showPredefined
+                    ? "Tidak ada template bawaan yang sesuai filter"
+                    : "Belum ada template kustom"
+                  }
                 </p>
-                <Button
-                  onClick={setupDefaultTemplates}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  Setup Template Default
-                </Button>
+                {!showPredefined && (
+                  <Button
+                    onClick={setupDefaultTemplates}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Setup Template Default
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredTemplates.map((template) => (
+                {(showPredefined ? predefinedTemplates : filteredTemplates).map((template) => (
                   <div
                     key={template.id}
                     className="p-4 border rounded-lg hover:shadow-md transition-shadow"
@@ -418,35 +548,61 @@ export default function NotificationTemplatesPage() {
                           <h3 className="font-semibold text-gray-900">
                             {template.name}
                           </h3>
-                          <Badge
-                            variant={
-                              template.isActive ? "success" : "secondary"
-                            }
-                          >
-                            {template.isActive ? "Aktif" : "Nonaktif"}
-                          </Badge>
-                          <Badge variant="outline">
-                            {getTypeLabel(template.type)}
-                          </Badge>
+                          {showPredefined ? (
+                            <>
+                              <Badge variant="outline">
+                                {template.category}
+                              </Badge>
+                              <Badge variant="outline">
+                                {template.type}
+                              </Badge>
+                            </>
+                          ) : (
+                            <>
+                              <Badge
+                                variant={
+                                  template.isActive ? "success" : "secondary"
+                                }
+                              >
+                                {template.isActive ? "Aktif" : "Nonaktif"}
+                              </Badge>
+                              <Badge variant="outline">
+                                {getTypeLabel(template.type)}
+                              </Badge>
+                            </>
+                          )}
                           {getChannelIcons(template.channels)}
                         </div>
                         <h4 className="font-medium text-gray-800 mb-1">
                           {template.title}
                         </h4>
                         <p className="text-gray-600 text-sm mb-2 line-clamp-2">
-                          {template.message}
+                          {showPredefined ? template.description : template.message}
                         </p>
                         <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span>Dibuat: {formatDate(template.createdAt)}</span>
-                          <span>Oleh: {template.creator.name}</span>
-                          {template.variables && (
-                            <span>
-                              Variables:{" "}
-                              {JSON.parse(template.variables)
-                                ? Object.keys(JSON.parse(template.variables))
-                                    .length
-                                : 0}
-                            </span>
+                          {showPredefined ? (
+                            <>
+                              <span>Template Bawaan</span>
+                              {template.variables && template.variables.length > 0 && (
+                                <span>
+                                  Variables: {template.variables.length}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <span>Dibuat: {formatDate(template.createdAt)}</span>
+                              <span>Oleh: {template.creator?.name}</span>
+                              {template.variables && (
+                                <span>
+                                  Variables:{" "}
+                                  {JSON.parse(template.variables)
+                                    ? Object.keys(JSON.parse(template.variables))
+                                        .length
+                                    : 0}
+                                </span>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
@@ -460,34 +616,47 @@ export default function NotificationTemplatesPage() {
                           <Eye className="h-3 w-3" />
                           Lihat
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex items-center gap-1"
-                        >
-                          <Edit className="h-3 w-3" />
-                          Edit
-                        </Button>
-                        <Button
-                          onClick={() =>
-                            toggleTemplateStatus(template.id, template.isActive)
-                          }
-                          size="sm"
-                          variant="outline"
-                          className="flex items-center gap-1"
-                        >
-                          <Settings className="h-3 w-3" />
-                          {template.isActive ? "Nonaktifkan" : "Aktifkan"}
-                        </Button>
-                        <Button
-                          onClick={() => deleteTemplate(template.id)}
-                          size="sm"
-                          variant="outline"
-                          className="flex items-center gap-1 text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                          Hapus
-                        </Button>
+                        {showPredefined ? (
+                          <Button
+                            onClick={() => sendPredefinedNotification(template)}
+                            size="sm"
+                            className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            <MessageSquare className="h-3 w-3" />
+                            Kirim
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex items-center gap-1"
+                            >
+                              <Edit className="h-3 w-3" />
+                              Edit
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                toggleTemplateStatus(template.id, template.isActive)
+                              }
+                              size="sm"
+                              variant="outline"
+                              className="flex items-center gap-1"
+                            >
+                              <Settings className="h-3 w-3" />
+                              {template.isActive ? "Nonaktifkan" : "Aktifkan"}
+                            </Button>
+                            <Button
+                              onClick={() => deleteTemplate(template.id)}
+                              size="sm"
+                              variant="outline"
+                              className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              Hapus
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>

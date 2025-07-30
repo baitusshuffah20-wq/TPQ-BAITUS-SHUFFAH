@@ -206,7 +206,8 @@ export default function SystemMonitoring() {
     return `${hours}h ${minutes}m`;
   };
 
-  const formatMemory = (mb: number) => {
+  const formatMemory = (bytes: number) => {
+    const mb = Math.round(bytes / 1024 / 1024);
     return `${mb} MB`;
   };
 
@@ -366,8 +367,8 @@ export default function SystemMonitoring() {
                             <span className="font-medium">
                               {typeof value === "boolean"
                                 ? value
-                                  ? "?"
-                                  : "?"
+                                  ? "✓"
+                                  : "✗"
                                 : String(value)}
                             </span>
                           </div>

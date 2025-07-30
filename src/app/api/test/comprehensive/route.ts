@@ -223,8 +223,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Test 6: API Endpoints
+  const testStart6 = Date.now();
   try {
-    const testStart = Date.now();
 
     // Test internal API calls
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3001";
@@ -240,7 +240,7 @@ export async function POST(request: NextRequest) {
     results.push({
       test: "API Endpoints",
       status: healthResponse.ok && insightsResponse.ok ? "pass" : "fail",
-      duration: Date.now() - testStart,
+      duration: Date.now() - testStart6,
       details: {
         healthEndpoint: healthResponse.ok,
         insightsEndpoint: insightsResponse.ok,
@@ -252,14 +252,14 @@ export async function POST(request: NextRequest) {
     results.push({
       test: "API Endpoints",
       status: "fail",
-      duration: Date.now() - testStart,
+      duration: Date.now() - testStart6,
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 
   // Test 7: Environment Configuration
+  const testStart7 = Date.now();
   try {
-    const testStart = Date.now();
 
     const requiredEnvVars = ["DATABASE_URL", "NEXTAUTH_SECRET", "JWT_SECRET"];
 
@@ -276,7 +276,7 @@ export async function POST(request: NextRequest) {
     results.push({
       test: "Environment Configuration",
       status: missingRequired.length === 0 ? "pass" : "fail",
-      duration: Date.now() - testStart,
+      duration: Date.now() - testStart7,
       details: {
         requiredVars: requiredEnvVars.length,
         missingRequired: missingRequired,
@@ -289,14 +289,14 @@ export async function POST(request: NextRequest) {
     results.push({
       test: "Environment Configuration",
       status: "fail",
-      duration: Date.now() - testStart,
+      duration: Date.now() - testStart7,
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 
   // Test 8: Performance Test
+  const testStart8 = Date.now();
   try {
-    const testStart = Date.now();
 
     // Test database query performance
     const queryStart = Date.now();
@@ -321,7 +321,7 @@ export async function POST(request: NextRequest) {
     results.push({
       test: "Performance Test",
       status: performanceGood ? "pass" : "fail",
-      duration: Date.now() - testStart,
+      duration: Date.now() - testStart8,
       details: {
         simpleQueryTime: queryTime,
         complexQueryTime: complexQueryTime,
@@ -333,7 +333,7 @@ export async function POST(request: NextRequest) {
     results.push({
       test: "Performance Test",
       status: "fail",
-      duration: Date.now() - testStart,
+      duration: Date.now() - testStart8,
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }

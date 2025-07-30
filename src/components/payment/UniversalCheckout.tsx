@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import PaymentMethodSelector from "./PaymentMethodSelector";
 import {
   CreditCard,
   Building,
@@ -26,17 +27,25 @@ import { toast } from "react-hot-toast";
 interface PaymentMethod {
   id: string;
   name: string;
-  code: string;
-  gateway: string;
-  icon: React.ReactNode;
-  description: string;
-  fees?: number;
-  processingTime: string;
-  isPopular?: boolean;
-  isRecommended?: boolean;
-  minAmount?: number;
-  maxAmount?: number;
-  isManual?: boolean;
+  type: "GATEWAY" | "BANK_TRANSFER";
+  paymentType: string;
+  provider: string;
+  description?: string;
+  logo?: string;
+  fees: {
+    fixedFee: number;
+    percentageFee: number;
+    minFee: number;
+    maxFee: number;
+  };
+  bankDetails?: {
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+    branch?: string;
+  };
+  isDefault?: boolean;
+  sortOrder: number;
 }
 
 interface CartSummary {
@@ -84,114 +93,6 @@ export default function UniversalCheckout({
   const [uploadedProof, setUploadedProof] = useState<File | null>(null);
   const [paymentInstructions, setPaymentInstructions] = useState<any>(null);
 
-  const paymentMethods: PaymentMethod[] = [
-    // Payment Gateway Methods
-    {
-      id: "credit_card",
-      name: "Kartu Kredit",
-      code: "CC",
-      gateway: "MIDTRANS",
-      icon: <CreditCard className="h-6 w-6" />,
-      description: "Visa, Mastercard, JCB",
-      fees: 2.9,
-      processingTime: "Instan",
-      isRecommended: true,
-      minAmount: 10000,
-    },
-    {
-      id: "bca_va",
-      name: "BCA Virtual Account",
-      code: "BCA_VA",
-      gateway: "MIDTRANS",
-      icon: <Building className="h-6 w-6 text-blue-600" />,
-      description: "Transfer melalui ATM/Mobile Banking BCA",
-      processingTime: "1-5 menit",
-      isPopular: true,
-      minAmount: 10000,
-    },
-    {
-      id: "mandiri_va",
-      name: "Mandiri Virtual Account",
-      code: "MANDIRI_VA",
-      gateway: "MIDTRANS",
-      icon: <Building className="h-6 w-6 text-yellow-600" />,
-      description: "Transfer melalui ATM/Mobile Banking Mandiri",
-      processingTime: "1-5 menit",
-      minAmount: 10000,
-    },
-    {
-      id: "gopay",
-      name: "GoPay",
-      code: "GOPAY",
-      gateway: "MIDTRANS",
-      icon: <Smartphone className="h-6 w-6 text-green-600" />,
-      description: "Bayar dengan aplikasi Gojek",
-      processingTime: "Instan",
-      minAmount: 10000,
-      maxAmount: 2000000,
-    },
-    {
-      id: "qris",
-      name: "QRIS",
-      code: "QRIS",
-      gateway: "MIDTRANS",
-      icon: <QrCode className="h-6 w-6 text-purple-600" />,
-      description: "Scan QR Code untuk pembayaran",
-      processingTime: "Instan",
-      minAmount: 10000,
-    },
-
-    // Manual Transfer Methods
-    {
-      id: "manual_bca",
-      name: "Transfer Bank BCA",
-      code: "MANUAL_BCA",
-      gateway: "MANUAL",
-      icon: <Building className="h-6 w-6 text-blue-600" />,
-      description: "Transfer manual ke rekening BCA",
-      processingTime: "1-24 jam",
-      isManual: true,
-    },
-    {
-      id: "manual_mandiri",
-      name: "Transfer Bank Mandiri",
-      code: "MANUAL_MANDIRI",
-      gateway: "MANUAL",
-      icon: <Building className="h-6 w-6 text-yellow-600" />,
-      description: "Transfer manual ke rekening Mandiri",
-      processingTime: "1-24 jam",
-      isManual: true,
-    },
-    {
-      id: "manual_bni",
-      name: "Transfer Bank BNI",
-      code: "MANUAL_BNI",
-      gateway: "MANUAL",
-      icon: <Building className="h-6 w-6 text-orange-600" />,
-      description: "Transfer manual ke rekening BNI",
-      processingTime: "1-24 jam",
-      isManual: true,
-    },
-  ];
-
-  const bankAccounts = {
-    MANUAL_BCA: {
-      bank: "BCA",
-      accountNumber: "1234567890",
-      accountName: "Yayasan Rumah Tahfidz Baitus Shuffah",
-    },
-    MANUAL_MANDIRI: {
-      bank: "Mandiri",
-      accountNumber: "0987654321",
-      accountName: "Yayasan Rumah Tahfidz Baitus Shuffah",
-    },
-    MANUAL_BNI: {
-      bank: "BNI",
-      accountNumber: "1122334455",
-      accountName: "Yayasan Rumah Tahfidz Baitus Shuffah",
-    },
-  };
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -200,15 +101,14 @@ export default function UniversalCheckout({
   };
 
   const calculateFee = (method: PaymentMethod) => {
-    if (method.fees) {
-      return (cartSummary.total * method.fees) / 100;
-    }
-    return 0;
+    const { fixedFee, percentageFee } = method.fees;
+    const percentageFeeAmount = (cartSummary.total * percentageFee) / 100;
+    return fixedFee + percentageFeeAmount;
   };
 
   const handlePaymentMethodSelect = (method: PaymentMethod) => {
     setSelectedMethod(method);
-    if (method.isManual) {
+    if (method.type === "BANK_TRANSFER") {
       setShowManualTransfer(true);
     } else {
       setShowManualTransfer(false);
@@ -224,7 +124,7 @@ export default function UniversalCheckout({
     try {
       setProcessing(true);
 
-      if (selectedMethod.isManual) {
+      if (selectedMethod.type === "BANK_TRANSFER") {
         await processManualTransfer();
       } else {
         await processGatewayPayment();
@@ -244,8 +144,8 @@ export default function UniversalCheckout({
 
     const paymentRequest = {
       cartId: `cart_${Date.now()}`,
-      gateway: selectedMethod!.gateway,
-      paymentMethod: selectedMethod!.code,
+      gateway: selectedMethod!.provider,
+      paymentMethod: selectedMethod!.paymentType,
       customerInfo: {
         id: null,
         name: customerInfo.name,
@@ -289,11 +189,7 @@ export default function UniversalCheckout({
       );
       setShowManualTransfer(true);
 
-      // Auto-select first manual method
-      const manualMethod = paymentMethods.find((m) => m.isManual);
-      if (manualMethod) {
-        setSelectedMethod(manualMethod);
-      }
+      // Note: Manual method will be selected from PaymentMethodSelector
     }
   };
 
@@ -301,12 +197,11 @@ export default function UniversalCheckout({
     // Create manual payment record
     const paymentData = {
       type: "MANUAL_TRANSFER",
-      method: selectedMethod!.code,
-      amount: cartSummary.total,
+      method: selectedMethod!.paymentType,
+      amount: cartSummary.total + calculateFee(selectedMethod!),
       customerInfo,
       items: cartSummary.items,
-      bankAccount:
-        bankAccounts[selectedMethod!.code as keyof typeof bankAccounts],
+      bankAccount: selectedMethod!.bankDetails,
       proofFile: uploadedProof,
     };
 
@@ -398,90 +293,15 @@ export default function UniversalCheckout({
 
       {/* Payment Methods */}
       {!showManualTransfer && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Metode Pembayaran
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {paymentMethods.map((method) => {
-              const fee = calculateFee(method);
-              const totalAmount = cartSummary.total + fee;
-              const isSelected = selectedMethod?.id === method.id;
-
-              return (
-                <div
-                  key={method.id}
-                  onClick={() => handlePaymentMethodSelect(method)}
-                  className={`
-                    p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md
-                    ${isSelected ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200" : "border-gray-200 hover:border-gray-300"}
-                  `}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`p-2 rounded-lg ${isSelected ? "bg-blue-100" : "bg-gray-100"}`}
-                      >
-                        {method.icon}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium text-gray-900">
-                            {method.name}
-                          </h3>
-                          {method.isPopular && (
-                            <Badge variant="secondary" className="text-xs">
-                              Populer
-                            </Badge>
-                          )}
-                          {method.isRecommended && (
-                            <Badge className="text-xs bg-green-100 text-green-800">
-                              Rekomendasi
-                            </Badge>
-                          )}
-                          {method.isManual && (
-                            <Badge variant="outline" className="text-xs">
-                              Manual
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-600">
-                          {method.description}
-                        </p>
-                        <div className="flex items-center gap-4 mt-1">
-                          <span className="text-xs text-gray-500 flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {method.processingTime}
-                          </span>
-                          {fee > 0 && (
-                            <span className="text-xs text-orange-600">
-                              Biaya: {formatCurrency(fee)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-900">
-                        {formatCurrency(totalAmount)}
-                      </p>
-                      {isSelected && (
-                        <CheckCircle className="h-5 w-5 text-blue-600 mt-1" />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
+        <PaymentMethodSelector
+          amount={cartSummary.total}
+          onMethodSelect={handlePaymentMethodSelect}
+          selectedMethodId={selectedMethod?.id}
+        />
       )}
 
       {/* Manual Transfer Instructions */}
-      {showManualTransfer && selectedMethod?.isManual && (
+      {showManualTransfer && selectedMethod?.type === "BANK_TRANSFER" && selectedMethod.bankDetails && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -499,33 +319,29 @@ export default function UniversalCheckout({
                 <div className="flex justify-between">
                   <span>Bank:</span>
                   <span className="font-semibold">
-                    {
-                      bankAccounts[
-                        selectedMethod.code as keyof typeof bankAccounts
-                      ]?.bank
-                    }
+                    {selectedMethod.bankDetails.bankName}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>No. Rekening:</span>
                   <span className="font-semibold font-mono">
-                    {
-                      bankAccounts[
-                        selectedMethod.code as keyof typeof bankAccounts
-                      ]?.accountNumber
-                    }
+                    {selectedMethod.bankDetails.accountNumber}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Atas Nama:</span>
                   <span className="font-semibold">
-                    {
-                      bankAccounts[
-                        selectedMethod.code as keyof typeof bankAccounts
-                      ]?.accountName
-                    }
+                    {selectedMethod.bankDetails.accountName}
                   </span>
                 </div>
+                {selectedMethod.bankDetails.branch && (
+                  <div className="flex justify-between">
+                    <span>Cabang:</span>
+                    <span className="font-semibold">
+                      {selectedMethod.bankDetails.branch}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between border-t pt-2">
                   <span>Jumlah Transfer:</span>
                   <span className="font-bold text-lg text-blue-600">

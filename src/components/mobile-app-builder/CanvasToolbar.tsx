@@ -80,30 +80,30 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
   };
 
   return (
-    <div className="border-b bg-white p-4 flex items-center justify-between">
+    <div className="border-b bg-white p-2 flex items-center justify-between overflow-x-auto">
       {/* Left Section - File Operations */}
-      <div className="flex items-center gap-2">
-        <Button onClick={onSave} size="sm" className="gap-2">
-          <Save size={16} />
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Button onClick={onSave} size="sm" className="gap-1 h-7 px-2 text-xs">
+          <Save size={14} />
           Save
         </Button>
 
-        <Button onClick={onLoad} size="sm" variant="outline" className="gap-2">
-          <Upload size={16} />
+        <Button onClick={onLoad} size="sm" variant="outline" className="gap-1 h-7 px-2 text-xs">
+          <Upload size={14} />
           Load
         </Button>
 
-        <div className="w-px h-6 bg-gray-300 mx-2" />
+        <div className="w-px h-4 bg-gray-300 mx-1" />
 
         <Button
           onClick={onUndo}
           size="sm"
           variant="outline"
           disabled={!canUndo}
-          className="gap-2"
+          className="h-7 w-7 p-0"
+          title="Undo"
         >
-          <Undo size={16} />
-          Undo
+          <Undo size={14} />
         </Button>
 
         <Button
@@ -111,18 +111,18 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
           size="sm"
           variant="outline"
           disabled={!canRedo}
-          className="gap-2"
+          className="h-7 w-7 p-0"
+          title="Redo"
         >
-          <Redo size={16} />
-          Redo
+          <Redo size={14} />
         </Button>
       </div>
 
       {/* Center Section - Device Presets */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-700">Device:</span>
-        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-          {DEVICE_PRESETS.map((device) => {
+      <div className="flex items-center gap-1 flex-shrink-0 mx-2">
+        <span className="text-xs font-medium text-gray-700 hidden sm:block">Device:</span>
+        <div className="flex items-center gap-1 bg-gray-100 rounded p-1">
+          {DEVICE_PRESETS.slice(0, 4).map((device) => {
             const Icon = device.icon;
             const isActive =
               canvasSize.width === device.width &&
@@ -137,15 +137,15 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
                     height: device.height,
                   })
                 }
-                className={`flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-colors ${
+                className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
                   isActive
                     ? "bg-blue-500 text-white"
                     : "text-gray-600 hover:bg-gray-200"
                 }`}
                 title={`${device.name} (${device.width}x${device.height})`}
               >
-                <Icon size={14} />
-                {device.name}
+                <Icon size={12} />
+                <span className="hidden sm:inline">{device.name.split(' ')[0]}</span>
               </button>
             );
           })}
@@ -153,20 +153,20 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
       </div>
 
       {/* Right Section - View Controls and Actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 flex-shrink-0">
         {/* Zoom Controls */}
-        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-gray-100 rounded p-1">
           <button
             onClick={handleZoomOut}
             className="p-1 rounded hover:bg-gray-200 transition-colors"
             title="Zoom Out"
           >
-            <ZoomOut size={16} />
+            <ZoomOut size={12} />
           </button>
 
           <button
             onClick={handleZoomReset}
-            className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-200 rounded transition-colors min-w-[50px]"
+            className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-200 rounded transition-colors min-w-[40px]"
             title="Reset Zoom"
           >
             {Math.round(zoom * 100)}%
@@ -177,54 +177,47 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
             className="p-1 rounded hover:bg-gray-200 transition-colors"
             title="Zoom In"
           >
-            <ZoomIn size={16} />
+            <ZoomIn size={12} />
           </button>
         </div>
 
-        <div className="w-px h-6 bg-gray-300 mx-2" />
+        <div className="w-px h-4 bg-gray-300 mx-1" />
 
         {/* Action Buttons */}
         <Button
           onClick={onPreview}
           size="sm"
           variant="outline"
-          className="gap-2"
+          className="gap-1 h-7 px-2 text-xs"
         >
-          <Eye size={16} />
-          Preview
+          <Eye size={12} />
+          <span className="hidden sm:inline">Preview</span>
         </Button>
 
         <Button
           onClick={onExport}
           size="sm"
           variant="outline"
-          className="gap-2"
+          className="gap-1 h-7 px-2 text-xs"
         >
-          <Code size={16} />
-          Export
+          <Code size={12} />
+          <span className="hidden sm:inline">Export</span>
         </Button>
 
         {/* Additional Tools */}
-        <div className="flex items-center gap-1 ml-2">
+        <div className="flex items-center gap-1 ml-1">
           <button
-            className="p-2 rounded hover:bg-gray-100 transition-colors"
+            className="p-1 rounded hover:bg-gray-100 transition-colors"
             title="Grid"
           >
-            <Grid size={16} />
+            <Grid size={12} />
           </button>
 
           <button
-            className="p-2 rounded hover:bg-gray-100 transition-colors"
-            title="Layers"
-          >
-            <Layers size={16} />
-          </button>
-
-          <button
-            className="p-2 rounded hover:bg-gray-100 transition-colors"
+            className="p-1 rounded hover:bg-gray-100 transition-colors"
             title="Settings"
           >
-            <Settings size={16} />
+            <Settings size={12} />
           </button>
         </div>
       </div>

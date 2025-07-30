@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "react-hot-toast";
 import {
   CreditCard,
@@ -21,6 +25,7 @@ import {
   Plus,
   Edit,
   Trash2,
+  X,
 } from "lucide-react";
 
 interface PaymentGateway {
@@ -62,9 +67,74 @@ export default function PaymentGatewayPage() {
   );
   const [isFormOpen, setIsFormOpen] = useState(false);
 
+  // Form state
+  const [formData, setFormData] = useState({
+    name: "",
+    type: "",
+    provider: "",
+    isActive: true,
+    config: {
+      serverKey: "",
+      clientKey: "",
+      apiKey: "",
+      secretKey: "",
+      accountNumber: "",
+      accountName: "",
+      bankCode: "",
+      qrisCode: "",
+    },
+    fees: {
+      fixedFee: 0,
+      percentageFee: 0,
+      minFee: 0,
+      maxFee: 0,
+    },
+  });
+
   useEffect(() => {
     loadPaymentGateways();
   }, []);
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (isFormOpen) {
+      if (selectedGateway) {
+        // Edit mode - populate form with existing data
+        setFormData({
+          name: selectedGateway.name,
+          type: selectedGateway.type,
+          provider: selectedGateway.provider,
+          isActive: selectedGateway.isActive,
+          config: selectedGateway.config,
+          fees: selectedGateway.fees,
+        });
+      } else {
+        // Add mode - reset form
+        setFormData({
+          name: "",
+          type: "",
+          provider: "",
+          isActive: true,
+          config: {
+            serverKey: "",
+            clientKey: "",
+            apiKey: "",
+            secretKey: "",
+            accountNumber: "",
+            accountName: "",
+            bankCode: "",
+            qrisCode: "",
+          },
+          fees: {
+            fixedFee: 0,
+            percentageFee: 0,
+            minFee: 0,
+            maxFee: 0,
+          },
+        });
+      }
+    }
+  }, [isFormOpen, selectedGateway]);
 
   const loadPaymentGateways = async () => {
     try {
@@ -92,9 +162,15 @@ export default function PaymentGatewayPage() {
     }
   };
 
-  const handleSaveGateway = async (gatewayData: Partial<PaymentGateway>) => {
+  const handleSaveGateway = async () => {
     try {
       setFormLoading(true);
+
+      // Validate required fields
+      if (!formData.name || !formData.type || !formData.provider) {
+        toast.error("Nama, tipe, dan provider harus diisi");
+        return;
+      }
 
       const url = selectedGateway
         ? `/api/payment-gateway/${selectedGateway.id}`
@@ -107,7 +183,7 @@ export default function PaymentGatewayPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(gatewayData),
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
@@ -158,29 +234,31 @@ export default function PaymentGatewayPage() {
 
   const handleToggleStatus = async (id: string, isActive: boolean) => {
     try {
-      const response = await fetch(`/api/payment-gateway/${id}/toggle`, {
-        method: "PATCH",
+      const response = await fetch(`/api/payment-gateway`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ isActive }),
+        body: JSON.stringify({ id, isActive }),
       });
 
       const data = await response.json();
 
       if (data.success) {
         toast.success(
-          `Payment gateway ${isActive ? "diaktifkan" : "dinonaktifkan"}`,
+          `Payment gateway berhasil ${isActive ? "diaktifkan" : "dinonaktifkan"}`,
         );
         loadPaymentGateways();
       } else {
         toast.error(data.error || "Gagal mengubah status payment gateway");
       }
     } catch (error) {
-      console.error("Error toggling gateway status:", error);
-      toast.error("Terjadi kesalahan saat mengubah status");
+      console.error("Error toggling payment gateway status:", error);
+      toast.error("Terjadi kesalahan saat mengubah status payment gateway");
     }
   };
+
+
 
   const getGatewayIcon = (type: string) => {
     switch (type) {
@@ -209,17 +287,20 @@ export default function PaymentGatewayPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Memuat data payment gateway...</p>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Memuat data payment gateway...</p>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <DashboardLayout>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -328,6 +409,222 @@ export default function PaymentGatewayPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+
+      {/* Form Modal */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedGateway ? "Edit Payment Gateway" : "Tambah Payment Gateway"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Informasi Dasar</h3>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">Nama Gateway</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    placeholder="Contoh: Midtrans"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="provider">Provider</Label>
+                  <Select
+                    value={formData.provider}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, provider: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MIDTRANS">Midtrans</SelectItem>
+                      <SelectItem value="XENDIT">Xendit</SelectItem>
+                      <SelectItem value="DOKU">DOKU</SelectItem>
+                      <SelectItem value="GOPAY">GoPay</SelectItem>
+                      <SelectItem value="OVO">OVO</SelectItem>
+                      <SelectItem value="DANA">DANA</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="type">Tipe Pembayaran</Label>
+                <Select
+                  value={formData.type}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, type: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih tipe pembayaran" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
+                    <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+                    <SelectItem value="E_WALLET">E-Wallet</SelectItem>
+                    <SelectItem value="QRIS">QRIS</SelectItem>
+                    <SelectItem value="VIRTUAL_ACCOUNT">Virtual Account</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isActive"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, isActive: checked })
+                  }
+                />
+                <Label htmlFor="isActive">Aktif</Label>
+              </div>
+            </div>
+
+            {/* Configuration */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Konfigurasi</h3>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="serverKey">Server Key</Label>
+                  <Input
+                    id="serverKey"
+                    type="password"
+                    value={formData.config.serverKey}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        config: { ...formData.config, serverKey: e.target.value },
+                      })
+                    }
+                    placeholder="Server key dari provider"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="clientKey">Client Key</Label>
+                  <Input
+                    id="clientKey"
+                    value={formData.config.clientKey}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        config: { ...formData.config, clientKey: e.target.value },
+                      })
+                    }
+                    placeholder="Client key dari provider"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="apiKey">API Key</Label>
+                  <Input
+                    id="apiKey"
+                    type="password"
+                    value={formData.config.apiKey}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        config: { ...formData.config, apiKey: e.target.value },
+                      })
+                    }
+                    placeholder="API key (opsional)"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="secretKey">Secret Key</Label>
+                  <Input
+                    id="secretKey"
+                    type="password"
+                    value={formData.config.secretKey}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        config: { ...formData.config, secretKey: e.target.value },
+                      })
+                    }
+                    placeholder="Secret key (opsional)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Fees */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Biaya</h3>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="percentageFee">Biaya Persentase (%)</Label>
+                  <Input
+                    id="percentageFee"
+                    type="number"
+                    step="0.1"
+                    value={formData.fees.percentageFee}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        fees: { ...formData.fees, percentageFee: parseFloat(e.target.value) || 0 },
+                      })
+                    }
+                    placeholder="0.0"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="fixedFee">Biaya Tetap (Rp)</Label>
+                  <Input
+                    id="fixedFee"
+                    type="number"
+                    value={formData.fees.fixedFee}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        fees: { ...formData.fees, fixedFee: parseInt(e.target.value) || 0 },
+                      })
+                    }
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-2 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => setIsFormOpen(false)}
+                disabled={formLoading}
+              >
+                Batal
+              </Button>
+              <Button
+                onClick={handleSaveGateway}
+                disabled={formLoading}
+              >
+                {formLoading ? "Menyimpan..." : selectedGateway ? "Update" : "Simpan"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      </div>
+    </DashboardLayout>
   );
 }

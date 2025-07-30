@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import mysql from "mysql2/promise";
+import { requireAuth, ApiResponse } from "@/lib/auth-middleware";
+import { hasPermission } from "@/lib/permissions";
 
 // Database connection configuration
 const dbConfig = {
@@ -9,10 +11,20 @@ const dbConfig = {
   database: "db_tpq",
 };
 
-// GET /api/halaqah/assessment - Get assessments for a halaqah or santri
+// GET /api/halaqah/assessment - Get assessments for a halaqah or santri (Admin and Musyrif can view)
 export async function GET(request: NextRequest) {
   let connection;
   try {
+    // Check authentication and permission
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
+    // Check permission
+    if (!hasPermission(authResult.role, 'hafalan:view')) {
+      return ApiResponse.forbidden("Access denied to assessment data");
+    }
     console.log("🔌 Connecting to database for Assessment data...");
     connection = await mysql.createConnection(dbConfig);
 
@@ -55,6 +67,14 @@ export async function GET(request: NextRequest) {
 
     let whereClause = "WHERE 1=1";
     const params: any[] = [];
+
+    // Role-based filtering
+    if (authResult.role === 'MUSYRIF') {
+      // Musyrif can only see assessments for santri in their halaqah
+      whereClause += " AND h.musyrifId = ?";
+      params.push(authResult.id);
+      console.log("Musyrif access: filtering assessments for their halaqah");
+    }
 
     if (halaqahId) {
       whereClause += " AND a.halaqahId = ?";
@@ -100,7 +120,7 @@ export async function GET(request: NextRequest) {
 
     // Get assessment statistics
     const [statsResult] = await connection.execute(
-      `SELECT 
+      `SELECT
         a.type,
         COUNT(*) as totalAssessments,
         AVG(a.score) as averageScore,
@@ -112,6 +132,8 @@ export async function GET(request: NextRequest) {
         COUNT(CASE WHEN a.grade = 'D' THEN 1 END) as gradeD,
         COUNT(CASE WHEN a.grade = 'E' THEN 1 END) as gradeE
        FROM assessments a
+       LEFT JOIN santri s ON a.santriId = s.id
+       LEFT JOIN halaqah h ON a.halaqahId = h.id
        ${whereClause}
        GROUP BY a.type`,
       params,
@@ -165,10 +187,21 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/halaqah/assessment - Create new assessment
+// POST /api/halaqah/assessment - Create new assessment (Admin and Musyrif can create)
 export async function POST(request: NextRequest) {
   let connection;
   try {
+    // Check authentication and permission
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
+    // Check permission
+    if (!hasPermission(authResult.role, 'hafalan:create')) {
+      return ApiResponse.forbidden("Access denied to create assessment");
+    }
+
     console.log("🔌 Creating new assessment...");
     connection = await mysql.createConnection(dbConfig);
 
@@ -184,14 +217,39 @@ export async function POST(request: NextRequest) {
     if (
       !santriId ||
       !halaqahId ||
-      !assessorId ||
       !assessments ||
       !Array.isArray(assessments)
     ) {
-      return NextResponse.json(
-        { success: false, error: "Missing required fields" },
-        { status: 400 },
+      return ApiResponse.error("Missing required fields");
+    }
+
+    // For musyrif, validate they can only create assessment for santri in their halaqah
+    let finalAssessorId = assessorId;
+    if (authResult.role === 'MUSYRIF') {
+      // Verify the halaqah belongs to the musyrif
+      const [halaqahResult] = await connection.execute(
+        "SELECT id, musyrifId FROM halaqah WHERE id = ?",
+        [halaqahId]
       );
+
+      if ((halaqahResult as any[]).length === 0 || (halaqahResult as any[])[0].musyrifId !== authResult.id) {
+        return ApiResponse.forbidden("You can only create assessments for santri in your halaqah");
+      }
+
+      // Verify the santri is in the musyrif's halaqah
+      const [santriResult] = await connection.execute(
+        "SELECT id, halaqahId FROM santri WHERE id = ?",
+        [santriId]
+      );
+
+      if ((santriResult as any[]).length === 0 || (santriResult as any[])[0].halaqahId !== halaqahId) {
+        return ApiResponse.forbidden("Santri is not in your halaqah");
+      }
+
+      // Use the authenticated musyrif's ID
+      finalAssessorId = authResult.id;
+    } else if (!assessorId) {
+      return ApiResponse.error("Assessor ID is required");
     }
 
     await connection.beginTransaction();
@@ -228,7 +286,7 @@ export async function POST(request: NextRequest) {
           [
             santriId,
             halaqahId,
-            assessorId,
+            finalAssessorId,
             type,
             category,
             surah || null,

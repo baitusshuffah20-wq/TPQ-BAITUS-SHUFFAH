@@ -34,7 +34,7 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
     // Personal Info
     name: "",
     nis: "",
-    gender: "MALE",
+    gender: "LAKI_LAKI",
     birthPlace: "",
     birthDate: "",
     address: "",
@@ -75,7 +75,7 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
       setFormData({
         name: editData.name || "",
         nis: editData.nis || "",
-        gender: editData.gender || "MALE",
+        gender: editData.gender || "LAKI_LAKI",
         birthPlace: editData.birthPlace || "",
         birthDate: editData.birthDate
           ? new Date(editData.birthDate).toISOString().split("T")[0]
@@ -101,7 +101,7 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
       setFormData({
         name: "",
         nis: "",
-        gender: "MALE",
+        gender: "LAKI_LAKI",
         birthPlace: "",
         birthDate: "",
         address: "",
@@ -377,8 +377,8 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({
                         handleInputChange("gender", e.target.value)
                       }
                     >
-                      <option value="MALE">Laki-laki</option>
-                      <option value="FEMALE">Perempuan</option>
+                      <option value="LAKI_LAKI">Laki-laki</option>
+                      <option value="PEREMPUAN">Perempuan</option>
                     </select>
                   </div>
 

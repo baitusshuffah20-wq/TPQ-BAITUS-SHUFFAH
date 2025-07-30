@@ -8,7 +8,8 @@ export async function GET(
   { params }: { params: { path: string[] } }
 ) {
   try {
-    const filePath = params.path.join('/');
+    const resolvedParams = await params;
+    const filePath = resolvedParams.path.join('/');
     console.log("Serving mobile asset:", filePath);
     
     // Construct full path to the file

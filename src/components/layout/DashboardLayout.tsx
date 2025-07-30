@@ -28,6 +28,8 @@ import {
   MessageSquare,
   Mail,
   Zap,
+  Star,
+  Building2,
   Brain,
   Monitor,
   Database,
@@ -40,6 +42,9 @@ import {
   AlertTriangle,
   Shield,
   Smartphone,
+  Wallet,
+  ArrowDownRight,
+  Activity,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -131,7 +136,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           name: "Data Santri",
           href: `/dashboard/${user?.role?.toLowerCase()}/santri`,
           icon: Users,
-          roles: ["ADMIN"],
+          roles: ["ADMIN", "MUSYRIF"], // Musyrif can only view santri in their halaqah (no create/edit)
         },
         {
           name: "Data Musyrif",
@@ -140,16 +145,22 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           roles: ["ADMIN"],
         },
         {
-          name: "Halaqah Terpadu",
-          href: `/dashboard/${user?.role?.toLowerCase()}/halaqah-terpadu`,
+          name: "Halaqah",
+          href: `/dashboard/${user?.role?.toLowerCase()}/halaqah`,
           icon: BookOpen,
-          roles: ["ADMIN", "MUSYRIF"],
+          roles: ["ADMIN", "MUSYRIF"], // Musyrif can view their assigned halaqah
         },
         {
           name: "Hafalan & Progress",
           href: `/dashboard/${user?.role?.toLowerCase()}/hafalan`,
           icon: BookOpen,
-          roles: ["ADMIN", "MUSYRIF"],
+          roles: ["ADMIN", "MUSYRIF"], // Musyrif can give grades/scores to their santri
+        },
+        {
+          name: "Penilaian Santri",
+          href: `/dashboard/${user?.role?.toLowerCase()}/penilaian`,
+          icon: Star,
+          roles: ["MUSYRIF"], // Menu khusus untuk musyrif memberikan penilaian
         },
         {
           name: "Absensi",
@@ -192,22 +203,41 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           icon: DollarSign,
           roles: ["ADMIN"],
         },
-        {
-          name: "Penggajian",
-          href: `/dashboard/${user?.role?.toLowerCase()}/payroll`,
-          icon: DollarSign,
-          roles: ["ADMIN"],
-        },
+
         {
           name: "Donasi",
           href: `/dashboard/${user?.role?.toLowerCase()}/donations`,
           icon: Heart,
-          roles: ["ADMIN"],
+          roles: ["ADMIN"], // Musyrif can contribute donations
+        },
+        {
+          name: "Wallet Saya",
+          href: `/dashboard/${user?.role?.toLowerCase()}/wallet`,
+          icon: Wallet,
+          roles: ["MUSYRIF"], // Menu khusus untuk musyrif mengelola penghasilan
+        },
+        {
+          name: "Kelola Penarikan",
+          href: `/dashboard/${user?.role?.toLowerCase()}/withdrawals`,
+          icon: ArrowDownRight,
+          roles: ["ADMIN"], // Menu khusus untuk admin kelola withdrawal musyrif
+        },
+        {
+          name: "Salary Rates",
+          href: `/dashboard/${user?.role?.toLowerCase()}/salary-rates`,
+          icon: DollarSign,
+          roles: ["ADMIN"], // Menu khusus untuk admin kelola salary rates musyrif
         },
         {
           name: "Payment Gateway",
           href: `/dashboard/${user?.role?.toLowerCase()}/payment-gateway`,
           icon: CreditCard,
+          roles: ["ADMIN"],
+        },
+        {
+          name: "Rekening Bank",
+          href: `/dashboard/${user?.role?.toLowerCase()}/bank-accounts`,
+          icon: Building2,
           roles: ["ADMIN"],
         },
         {
@@ -246,6 +276,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           roles: ["ADMIN"],
         },
         {
+          name: "Laporan Salary",
+          href: `/dashboard/${user?.role?.toLowerCase()}/salary-reports`,
+          icon: BarChart3,
+          roles: ["ADMIN"],
+        },
+        {
           name: "AI Insights",
           href: `/dashboard/${user?.role?.toLowerCase()}/insights`,
           icon: Brain,
@@ -278,7 +314,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           name: "Database Test",
           href: `/db-test`,
           icon: Database,
-          roles: ["ADMIN", "MUSYRIF", "WALI"],
+          roles: ["ADMIN"],
         },
       ],
     },
@@ -341,13 +377,19 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           name: "Pengaturan",
           href: `/dashboard/${user?.role?.toLowerCase()}/settings`,
           icon: Settings,
-          roles: ["ADMIN", "MUSYRIF", "WALI"],
+          roles: ["ADMIN"], // Musyrif tidak boleh akses pengaturan sistem
         },
         {
           name: "Integrasi Sistem",
           href: `/dashboard/${user?.role?.toLowerCase()}/settings/integrations`,
           icon: Zap,
           roles: ["ADMIN"],
+        },
+        {
+          name: "System Health",
+          href: `/dashboard/${user?.role?.toLowerCase()}/system-health`,
+          icon: Activity,
+          roles: ["ADMIN"], // Menu khusus untuk admin monitor system health
         },
         {
           name: "Kustomisasi Tema",

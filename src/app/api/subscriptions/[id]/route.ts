@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { SubscriptionService } from "@/lib/subscription-service";
 
 // GET /api/subscriptions/[id] - Get subscription details
@@ -7,6 +9,15 @@ export async function GET(
   { params }: { params: { id: string } },
 ) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== "ADMIN") {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const subscription = await SubscriptionService.getSubscription(params.id);
 
     if (!subscription) {
@@ -39,6 +50,15 @@ export async function PATCH(
   { params }: { params: { id: string } },
 ) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== "ADMIN") {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { action, ...data } = body;
 

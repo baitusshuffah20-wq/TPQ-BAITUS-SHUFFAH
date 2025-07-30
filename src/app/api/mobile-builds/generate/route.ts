@@ -436,6 +436,84 @@ async function copyMobileAppTemplate(
 }
 
 function generateAppTsx(appType: string, config: AppConfig): string {
+  if (appType === "musyrif") {
+    // Use modern musyrif template with custom configuration
+    const customMenuGrid = config.customMenuGrid || [];
+    const customBottomTabs = config.customBottomTabs || [
+      { name: "Dashboard", title: "Dashboard", icon: "analytics" },
+      { name: "Santri", title: "Santri", icon: "people" },
+      { name: "Hafalan", title: "Hafalan", icon: "book" },
+      { name: "Wallet", title: "Wallet", icon: "wallet" },
+      { name: "Profile", title: "Profil", icon: "person" },
+    ];
+
+    return `
+import React from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+
+// Import screens
+import DashboardScreen from './src/screens/DashboardScreen';
+import SantriScreen from './src/screens/SantriScreen';
+import HafalanScreen from './src/screens/HafalanScreen';
+import WalletScreen from './src/screens/WalletScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+
+const Tab = createBottomTabNavigator();
+
+const appConfig = {
+  primaryColor: '${config.primaryColor}',
+  secondaryColor: '${config.secondaryColor}',
+  appName: '${config.displayName}',
+  customMenuGrid: ${JSON.stringify(customMenuGrid)},
+  customBottomTabs: ${JSON.stringify(customBottomTabs)},
+};
+
+export default function App() {
+  return (
+    <NavigationContainer>
+      <StatusBar style="auto" />
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            const tab = appConfig.customBottomTabs.find(t => t.name === route.name);
+            const iconName = tab?.icon || 'home';
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: appConfig.primaryColor,
+          tabBarInactiveTintColor: 'gray',
+          headerShown: false,
+        })}
+      >
+        ${customBottomTabs
+          .map(
+            (tab) => `
+        <Tab.Screen
+          name="${tab.name}"
+          options={{ title: '${tab.title}' }}
+        >
+          {(props) => {
+            switch('${tab.name}') {
+              case 'Dashboard': return <DashboardScreen {...props} appConfig={appConfig} />;
+              case 'Santri': return <SantriScreen {...props} appConfig={appConfig} />;
+              case 'Hafalan': return <HafalanScreen {...props} appConfig={appConfig} />;
+              case 'Wallet': return <WalletScreen {...props} appConfig={appConfig} />;
+              case 'Profile': return <ProfileScreen {...props} appConfig={appConfig} />;
+              default: return <DashboardScreen {...props} appConfig={appConfig} />;
+            }
+          }}
+        </Tab.Screen>`,
+          )
+          .join("")}
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
+}`;
+  }
+
+  // Default template for wali app
   const enabledFeatures = Object.entries(config.features)
     .filter(([_, enabled]) => enabled)
     .map(([feature, _]) => feature);
@@ -470,9 +548,9 @@ export default function App() {
         ${enabledFeatures
           .map(
             (feature) => `
-        <Tab.Screen 
-          name="${feature.charAt(0).toUpperCase() + feature.slice(1)}" 
-          component={${feature.charAt(0).toUpperCase() + feature.slice(1)}Screen} 
+        <Tab.Screen
+          name="${feature.charAt(0).toUpperCase() + feature.slice(1)}"
+          component={${feature.charAt(0).toUpperCase() + feature.slice(1)}Screen}
         />`,
           )
           .join("")}

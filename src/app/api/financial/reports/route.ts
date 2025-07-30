@@ -75,23 +75,23 @@ async function generateSummaryReport(filters: ReportFilters) {
   // Get transaction summary
   const transactions = await prisma.transaction.findMany({
     where: {
-      transactionDate: dateFilter,
+      date: dateFilter,
       ...(filters.accountId && { accountId: filters.accountId }),
     },
     select: {
-      type: true,
+      transactionType: true,
       amount: true,
-      category: true,
+      description: true,
     },
   });
 
   // Calculate totals
   const income = transactions
-    .filter((t) => t.type === "INCOME")
+    .filter((t) => t.transactionType === "INCOME")
     .reduce((sum, t) => sum + t.amount, 0);
 
   const expense = transactions
-    .filter((t) => t.type === "EXPENSE")
+    .filter((t) => t.transactionType === "EXPENSE")
     .reduce((sum, t) => sum + t.amount, 0);
 
   const netIncome = income - expense;
@@ -115,7 +115,7 @@ async function generateSummaryReport(filters: ReportFilters) {
   const sppCollectionRate = sppTotal > 0 ? (sppCollected / sppTotal) * 100 : 0;
 
   // Get account balances
-  const accounts = await prisma.account.findMany({
+  const accounts = await prisma.financialAccount.findMany({
     where: {
       isActive: true,
       ...(filters.accountId && { id: filters.accountId }),
@@ -123,7 +123,7 @@ async function generateSummaryReport(filters: ReportFilters) {
     select: {
       id: true,
       name: true,
-      type: true,
+      accountType: true,
       balance: true,
     },
   });
@@ -254,15 +254,15 @@ async function generateTransactionReport(filters: ReportFilters) {
 
   const transactions = await prisma.transaction.findMany({
     where: {
-      transactionDate: dateFilter,
+      date: dateFilter,
       ...(filters.accountId && { accountId: filters.accountId }),
-      ...(filters.type === "spp" && { category: "SPP" }),
+      ...(filters.type === "spp" && { description: { contains: "SPP" } }),
     },
     include: {
       account: {
         select: {
           name: true,
-          type: true,
+          accountType: true,
         },
       },
       santri: {
@@ -273,14 +273,14 @@ async function generateTransactionReport(filters: ReportFilters) {
       },
     },
     orderBy: {
-      transactionDate: "desc",
+      date: "desc",
     },
   });
 
   // Group by type
   const typeBreakdown = transactions.reduce(
     (acc, transaction) => {
-      acc[transaction.type] = (acc[transaction.type] || 0) + transaction.amount;
+      acc[transaction.transactionType] = (acc[transaction.transactionType] || 0) + transaction.amount;
       return acc;
     },
     {} as Record<string, number>,
@@ -289,7 +289,7 @@ async function generateTransactionReport(filters: ReportFilters) {
   // Group by category
   const categoryBreakdown = transactions.reduce(
     (acc, transaction) => {
-      const category = transaction.category || "Lainnya";
+      const category = transaction.description || "Lainnya";
       acc[category] = (acc[category] || 0) + transaction.amount;
       return acc;
     },
@@ -457,11 +457,11 @@ async function generateCollectionReport(filters: ReportFilters) {
 function getTransactionsByCategory(transactions: any[]) {
   return transactions.reduce(
     (acc, transaction) => {
-      const category = transaction.category || "Lainnya";
+      const category = transaction.description || "Lainnya";
       if (!acc[category]) {
         acc[category] = { income: 0, expense: 0 };
       }
-      if (transaction.type === "INCOME") {
+      if (transaction.transactionType === "INCOME") {
         acc[category].income += transaction.amount;
       } else {
         acc[category].expense += transaction.amount;

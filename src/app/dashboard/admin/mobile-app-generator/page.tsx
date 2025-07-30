@@ -30,6 +30,8 @@ import { toast } from "react-hot-toast";
 import BuildProgressModal from "@/components/BuildProgressModal";
 import ImagePreview from "@/components/ImagePreview";
 import ImageDebugInfo from "@/components/ImageDebugInfo";
+import AppConfigurationModal from "@/components/mobile-app-generator/AppConfigurationModal";
+import MenuItemEditor from "@/components/mobile-app-generator/MenuItemEditor";
 
 interface AppConfig {
   id: string;
@@ -102,43 +104,47 @@ const AVAILABLE_FEATURES = {
   musyrif: {
     dashboard: {
       name: "Dashboard Musyrif",
-      description: "Dashboard khusus untuk musyrif",
+      description: "Dashboard khusus untuk musyrif dengan statistik real-time",
     },
-    students: {
-      name: "Manajemen Santri",
-      description: "Kelola data dan progress santri",
+    santri: {
+      name: "Data Santri",
+      description: "Kelola data santri binaan dalam halaqah",
+    },
+    halaqah: {
+      name: "Halaqah",
+      description: "Manajemen halaqah yang diampu",
+    },
+    hafalan: {
+      name: "Hafalan & Progress",
+      description: "Input dan evaluasi hafalan santri",
+    },
+    penilaian: {
+      name: "Penilaian Santri",
+      description: "Sistem penilaian komprehensif santri",
     },
     attendance: {
-      name: "Input Absensi",
-      description: "Input kehadiran santri",
+      name: "Absensi",
+      description: "Input dan kelola kehadiran santri",
     },
-    grades: {
-      name: "Input Nilai",
-      description: "Input nilai dan penilaian santri",
+    behavior: {
+      name: "Evaluasi Perilaku",
+      description: "Penilaian perilaku dan akhlak santri",
     },
-    schedule: {
-      name: "Jadwal Mengajar",
-      description: "Melihat dan kelola jadwal mengajar",
+    achievements: {
+      name: "Prestasi & Achievement",
+      description: "Kelola prestasi dan pencapaian santri",
+    },
+    wallet: {
+      name: "Wallet Saya",
+      description: "Kelola penghasilan dan penarikan dana",
     },
     reports: {
       name: "Laporan",
-      description: "Generate laporan progress santri",
-    },
-    messages: {
-      name: "Komunikasi",
-      description: "Komunikasi dengan wali dan admin",
+      description: "Generate laporan progress dan kehadiran santri",
     },
     profile: {
       name: "Profil Musyrif",
-      description: "Manajemen profil musyrif",
-    },
-    materials: {
-      name: "Materi Pelajaran",
-      description: "Kelola materi dan kurikulum",
-    },
-    assessments: {
-      name: "Penilaian",
-      description: "Sistem penilaian komprehensif",
+      description: "Manajemen profil dan data pribadi",
     },
   },
 };
@@ -147,6 +153,10 @@ const TEMPLATES = {
   modern: {
     name: "Modern",
     description: "Design modern dengan warna-warna cerah",
+  },
+  musyrif: {
+    name: "Musyrif",
+    description: "Template khusus untuk aplikasi musyrif",
   },
   classic: {
     name: "Classic",
@@ -182,6 +192,14 @@ export default function MobileAppGenerator() {
     [key: string]: boolean;
   }>({});
 
+  // Configuration modal states
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [configAppType, setConfigAppType] = useState<"wali" | "musyrif">("musyrif");
+  const [appConfigurations, setAppConfigurations] = useState<{
+    wali?: any;
+    musyrif?: any;
+  }>({});
+
   const [waliConfig, setWaliConfig] = useState<AppConfig>({
     id: "wali",
     name: "TPQ Wali Santri",
@@ -191,8 +209,8 @@ export default function MobileAppGenerator() {
     buildNumber: 1,
     icon: null,
     splashScreen: null,
-    primaryColor: "#1e40af",
-    secondaryColor: "#3b82f6",
+    primaryColor: "#eca825",
+    secondaryColor: "#ffd700",
     features: Object.keys(AVAILABLE_FEATURES.wali).reduce(
       (acc, key) => {
         acc[key] = true;
@@ -212,8 +230,8 @@ export default function MobileAppGenerator() {
     buildNumber: 1,
     icon: null,
     splashScreen: null,
-    primaryColor: "#059669",
-    secondaryColor: "#10b981",
+    primaryColor: "#eca825",
+    secondaryColor: "#ffd700",
     features: Object.keys(AVAILABLE_FEATURES.musyrif).reduce(
       (acc, key) => {
         acc[key] = true;
@@ -221,7 +239,24 @@ export default function MobileAppGenerator() {
       },
       {} as { [key: string]: boolean },
     ),
-    template: "islamic",
+    template: "musyrif",
+    customMenuGrid: [
+      { id: 1, title: "Data Santri", icon: "👥", color: "#3B82F6", route: "santri" },
+      { id: 2, title: "Halaqah", icon: "📖", color: "#059669", route: "halaqah" },
+      { id: 3, title: "Hafalan", icon: "📚", color: "#DC2626", route: "hafalan" },
+      { id: 4, title: "Absensi", icon: "✅", color: "#F59E0B", route: "attendance" },
+      { id: 5, title: "Penilaian", icon: "⭐", color: "#8B5CF6", route: "assessment" },
+      { id: 6, title: "Perilaku", icon: "❤️", color: "#EC4899", route: "behavior" },
+      { id: 7, title: "Laporan", icon: "📊", color: "#06B6D4", route: "reports" },
+      { id: 8, title: "Profil", icon: "👤", color: "#84CC16", route: "profile" },
+    ],
+    customBottomTabs: [
+      { name: "Dashboard", title: "Dashboard", icon: "🏠", active: true },
+      { name: "Santri", title: "Santri", icon: "👥", active: false },
+      { name: "Hafalan", title: "Hafalan", icon: "📚", active: false },
+      { name: "Wallet", title: "Wallet", icon: "💰", active: false },
+      { name: "Profil", title: "Profil", icon: "👤", active: false },
+    ],
   });
 
   const [buildHistory, setBuildHistory] = useState<any[]>([]);
@@ -236,8 +271,8 @@ export default function MobileAppGenerator() {
 
   useEffect(() => {
     loadBuildHistory();
-    // Setup WebSocket for real-time updates
-    setupWebSocket();
+    // WebSocket disabled temporarily to fix infinite loading
+    // setupWebSocket();
   }, []);
 
   const setupWebSocket = () => {
@@ -429,6 +464,7 @@ export default function MobileAppGenerator() {
           appType,
           config,
           buildId,
+          template: appType === "wali" ? "modern" : "musyrif", // Use musyrif template for musyrif app
         }),
       });
 
@@ -451,9 +487,39 @@ export default function MobileAppGenerator() {
 
   const previewApp = (appType: "wali" | "musyrif") => {
     const config = appType === "wali" ? waliConfig : musyrifConfig;
-    // Force refresh preview with current config
-    const previewUrl = `/api/mobile-builds/preview?appType=${appType}&config=${encodeURIComponent(JSON.stringify(config))}&t=${Date.now()}`;
+    // Open preview in new tab
+    const previewUrl = `/api/mobile-builds/preview?appType=${appType}&config=${encodeURIComponent(JSON.stringify(config))}`;
     window.open(previewUrl, "_blank");
+  };
+
+  // Configuration handlers
+  const openConfigModal = (appType: "wali" | "musyrif") => {
+    setConfigAppType(appType);
+    setShowConfigModal(true);
+  };
+
+  const handleSaveConfiguration = (config: any) => {
+    setAppConfigurations(prev => ({
+      ...prev,
+      [configAppType]: config,
+    }));
+
+    // Update the app config with new menu grid and bottom tabs
+    if (configAppType === "musyrif") {
+      setMusyrifConfig(prev => ({
+        ...prev,
+        customMenuGrid: config.menuGrid,
+        customBottomTabs: config.bottomTabs,
+      }));
+    } else {
+      setWaliConfig(prev => ({
+        ...prev,
+        customMenuGrid: config.menuGrid,
+        customBottomTabs: config.bottomTabs,
+      }));
+    }
+
+    toast.success(`Konfigurasi ${configAppType} berhasil disimpan!`);
   };
 
   const renderAppConfig = (type: "wali" | "musyrif") => {
@@ -801,6 +867,16 @@ export default function MobileAppGenerator() {
                 <Eye className="h-4 w-4" />
                 Preview
               </Button>
+              {type === "musyrif" && (
+                <Button
+                  onClick={() => openConfigModal(type)}
+                  variant="outline"
+                  className="flex items-center gap-2 bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100"
+                >
+                  <Settings className="h-4 w-4" />
+                  Konfigurasi Menu & Icon
+                </Button>
+              )}
               <Button
                 onClick={() => generateApp("android", type)}
                 disabled={buildStatus.isBuilding}
@@ -833,10 +909,10 @@ export default function MobileAppGenerator() {
           <CardContent>
             <div className="bg-gray-100 rounded-lg p-4 min-h-[400px] flex items-center justify-center">
               <iframe
-                src={`/api/mobile-builds/preview?appType=${type}&config=${encodeURIComponent(JSON.stringify(config))}&inline=true&t=${Date.now()}`}
+                src={`/api/mobile-builds/preview?appType=${type}&config=${encodeURIComponent(JSON.stringify(config))}&inline=true`}
                 className="w-full h-[500px] border-0 rounded-lg"
                 title={`Preview ${config.displayName}`}
-                key={`${type}-${config.primaryColor}-${config.secondaryColor}-${config.template}`}
+                key={`preview-${type}`}
               />
             </div>
           </CardContent>
@@ -1093,6 +1169,14 @@ export default function MobileAppGenerator() {
         buildId={currentBuildId}
         platform={currentPlatform}
         appType={currentAppType}
+      />
+
+      {/* App Configuration Modal */}
+      <AppConfigurationModal
+        isOpen={showConfigModal}
+        onClose={() => setShowConfigModal(false)}
+        appType={configAppType}
+        onSave={handleSaveConfiguration}
       />
     </DashboardLayout>
   );

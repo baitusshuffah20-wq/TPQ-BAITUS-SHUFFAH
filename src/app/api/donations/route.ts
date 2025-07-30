@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth, ApiResponse } from "@/lib/auth-middleware";
+import { hasPermission } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
+    // Check permission - musyrif can only view donations for contributing
+    if (!hasPermission(authResult.role, 'donation:view') && !hasPermission(authResult.role, 'donation:contribute')) {
+      return ApiResponse.forbidden("Access denied to donation data");
+    }
     // Get query parameters
     const url = new URL(request.url);
     const type = url.searchParams.get("type");
@@ -48,6 +60,16 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
+    // Check permission - musyrif can contribute, admin can manage
+    if (!hasPermission(authResult.role, 'donation:contribute') && !hasPermission(authResult.role, 'donation:manage')) {
+      return ApiResponse.forbidden("Access denied to create donations");
+    }
     const data = await request.json();
 
     // Validate required fields

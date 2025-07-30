@@ -13,17 +13,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate userId if provided
+    let validUserId = null;
+    if (data.userId) {
+      const userExists = await prisma.user.findUnique({
+        where: { id: data.userId },
+        select: { id: true },
+      });
+      if (userExists) {
+        validUserId = data.userId;
+      }
+    }
+
     // Create error log in database
     const errorLog = await prisma.errorLog.create({
       data: {
         message: data.message,
         stack: data.stack || null,
+        level: data.severity || data.level || "ERROR",
+        source: data.context || data.source || null,
         url: data.url || null,
-        userId: data.userId || null,
         userAgent: data.userAgent || null,
-        severity: data.severity || "ERROR",
-        context: data.context || null,
-        metadata: data.metadata ? JSON.stringify(data.metadata) : null,
+        userId: validUserId,
       },
     });
 

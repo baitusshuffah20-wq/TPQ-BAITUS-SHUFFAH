@@ -175,7 +175,7 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
                       Jenis Kelamin
                     </label>
                     <p className="text-gray-900">
-                      {student.gender === "L" ? "Laki-laki" : "Perempuan"}
+                      {student.gender === "LAKI_LAKI" ? "Laki-laki" : "Perempuan"}
                     </p>
                   </div>
                   <div>

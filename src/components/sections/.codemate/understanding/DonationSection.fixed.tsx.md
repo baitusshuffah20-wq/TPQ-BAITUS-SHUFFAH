@@ -19,9 +19,9 @@ The `DonationSection` React component implements an interactive donation form fo
    - The form collects donor name, email, phone number, and an optional message or prayer.
    - Users can choose to donate anonymously (disabling personal data inputs).
 
-4. **Selecting Payment Method**
-   - Several payment options are displayed as selectable cards (Bank transfer, E-Wallet, QRIS), each with an icon and description.
-   - The selected payment method is visually highlighted.
+4. **Cart Integration**
+   - Uses cart-based payment flow instead of direct payment method selection.
+   - Payment methods are handled in the checkout process after items are added to cart.
 
 5. **Form Submission & Donation Creation**
    - Upon submitting, the form:

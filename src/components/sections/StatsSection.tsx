@@ -11,6 +11,8 @@ import {
   Clock,
   MapPin,
 } from "lucide-react";
+import { safeFetch, handleApiResponse, formatErrorForUser } from "@/lib/api-utils";
+import { mockStats, mockOperationalInfo } from "@/lib/mock-data";
 
 interface StatItem {
   id: string;
@@ -66,21 +68,31 @@ const StatsSection = () => {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/stats/homepage");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
+        setError(null);
 
-        if (data.success) {
-          setStats(data.data.stats);
-          setOperationalInfo(data.data.operationalInfo);
+        const response = await safeFetch("/api/stats/homepage");
+
+        if (response.success && response.data) {
+          const data = response.data;
+          if (data.success) {
+            setStats(data.data.stats);
+            setOperationalInfo(data.data.operationalInfo);
+          } else {
+            throw new Error(data.message || "Failed to fetch stats");
+          }
         } else {
-          throw new Error(data.message || "Failed to fetch stats");
+          throw new Error(response.error || "Failed to fetch stats");
         }
       } catch (err) {
         console.error("Error fetching stats:", err);
-        setError("Failed to load statistics");
+        console.log("Using fallback mock data...");
+
+        // Use mock data as fallback
+        setStats(mockStats);
+        setOperationalInfo(mockOperationalInfo);
+
+        const errorMessage = formatErrorForUser(err instanceof Error ? err.message : String(err));
+        setError(errorMessage);
 
         // Fallback to default stats
         setStats([

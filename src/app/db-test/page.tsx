@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Database, CheckCircle, XCircle, RefreshCw } from "lucide-react";
+import { Database, CheckCircle, XCircle, RefreshCw, AlertCircle } from "lucide-react";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 interface DatabaseInfo {
   type: string;
@@ -20,9 +21,29 @@ interface DatabaseTestResult {
 }
 
 export default function DatabaseTestPage() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DatabaseTestResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Check if user has admin role
+  if (!user || user.role !== "ADMIN") {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Akses Ditolak
+            </h3>
+            <p className="text-gray-600">
+              Hanya administrator yang dapat mengakses halaman Database Test.
+            </p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const testConnection = async () => {
     try {

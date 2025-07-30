@@ -15,6 +15,8 @@ import {
   Loader,
 } from "lucide-react";
 import { formatDate, getRelativeTime } from "@/lib/utils";
+import { safeFetch, formatErrorForUser } from "@/lib/api-utils";
+import { mockNews, mockNewsCategories } from "@/lib/mock-data";
 
 interface NewsItem {
   id: string;
@@ -52,21 +54,35 @@ const NewsSection = () => {
     const fetchNews = async () => {
       try {
         setLoading(true);
+        setError(null);
 
         // Fetch news based on selected category
         const categoryParam =
           selectedCategory !== "Semua" ? `&category=${selectedCategory}` : "";
-        const response = await fetch(`/api/news?limit=6${categoryParam}`);
-        const data = await response.json();
+        const response = await safeFetch(`/api/news?limit=6${categoryParam}`);
 
-        if (data.success) {
-          setNews(data.news);
+        if (response.success && response.data) {
+          const data = response.data;
+          if (data.success) {
+            setNews(data.news);
+          } else {
+            throw new Error(data.error || "Failed to fetch news");
+          }
         } else {
-          throw new Error("Failed to fetch news");
+          throw new Error(response.error || "Failed to fetch news");
         }
       } catch (err) {
         console.error("Error fetching news:", err);
-        setError("Failed to load news");
+        console.log("Using fallback mock data...");
+
+        // Use mock data as fallback
+        const filteredMockNews = selectedCategory === "Semua"
+          ? mockNews
+          : mockNews.filter(item => item.category === selectedCategory);
+        setNews(filteredMockNews);
+
+        const errorMessage = formatErrorForUser(err instanceof Error ? err.message : String(err));
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }

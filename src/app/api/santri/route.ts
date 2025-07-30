@@ -1,19 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import mysql from "mysql2/promise";
+import { prisma } from "@/lib/prisma";
+import { requireAuth, ApiResponse } from "@/lib/auth-middleware";
+import { hasPermission } from "@/lib/permissions";
 
-// Database connection configuration
-const dbConfig = {
-  host: "localhost",
-  user: "root",
-  password: "admin123",
-  database: "db_tpq",
-};
-
-// GET /api/santri - Get all santri
+// GET /api/santri - Get santri based on user permissions
 export async function GET(request: NextRequest) {
-  let connection: mysql.Connection | null = null;
-
   try {
+    // Check authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
+    // Check permission
+    if (!hasPermission(authResult.role, 'santri:view')) {
+      return ApiResponse.forbidden("Access denied to santri data");
+    }
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
     const halaqahId = searchParams.get("halaqahId");
@@ -28,571 +31,198 @@ export async function GET(request: NextRequest) {
       search,
       simple,
     });
+    console.log("User role:", authResult.role, "User ID:", authResult.id);
 
-    // Create connection
-    connection = await mysql.createConnection(dbConfig);
+    const where: any = {};
 
-    // Check if database exists
-    try {
-      await connection.query(`USE ${dbConfig.database}`);
-    } catch (dbError) {
-      console.log(
-        `Database ${dbConfig.database} does not exist, creating it...`,
-      );
-      await connection.query(
-        `CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`,
-      );
-      await connection.query(`USE ${dbConfig.database}`);
-    }
+    // Apply role-based filtering
+    if (authResult.role === 'MUSYRIF') {
+      // Musyrif can only see santri in their halaqah
+      const musyrifHalaqah = await prisma.halaqah.findMany({
+        where: { musyrifId: authResult.id },
+        select: { id: true }
+      });
 
-    // Check if santri table exists
-    let santriTableExists = true;
-    try {
-      await connection.execute("SELECT 1 FROM santri LIMIT 1");
-      console.log("Table santri exists");
-    } catch (error) {
-      console.log("Table santri does not exist, creating it...");
-      santriTableExists = false;
+      const halaqahIds = musyrifHalaqah.map(h => h.id);
 
-      // Create santri table
-      await connection.execute(`
-        CREATE TABLE santri (
-          id VARCHAR(50) PRIMARY KEY,
-          nis VARCHAR(20) UNIQUE,
-          name VARCHAR(100) NOT NULL,
-          gender ENUM('MALE', 'FEMALE') NOT NULL,
-          birthDate DATE,
-          birthPlace VARCHAR(100),
-          address TEXT,
-          phone VARCHAR(20),
-          email VARCHAR(100),
-          photo VARCHAR(255),
-          halaqahId VARCHAR(50),
-          waliId VARCHAR(50),
-          status ENUM('ACTIVE', 'INACTIVE', 'GRADUATED', 'SUSPENDED') NOT NULL DEFAULT 'ACTIVE',
-          enrollmentDate DATE,
-          graduationDate DATE,
-          createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          INDEX (halaqahId),
-          INDEX (waliId),
-          INDEX (status)
-        )
-      `);
+      if (halaqahIds.length === 0) {
+        // Musyrif has no halaqah assigned
+        return ApiResponse.success([], "No santri found - no halaqah assigned");
+      }
 
-      // Insert sample data
-      await connection.execute(`
-        INSERT INTO santri (id, nis, name, gender, status, enrollmentDate) VALUES
-        ('santri_001', 'S001', 'Ahmad Fauzi', 'MALE', 'ACTIVE', '2023-01-01'),
-        ('santri_002', 'S002', 'Fatimah Azzahra', 'FEMALE', 'ACTIVE', '2023-01-02'),
-        ('santri_003', 'S003', 'Muhammad Rizki', 'MALE', 'ACTIVE', '2023-01-03'),
-        ('santri_004', 'S004', 'Aisyah Putri', 'FEMALE', 'ACTIVE', '2023-01-04'),
-        ('santri_005', 'S005', 'Abdullah Zaki', 'MALE', 'ACTIVE', '2023-01-05')
-      `);
-
-      console.log("Table santri created with sample data");
-    }
-
-    // Check if halaqah table exists
-    let halaqahTableExists = true;
-    try {
-      await connection.execute("SELECT 1 FROM halaqah LIMIT 1");
-      console.log("Table halaqah exists");
-    } catch (error) {
-      console.log("Table halaqah does not exist, creating it...");
-      halaqahTableExists = false;
-
-      // Create halaqah table
-      await connection.execute(`
-        CREATE TABLE halaqah (
-          id VARCHAR(50) PRIMARY KEY,
-          name VARCHAR(100) NOT NULL,
-          level VARCHAR(50),
-          description TEXT,
-          musyrifId VARCHAR(50),
-          schedule TEXT,
-          location VARCHAR(100),
-          capacity INT,
-          createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          INDEX (musyrifId)
-        )
-      `);
-
-      // Insert sample data
-      await connection.execute(`
-        INSERT INTO halaqah (id, name, level) VALUES
-        ('halaqah_001', 'Halaqah Al-Fatihah', 'Pemula'),
-        ('halaqah_002', 'Halaqah Al-Baqarah', 'Menengah'),
-        ('halaqah_003', 'Halaqah Ali Imran', 'Lanjutan')
-      `);
-
-      console.log("Table halaqah created with sample data");
-
-      // Update santri with halaqahId if both tables were just created
-      if (!santriTableExists) {
-        await connection.execute(
-          `UPDATE santri SET halaqahId = 'halaqah_001' WHERE id IN ('santri_001', 'santri_002')`,
-        );
-        await connection.execute(
-          `UPDATE santri SET halaqahId = 'halaqah_002' WHERE id IN ('santri_003', 'santri_004')`,
-        );
-        await connection.execute(
-          `UPDATE santri SET halaqahId = 'halaqah_003' WHERE id = 'santri_005'`,
-        );
-        console.log("Updated santri with halaqahId");
+      where.halaqahId = { in: halaqahIds };
+      console.log("Musyrif access: filtering by halaqahIds =", halaqahIds);
+    } else if (authResult.role === 'WALI') {
+      // Wali can only see their own children
+      where.waliId = authResult.id;
+    } else if (authResult.role === 'ADMIN') {
+      // Admin can see all santri, apply requested filters
+      if (halaqahId) {
+        where.halaqahId = halaqahId;
+      }
+      if (waliId) {
+        where.waliId = waliId;
       }
     }
 
-    // Check if users table exists
-    let usersTableExists = true;
-    try {
-      await connection.execute("SELECT 1 FROM users LIMIT 1");
-      console.log("Table users exists");
-    } catch (error) {
-      console.log("Table users does not exist");
-      usersTableExists = false;
-    }
-
-    // Build query based on available tables
-    let query = "";
-
-    if (simple) {
-      query = `
-        SELECT
-          id,
-          nis,
-          name,
-          photo,
-          halaqahId
-        FROM
-          santri s
-        WHERE 1=1
-      `;
-    } else if (halaqahTableExists && usersTableExists) {
-      query = `
-        SELECT
-          s.id,
-          s.nis,
-          s.name,
-          s.birthDate,
-          s.birthPlace,
-          s.gender,
-          s.address,
-          s.phone,
-          s.email,
-          s.photo,
-          s.status,
-          s.enrollmentDate,
-          s.graduationDate,
-          s.waliId,
-          s.halaqahId,
-          h.name as halaqahName,
-          h.level as halaqahLevel,
-          u.name as waliName,
-          u.email as waliEmail,
-          u.phone as waliPhone
-        FROM
-          santri s
-        LEFT JOIN
-          halaqah h ON s.halaqahId = h.id
-        LEFT JOIN
-          users u ON s.waliId = u.id
-        WHERE 1=1
-      `;
-    } else if (halaqahTableExists) {
-      query = `
-        SELECT
-          s.id,
-          s.nis,
-          s.name,
-          s.birthDate,
-          s.birthPlace,
-          s.gender,
-          s.address,
-          s.phone,
-          s.email,
-          s.photo,
-          s.status,
-          s.enrollmentDate,
-          s.graduationDate,
-          s.waliId,
-          s.halaqahId,
-          h.name as halaqahName,
-          h.level as halaqahLevel
-        FROM
-          santri s
-        LEFT JOIN
-          halaqah h ON s.halaqahId = h.id
-        WHERE 1=1
-      `;
-    } else {
-      query = `
-        SELECT
-          s.id,
-          s.nis,
-          s.name,
-          s.birthDate,
-          s.birthPlace,
-          s.gender,
-          s.address,
-          s.phone,
-          s.email,
-          s.photo,
-          s.status,
-          s.enrollmentDate,
-          s.graduationDate,
-          s.waliId,
-          s.halaqahId
-        FROM
-          santri s
-        WHERE 1=1
-      `;
-    }
-
-    const params = [];
-
-    if (status && status !== "ALL") {
-      query += ` AND s.status = ?`;
-      params.push(status);
-    } else {
-      // Default to ACTIVE status if not specified
-      query += ` AND s.status = 'ACTIVE'`;
-    }
-
-    if (halaqahId && halaqahId !== "ALL") {
-      query += ` AND s.halaqahId = ?`;
-      params.push(halaqahId);
-    }
-
-    if (waliId && waliId !== "ALL") {
-      query += ` AND s.waliId = ?`;
-      params.push(waliId);
+    // Apply common filters
+    if (status) {
+      where.status = status;
     }
 
     if (search) {
-      query += ` AND (s.name LIKE ? OR s.nis LIKE ? OR s.email LIKE ?)`;
-      const searchParam = `%${search}%`;
-      params.push(searchParam, searchParam, searchParam);
+      where.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { nis: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } }
+      ];
     }
 
-    query += ` ORDER BY s.name ASC`;
+    console.log("Final where clause:", JSON.stringify(where));
 
-    console.log("Executing query:", query);
-    console.log("With params:", params);
-
-    // Execute query
-    const [rows] = await connection.execute(query, params);
-    console.log(`Found ${(rows as any[]).length} santri records`);
-
-    // Format data
-    const santri = await Promise.all(
-      (rows as any[]).map(async (row) => {
-        const result = {
-          id: row.id,
-          nis: row.nis,
-          name: row.name,
-          birthDate: row.birthDate,
-          birthPlace: row.birthPlace,
-          gender: row.gender,
-          address: row.address,
-          phone: row.phone,
-          email: row.email,
-          photo: row.photo,
-          status: row.status,
-          enrollmentDate: row.enrollmentDate,
-          graduationDate: row.graduationDate,
-          wali: row.waliId
-            ? {
-                id: row.waliId,
-                name: row.waliName,
-                email: row.waliEmail,
-                phone: row.waliPhone,
-              }
-            : null,
-          halaqah: row.halaqahId
-            ? {
-                id: row.halaqahId,
-                name: row.halaqahName,
-                level: row.halaqahLevel,
-              }
-            : null,
-        };
-
-        // If simple mode, return without additional data
-        if (simple) {
-          return result;
+    // Query santri with Prisma
+    const santri = await prisma.santri.findMany({
+      where,
+      include: simple ? undefined : {
+        halaqah: {
+          select: {
+            id: true,
+            name: true,
+            level: true
+          }
+        },
+        wali: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true
+          }
         }
-
-        try {
-          // Ensure connection is not null before executing queries
-          if (!connection) {
-            throw new Error("Database connection is null");
-          }
-
-          // Check if hafalan table exists
-          let hafalanRows = [];
-          try {
-            const [rows] = await connection.execute(
-              `
-            SELECT 
-              id, surahId, surahName, ayahStart, ayahEnd, type, status, grade, recordedAt
-            FROM
-              hafalan
-            WHERE
-              santriId = ?
-            ORDER BY
-              recordedAt DESC
-            LIMIT 5
-          `,
-              [row.id],
-            );
-            hafalanRows = rows as any[];
-          } catch (error) {
-            console.log(
-              `Table hafalan does not exist or error fetching hafalan for santri ${row.id}`,
-            );
-          }
-
-          // Check if attendance table exists
-          let attendanceRows = [];
-          try {
-            const [rows] = await connection.execute(
-              `
-            SELECT
-              id, date, status
-            FROM
-              attendance
-            WHERE
-              santriId = ?
-            ORDER BY
-              date DESC
-            LIMIT 10
-          `,
-              [row.id],
-            );
-            attendanceRows = rows as any[];
-          } catch (error) {
-            console.log(
-              `Table attendance does not exist or error fetching attendance for santri ${row.id}`,
-            );
-          }
-
-          // Check if payments table exists
-          let paymentRows = [];
-          try {
-            const [rows] = await connection.execute(
-              `
-            SELECT
-              id, type, amount, status, dueDate
-            FROM
-              payments
-            WHERE
-              santriId = ?
-            ORDER BY
-              dueDate DESC
-            LIMIT 5
-          `,
-              [row.id],
-            );
-            paymentRows = rows as any[];
-          } catch (error) {
-            console.log(
-              `Table payments does not exist or error fetching payments for santri ${row.id}`,
-            );
-          }
-
-          return {
-            ...result,
-            hafalan: hafalanRows || [],
-            attendance: attendanceRows || [],
-            payments: paymentRows || [],
-          };
-        } catch (error) {
-          console.error(
-            `Error fetching related data for santri ${row.id}:`,
-            error,
-          );
-          return {
-            ...result,
-            hafalan: [],
-            attendance: [],
-            payments: [],
-          };
-        }
-      }),
-    );
-
-    console.log(`Returning ${santri.length} formatted santri records`);
-
-    return NextResponse.json({
-      success: true,
-      santri,
-      total: santri.length,
-    });
-  } catch (error) {
-    console.error("Error fetching santri:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Gagal mengambil data santri",
-        error: String(error),
       },
-      { status: 500 },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    console.log("Found santri:", santri.length);
+
+    return ApiResponse.success(santri, `Found ${santri.length} santri`);
+
+  } catch (error) {
+    console.error("Error in GET /api/santri:", error);
+    return ApiResponse.error(
+      "Failed to fetch santri data",
+      500,
+      error instanceof Error ? error.message : "Unknown error"
     );
-  } finally {
-    if (connection) {
-      await connection.end();
-    }
   }
 }
 
-// POST /api/santri - Create new santri
+// POST /api/santri - Create new santri (Admin only - Musyrif cannot create)
 export async function POST(request: NextRequest) {
-  let connection: mysql.Connection | null = null;
-
   try {
+    // Check authentication and permission
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
+    // Check permission - Only admin can create santri
+    if (!hasPermission(authResult.role, 'santri:create')) {
+      return ApiResponse.forbidden("Access denied to create santri. Only admin can add new santri.");
+    }
+
     const body = await request.json();
     const {
       nis,
       name,
+      gender,
       birthDate,
       birthPlace,
-      gender,
       address,
       phone,
       email,
       photo,
-      status = "ACTIVE",
-      waliId,
       halaqahId,
-      enrollmentDate,
-      graduationDate,
+      waliId,
+      status = 'ACTIVE',
+      enrollmentDate
     } = body;
 
     // Validation
-    if (
-      !nis ||
-      !name ||
-      !birthDate ||
-      !birthPlace ||
-      !gender ||
-      !address ||
-      !waliId ||
-      !enrollmentDate
-    ) {
-      return NextResponse.json(
-        { success: false, message: "Field wajib tidak boleh kosong" },
-        { status: 400 },
-      );
+    if (!name || !gender) {
+      return ApiResponse.error("Name and gender are required");
     }
 
-    // Create connection
-    connection = await mysql.createConnection(dbConfig);
+    // For musyrif, validate they can only add santri to their own halaqah
+    if (authResult.role === 'MUSYRIF' && halaqahId) {
+      const halaqah = await prisma.halaqah.findUnique({
+        where: { id: halaqahId }
+      });
+
+      if (!halaqah || halaqah.musyrifId !== authResult.id) {
+        return ApiResponse.forbidden("You can only add santri to your own halaqah");
+      }
+    }
 
     // Check if NIS already exists
-    const [existingSantriRows] = await connection.execute(
-      "SELECT * FROM santri WHERE nis = ?",
-      [nis],
-    );
+    if (nis) {
+      const existingSantri = await prisma.santri.findUnique({
+        where: { nis }
+      });
 
-    if ((existingSantriRows as any[]).length > 0) {
-      return NextResponse.json(
-        { success: false, message: "NIS sudah digunakan" },
-        { status: 400 },
-      );
-    }
-
-    // Check if wali exists
-    const [waliRows] = await connection.execute(
-      'SELECT * FROM users WHERE id = ? AND role = "WALI"',
-      [waliId],
-    );
-
-    if ((waliRows as any[]).length === 0) {
-      return NextResponse.json(
-        { success: false, message: "Wali tidak ditemukan" },
-        { status: 400 },
-      );
-    }
-
-    // Check if halaqah exists (if provided)
-    if (halaqahId) {
-      const [halaqahRows] = await connection.execute(
-        "SELECT * FROM halaqah WHERE id = ?",
-        [halaqahId],
-      );
-
-      if ((halaqahRows as any[]).length === 0) {
-        return NextResponse.json(
-          { success: false, message: "Halaqah tidak ditemukan" },
-          { status: 400 },
-        );
+      if (existingSantri) {
+        return ApiResponse.error("NIS already exists");
       }
     }
 
     // Create santri
-    const santriId = `santri_${Date.now()}`;
-    const birthDateObj = new Date(birthDate);
-    const enrollmentDateObj = new Date(enrollmentDate);
-    const graduationDateObj = graduationDate ? new Date(graduationDate) : null;
-
-    await connection.execute(
-      `
-      INSERT INTO santri (
-        id, nis, name, birthDate, birthPlace, gender, address,
-        phone, email, photo, status, waliId, halaqahId,
-        enrollmentDate, graduationDate, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-    `,
-      [
-        santriId,
+    const santri = await prisma.santri.create({
+      data: {
         nis,
         name,
-        birthDateObj,
-        birthPlace,
         gender,
+        birthDate: birthDate ? new Date(birthDate) : null,
+        birthPlace,
         address,
-        phone || null,
-        email || null,
-        photo || null,
-        status,
+        phone,
+        email,
+        photo,
+        halaqahId,
         waliId,
-        halaqahId || null,
-        enrollmentDateObj,
-        graduationDateObj,
-      ],
-    );
-
-    // Get the created santri with related data
-    const [santriRows] = await connection.execute(
-      `
-      SELECT s.*, u.name as waliName, u.email as waliEmail, u.phone as waliPhone,
-             h.name as halaqahName, h.level as halaqahLevel
-      FROM santri s
-      LEFT JOIN users u ON s.waliId = u.id
-      LEFT JOIN halaqah h ON s.halaqahId = h.id
-      WHERE s.id = ?
-    `,
-      [santriId],
-    );
-
-    const santri = (santriRows as any[])[0];
-
-    return NextResponse.json({
-      success: true,
-      message: "Santri berhasil dibuat",
-      santri,
+        status,
+        enrollmentDate: enrollmentDate ? new Date(enrollmentDate) : new Date()
+      },
+      include: {
+        halaqah: {
+          select: {
+            id: true,
+            name: true,
+            level: true
+          }
+        },
+        wali: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
     });
+
+    console.log("Created santri:", santri.id);
+    return ApiResponse.success(santri, "Santri created successfully");
+
   } catch (error) {
-    console.error("Error creating santri:", error);
-    return NextResponse.json(
-      { success: false, message: "Gagal membuat santri" },
-      { status: 500 },
+    console.error("Error in POST /api/santri:", error);
+    return ApiResponse.error(
+      "Failed to create santri",
+      500,
+      error instanceof Error ? error.message : "Unknown error"
     );
-  } finally {
-    if (connection) {
-      await connection.end();
-    }
   }
 }
+
+

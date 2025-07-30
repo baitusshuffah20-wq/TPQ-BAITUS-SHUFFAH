@@ -71,45 +71,35 @@ export class NotificationTriggerService {
       const threeDaysFromNow = new Date();
       threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
 
-      const duePayments = await prisma.transaction.findMany({
+      const duePayments = await prisma.payment.findMany({
         where: {
           status: "PENDING",
           dueDate: {
             gte: new Date(),
             lte: threeDaysFromNow,
           },
-          // Don't send reminder if already sent today
-          NOT: {
-            notifications: {
-              some: {
-                type: "PAYMENT_REMINDER",
-                createdAt: {
-                  gte: new Date(new Date().setHours(0, 0, 0, 0)),
-                },
-              },
-            },
-          },
         },
         include: {
-          student: {
+          santri: {
             include: {
-              parent: true,
+              wali: true,
             },
           },
         },
       });
 
       for (const payment of duePayments) {
-        if (payment.student?.parent) {
+        if (payment.santri?.wali) {
           await NotificationService.createNotification({
             type: "PAYMENT_REMINDER",
             title: "Pengingat Pembayaran SPP",
-            message: `Pembayaran SPP untuk ${payment.student.name} akan jatuh tempo pada ${payment.dueDate?.toLocaleDateString("id-ID")}. Jumlah: ${this.formatCurrency(payment.amount)}`,
+            message: `Pembayaran SPP untuk ${payment.santri.name} akan jatuh tempo pada ${payment.dueDate?.toLocaleDateString("id-ID")}. Jumlah: ${this.formatCurrency(payment.amount)}`,
             priority: "HIGH",
             channels: ["EMAIL", "WHATSAPP"],
-            recipientId: payment.student.parent.id,
-            data: {
-              studentName: payment.student.name,
+            recipientId: payment.santri.wali.id,
+            createdBy: "system",
+            metadata: {
+              studentName: payment.santri.name,
               amount: payment.amount,
               dueDate: payment.dueDate,
               paymentId: payment.id,
@@ -132,35 +122,24 @@ export class NotificationTriggerService {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
 
-      const overduePayments = await prisma.transaction.findMany({
+      const overduePayments = await prisma.payment.findMany({
         where: {
           status: "PENDING",
           dueDate: {
             lt: new Date(),
           },
-          // Don't send overdue notice if already sent today
-          NOT: {
-            notifications: {
-              some: {
-                type: "PAYMENT_OVERDUE",
-                createdAt: {
-                  gte: new Date(new Date().setHours(0, 0, 0, 0)),
-                },
-              },
-            },
-          },
         },
         include: {
-          student: {
+          santri: {
             include: {
-              parent: true,
+              wali: true,
             },
           },
         },
       });
 
       for (const payment of overduePayments) {
-        if (payment.student?.parent) {
+        if (payment.santri?.wali) {
           const daysOverdue = Math.floor(
             (new Date().getTime() - (payment.dueDate?.getTime() || 0)) /
               (1000 * 60 * 60 * 24),
@@ -169,12 +148,13 @@ export class NotificationTriggerService {
           await NotificationService.createNotification({
             type: "PAYMENT_OVERDUE",
             title: "Pembayaran SPP Terlambat",
-            message: `Pembayaran SPP untuk ${payment.student.name} telah terlambat ${daysOverdue} hari. Mohon segera melakukan pembayaran. Jumlah: ${this.formatCurrency(payment.amount)}`,
+            message: `Pembayaran SPP untuk ${payment.santri.name} telah terlambat ${daysOverdue} hari. Mohon segera melakukan pembayaran. Jumlah: ${this.formatCurrency(payment.amount)}`,
             priority: "URGENT",
             channels: ["EMAIL", "WHATSAPP"],
-            recipientId: payment.student.parent.id,
-            data: {
-              studentName: payment.student.name,
+            recipientId: payment.santri.wali.id,
+            createdBy: "system",
+            metadata: {
+              studentName: payment.santri.name,
               amount: payment.amount,
               dueDate: payment.dueDate,
               daysOverdue,
@@ -197,31 +177,32 @@ export class NotificationTriggerService {
   // Payment Confirmation (when payment is received)
   static async sendPaymentConfirmation(paymentId: string) {
     try {
-      const payment = await prisma.transaction.findUnique({
+      const payment = await prisma.payment.findUnique({
         where: { id: paymentId },
         include: {
-          student: {
+          santri: {
             include: {
-              parent: true,
+              wali: true,
             },
           },
         },
       });
 
-      if (payment && payment.student?.parent) {
+      if (payment && payment.santri?.wali) {
         await NotificationService.createNotification({
           type: "PAYMENT_CONFIRMATION",
           title: "Konfirmasi Pembayaran SPP",
-          message: `Pembayaran SPP untuk ${payment.student.name} sebesar ${this.formatCurrency(payment.amount)} telah diterima. Terima kasih atas pembayarannya.`,
+          message: `Pembayaran SPP untuk ${payment.santri.name} sebesar ${this.formatCurrency(payment.amount)} telah diterima. Terima kasih atas pembayarannya.`,
           priority: "NORMAL",
           channels: ["EMAIL", "WHATSAPP"],
-          recipientId: payment.student.parent.id,
-          data: {
-            studentName: payment.student.name,
+          recipientId: payment.santri.wali.id,
+          createdBy: "system",
+          metadata: {
+            studentName: payment.santri.name,
             amount: payment.amount,
-            paymentDate: payment.paidAt,
+            paymentDate: payment.paidDate,
             paymentId: payment.id,
-            receiptNumber: payment.receiptNumber,
+            reference: payment.reference,
           },
         });
       }
@@ -425,22 +406,19 @@ export class NotificationTriggerService {
       const todayMonth = today.getMonth() + 1;
       const todayDate = today.getDate();
 
-      const birthdayStudents = await prisma.user.findMany({
+      const birthdayStudents = await prisma.santri.findMany({
         where: {
-          role: "STUDENT",
-          isActive: true,
-          dateOfBirth: {
-            not: null,
-          },
+          status: "ACTIVE",
         },
         include: {
-          parent: true,
+          wali: true,
+          halaqah: true,
         },
       });
 
       const todayBirthdays = birthdayStudents.filter((student) => {
-        if (!student.dateOfBirth) return false;
-        const birthDate = new Date(student.dateOfBirth);
+        if (!student.birthDate) return false;
+        const birthDate = new Date(student.birthDate);
         return (
           birthDate.getMonth() + 1 === todayMonth &&
           birthDate.getDate() === todayDate
@@ -448,9 +426,9 @@ export class NotificationTriggerService {
       });
 
       for (const student of todayBirthdays) {
-        if (student.parent) {
+        if (student.wali) {
           const age =
-            today.getFullYear() - (student.dateOfBirth?.getFullYear() || 0);
+            today.getFullYear() - (student.birthDate?.getFullYear() || 0);
 
           await NotificationService.createNotification({
             type: "BIRTHDAY_REMINDER",
@@ -458,12 +436,14 @@ export class NotificationTriggerService {
             message: `Selamat ulang tahun untuk ${student.name} yang berusia ${age} tahun hari ini! Semoga Allah memberikan keberkahan dan kemudahan dalam menghafal Al-Quran.`,
             priority: "NORMAL",
             channels: ["EMAIL", "WHATSAPP"],
-            recipientId: student.parent.id,
-            data: {
+            recipientId: student.wali.id,
+            recipientType: "WALI",
+            metadata: {
               studentName: student.name,
               age,
-              birthDate: student.dateOfBirth,
+              birthDate: student.birthDate,
             },
+            createdBy: "system",
           });
         }
       }

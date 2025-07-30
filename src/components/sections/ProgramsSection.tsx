@@ -16,6 +16,8 @@ import {
   Zap,
   Loader,
 } from "lucide-react";
+import { safeFetch, formatErrorForUser } from "@/lib/api-utils";
+import { mockPrograms } from "@/lib/mock-data";
 
 interface Program {
   id: string;
@@ -65,40 +67,23 @@ const ProgramsSection = () => {
         setLoading(true);
         setError(null); // Clear any previous errors
 
-        // Use try-catch for fetch to handle network errors
-        let response;
-        try {
-          response = await fetch("/api/programs");
-        } catch (fetchError) {
-          console.error("Network error when fetching programs:", fetchError);
-          setError(
-            "Network error. Please check your connection and try again.",
-          );
+        // Use safeFetch for better error handling
+        const response = await safeFetch("/api/programs");
+
+        if (!response.success) {
+          console.error("Error fetching programs:", response.error);
+          console.log("Using fallback mock data...");
+
+          // Use mock data as fallback
+          setPrograms(mockPrograms);
+
+          setError(formatErrorForUser(response.error || "Failed to load programs"));
           setLoading(false);
           return;
         }
 
-        if (!response.ok) {
-          console.error(
-            `Server error: ${response.status} ${response.statusText}`,
-          );
-          setError(
-            `Failed to load programs: Server responded with status ${response.status}`,
-          );
-          setLoading(false);
-          return;
-        }
-
-        // Use try-catch for JSON parsing to handle malformed responses
-        let data;
-        try {
-          data = await response.json();
-        } catch (jsonError) {
-          console.error("Error parsing JSON response:", jsonError);
-          setError("Invalid response from server. Please try again later.");
-          setLoading(false);
-          return;
-        }
+        // Get data from response
+        const data = response.data;
 
         if (data && data.success) {
           try {

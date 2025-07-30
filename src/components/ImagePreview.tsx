@@ -71,11 +71,11 @@ export default function ImagePreview({
       setImageError(false);
       setIsLoading(true);
 
-      // Force reload by adding timestamp and cache busting
+      // Simple retry without timestamp to prevent infinite loading
       const img = new Image();
       img.onload = handleImageLoad;
       img.onerror = handleImageError;
-      img.src = `${src}?t=${Date.now()}&retry=${retryCount + 1}`;
+      img.src = src;
     }
   };
 
@@ -107,7 +107,7 @@ export default function ImagePreview({
         </div>
       )}
       <img
-        src={`${currentSrc}?t=${Date.now()}&retry=${retryCount}`}
+        src={currentSrc}
         alt={alt}
         className={className}
         onError={handleImageError}

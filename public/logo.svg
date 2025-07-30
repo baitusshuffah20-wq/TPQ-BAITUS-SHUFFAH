@@ -1,17 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background Circle -->
-  <circle cx="256" cy="256" r="248" fill="white" stroke="#0D9488" stroke-width="16"/>
-  
   <!-- Quran Book Shape -->
   <path d="M156 146C156 137.163 163.163 130 172 130H340C348.837 130 356 137.163 356 146V366C356 374.837 348.837 382 340 382H172C163.163 382 156 374.837 156 366V146Z" fill="#0D9488"/>
-  
+
   <!-- Arabic Style Decorative Lines -->
   <path d="M186 180H326" stroke="white" stroke-width="12" stroke-linecap="round"/>
   <path d="M186 220H306" stroke="white" stroke-width="12" stroke-linecap="round"/>
   <path d="M186 260H326" stroke="white" stroke-width="12" stroke-linecap="round"/>
   <path d="M186 300H286" stroke="white" stroke-width="12" stroke-linecap="round"/>
-  
+
   <!-- Decorative Dots -->
   <circle cx="186" cy="340" r="6" fill="white"/>
   <circle cx="216" cy="340" r="6" fill="white"/>

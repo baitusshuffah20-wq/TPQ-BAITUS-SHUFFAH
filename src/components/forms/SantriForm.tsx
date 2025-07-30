@@ -350,8 +350,8 @@ export default function SantriForm({
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   disabled={isLoading}
                 >
-                  <option value="MALE">Laki-laki</option>
-                  <option value="FEMALE">Perempuan</option>
+                  <option value="LAKI_LAKI">Laki-laki</option>
+                  <option value="PEREMPUAN">Perempuan</option>
                 </select>
               </div>
 

@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/components/providers/AuthProvider";
 import {
   Users,
@@ -19,64 +21,61 @@ import {
   Phone,
   Mail,
   MapPin,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
+
+interface SantriData {
+  id: string;
+  name: string;
+  nis: string;
+  age: number;
+  halaqah: string;
+  progress: number;
+  lastHafalan: string;
+  attendanceRate: number;
+  phone: string;
+  address: string;
+  parentName: string;
+  status: string;
+  joinDate: string;
+  photo: string | null;
+}
 
 const MusyrifSantriPage = () => {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
+  const [santriList, setSantriList] = useState<SantriData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data for santri under this musyrif
-  const santriList = [
-    {
-      id: "1",
-      name: "Ahmad Fauzi",
-      nis: "24001",
-      age: 12,
-      halaqah: "Al-Fatihah",
-      progress: 75,
-      lastHafalan: "Al-Baqarah 1-20",
-      attendanceRate: 95,
-      phone: "081234567890",
-      address: "Jl. Masjid No. 123",
-      parentName: "Bapak Ahmad",
-      status: "ACTIVE",
-      joinDate: "2024-01-15",
-      photo: null, // Add photo field
-    },
-    {
-      id: "2",
-      name: "Siti Aisyah",
-      nis: "24002",
-      age: 11,
-      halaqah: "Al-Fatihah",
-      progress: 60,
-      lastHafalan: "Ali Imran 1-15",
-      attendanceRate: 88,
-      phone: "081234567891",
-      address: "Jl. Pondok No. 456",
-      parentName: "Ibu Siti",
-      status: "ACTIVE",
-      joinDate: "2024-02-01",
-      photo: null, // Add photo field
-    },
-    {
-      id: "3",
-      name: "Muhammad Rizki",
-      nis: "24003",
-      age: 13,
-      halaqah: "Al-Baqarah",
-      progress: 85,
-      lastHafalan: "An-Nisa 1-25",
-      attendanceRate: 92,
-      phone: "081234567892",
-      address: "Jl. Tahfidz No. 789",
-      parentName: "Bapak Rizki",
-      status: "ACTIVE",
-      joinDate: "2023-12-10",
-      photo: null, // Add photo field
-    },
-  ];
+  useEffect(() => {
+    fetchSantriData();
+  }, []);
+
+  const fetchSantriData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch("/api/musyrif/santri");
+      const data = await response.json();
+
+      if (data.success) {
+        setSantriList(data.data || []);
+      } else {
+        setError("Gagal memuat data santri: " + data.message);
+        setSantriList([]);
+      }
+    } catch (error) {
+      console.error("Error fetching santri data:", error);
+      setError("Terjadi kesalahan saat memuat data santri");
+      setSantriList([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredSantri = santriList.filter((santri) => {
     const matchesSearch =
@@ -99,6 +98,36 @@ const MusyrifSantriPage = () => {
     if (rate >= 80) return "text-yellow-600";
     return "text-red-600";
   };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-teal-600 mx-auto mb-4" />
+            <p className="text-gray-600">Memuat data santri...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Error</h3>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <Button onClick={fetchSantriData} variant="outline">
+              Coba Lagi
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

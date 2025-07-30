@@ -10,6 +10,8 @@ export interface ComponentData {
     width: number;
     height: number;
   };
+  parentId?: string;
+  isContainer?: boolean;
 }
 
 export interface ComponentDefinition {

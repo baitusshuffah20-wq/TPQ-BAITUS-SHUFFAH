@@ -39,15 +39,15 @@ const PropertyGroup: React.FC<PropertyGroupProps> = ({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
-    <div className="border border-gray-200 rounded-lg mb-4">
+    <div className="border border-gray-200 rounded mb-3">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between p-2 text-left hover:bg-gray-50 transition-colors"
       >
-        <span className="font-medium text-sm">{title}</span>
-        {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+        <span className="font-medium text-xs">{title}</span>
+        {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
       </button>
-      {isExpanded && <div className="p-3 pt-0 space-y-3">{children}</div>}
+      {isExpanded && <div className="p-2 pt-0 space-y-2">{children}</div>}
     </div>
   );
 };
@@ -81,13 +81,14 @@ const PropertyInput: React.FC<PropertyInputProps> = ({
             value={value || ""}
             onChange={(e) => onChange(e.target.value)}
             placeholder={`Enter ${schema.label.toLowerCase()}...`}
+            className="text-xs h-8"
           />
         );
 
       case "textarea":
         return (
           <textarea
-            className="w-full p-2 border border-gray-300 rounded-md resize-none min-h-[80px] text-sm"
+            className="w-full p-2 border border-gray-300 rounded-md resize-none min-h-[60px] text-xs"
             value={value || ""}
             onChange={(e) => onChange(e.target.value)}
             placeholder={`Enter ${schema.label.toLowerCase()}...`}
@@ -103,6 +104,7 @@ const PropertyInput: React.FC<PropertyInputProps> = ({
             min={schema.min}
             max={schema.max}
             step={schema.step || 1}
+            className="text-xs h-8"
           />
         );
 
@@ -254,12 +256,12 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({
 
   if (!component) {
     return (
-      <div className="w-80 p-6 border-l bg-gray-50 flex flex-col items-center justify-center text-center">
-        <Settings className="mb-4 text-gray-400" size={48} />
-        <h3 className="font-semibold text-gray-700 mb-2">
+      <div className="h-full p-4 bg-gray-50 flex flex-col items-center justify-center text-center">
+        <Settings className="mb-3 text-gray-400" size={32} />
+        <h3 className="font-semibold text-gray-700 mb-2 text-sm">
           No Component Selected
         </h3>
-        <p className="text-sm text-gray-500">
+        <p className="text-xs text-gray-500">
           Select a component from the canvas to edit its properties
         </p>
       </div>
@@ -288,14 +290,12 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center justify-between mb-3">
+      <div className="p-3 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between mb-2">
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">Properties</h3>
-            <p className="text-sm text-gray-600 mt-1">
-              {component
-                ? "Edit component properties"
-                : "Select a component to edit"}
+            <h3 className="text-sm font-semibold text-gray-800">Properties</h3>
+            <p className="text-xs text-gray-600 mt-1">
+              Edit component properties
             </p>
           </div>
           <div className="flex items-center gap-1">
@@ -303,42 +303,43 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({
               size="sm"
               variant="outline"
               onClick={handleDuplicateComponent}
+              className="h-6 w-6 p-0"
             >
-              <Copy size={14} />
+              <Copy size={12} />
             </Button>
-            <Button size="sm" variant="outline">
-              <Eye size={14} />
+            <Button size="sm" variant="outline" className="h-6 w-6 p-0">
+              <Eye size={12} />
             </Button>
-            <Button size="sm" variant="outline">
-              <Lock size={14} />
+            <Button size="sm" variant="outline" className="h-6 w-6 p-0">
+              <Lock size={12} />
             </Button>
           </div>
         </div>
 
         {/* Component Info */}
-        <div className="bg-blue-50 p-3 rounded-lg">
+        <div className="bg-blue-50 p-2 rounded">
           <div className="flex items-center gap-2 mb-1">
-            <definition.icon size={16} className="text-blue-600" />
-            <span className="font-medium text-blue-900">
+            <definition.icon size={14} className="text-blue-600" />
+            <span className="font-medium text-blue-900 text-xs">
               {definition.label}
             </span>
           </div>
-          <div className="text-xs text-blue-700">ID: {component.id}</div>
+          <div className="text-xs text-blue-700 truncate">ID: {component.id}</div>
         </div>
 
         {/* Search */}
-        <div className="mt-3">
+        <div className="mt-2">
           <Input
             placeholder="Search properties..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="text-sm"
+            className="text-xs h-7"
           />
         </div>
       </div>
 
       {/* Properties */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-2">
         {filteredProperties.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
             <p>No properties found</p>

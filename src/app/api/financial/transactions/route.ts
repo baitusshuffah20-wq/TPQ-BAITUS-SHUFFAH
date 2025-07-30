@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { NotificationTriggerService } from "@/lib/notification-triggers";
+import { requirePermission, ApiResponse } from "@/lib/auth-middleware";
 
-// GET /api/financial/transactions - Get all transactions
+// GET /api/financial/transactions - Get all transactions (Admin only)
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication and permission
+    const authResult = await requirePermission(request, 'finance:view');
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type");
     const category = searchParams.get("category");
@@ -134,9 +140,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/financial/transactions - Create new transaction
+// POST /api/financial/transactions - Create new transaction (Admin only)
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication and permission
+    const authResult = await requirePermission(request, 'finance:create');
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
     const body = await request.json();
     const {
       type,

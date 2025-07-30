@@ -39,8 +39,8 @@ export interface Santri {
 }
 
 export enum Gender {
-  MALE = "MALE",
-  FEMALE = "FEMALE",
+  LAKI_LAKI = "LAKI_LAKI",
+  PEREMPUAN = "PEREMPUAN",
 }
 
 export enum SantriStatus {

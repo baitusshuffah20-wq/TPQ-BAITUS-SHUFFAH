@@ -109,12 +109,12 @@ export function generateSantriTemplate(): void {
     {
       sqref: "E:E",
       type: "list",
-      formula1: '"MALE,FEMALE"',
+      formula1: '"LAKI_LAKI,PEREMPUAN"',
       showDropDown: true,
       promptTitle: "Jenis Kelamin",
-      prompt: "Pilih MALE atau FEMALE",
+      prompt: "Pilih LAKI_LAKI atau PEREMPUAN",
       errorTitle: "Input Tidak Valid",
-      error: "Hanya MALE atau FEMALE yang diperbolehkan",
+      error: "Hanya LAKI_LAKI atau PEREMPUAN yang diperbolehkan",
     },
     {
       sqref: "K:K",

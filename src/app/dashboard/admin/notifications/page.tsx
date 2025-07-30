@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ interface NotificationStats {
 }
 
 export default function NotificationsPage() {
+  const { data: session } = useSession();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [stats, setStats] = useState<NotificationStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,15 +48,19 @@ export default function NotificationsPage() {
   });
 
   useEffect(() => {
-    loadNotifications();
-    loadStats();
-  }, [filters]);
+    if (session?.user?.id) {
+      loadNotifications();
+      loadStats();
+    }
+  }, [filters, session]);
 
   const loadNotifications = async () => {
+    if (!session?.user?.id) return;
+
     try {
       setLoading(true);
       const params = new URLSearchParams({
-        userId: "admin-user",
+        userId: session.user.id,
         limit: "50",
         offset: "0",
       });
@@ -75,9 +81,11 @@ export default function NotificationsPage() {
   };
 
   const loadStats = async () => {
+    if (!session?.user?.id) return;
+
     try {
       const params = new URLSearchParams({
-        userId: "admin-user",
+        userId: session.user.id,
         statsOnly: "true",
       });
 

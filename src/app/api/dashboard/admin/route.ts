@@ -297,8 +297,8 @@ export async function GET(request: NextRequest) {
         change: "0%", // Placeholder
         changeType: "increase",
         icon: "BookOpen",
-        color: "text-teal-600",
-        bgColor: "bg-teal-50",
+        color: "text-indigo-600",
+        bgColor: "bg-indigo-50",
       },
       {
         title: "Kehadiran Hari Ini",

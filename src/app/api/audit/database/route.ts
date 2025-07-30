@@ -55,9 +55,7 @@ export async function GET(request: NextRequest) {
         select: {
           id: true,
           name: true,
-          currentCapacity: true,
-          maxCapacity: true,
-          level: true,
+          capacity: true,
           status: true,
           musyrif: {
             select: {
@@ -153,7 +151,6 @@ export async function GET(request: NextRequest) {
           id: true,
           donorName: true,
           amount: true,
-          type: true,
           status: true,
           createdAt: true,
         },

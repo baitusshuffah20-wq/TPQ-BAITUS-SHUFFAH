@@ -13,6 +13,7 @@ import {
   BookOpen,
   Heart,
   Phone,
+  Target,
   User,
   LogIn,
   UserPlus,
@@ -74,6 +75,7 @@ const PublicNavbar = () => {
     { name: "Beranda", href: "/", icon: Home },
     { name: "Tentang", href: "/about", icon: BookOpen },
     { name: "Program", href: "/programs", icon: BookOpen },
+    { name: "Campaign", href: "/campaigns", icon: Target },
     { name: "Donasi", href: "/donate", icon: Heart },
     { name: "Kontak", href: "/contact", icon: Phone },
   ];

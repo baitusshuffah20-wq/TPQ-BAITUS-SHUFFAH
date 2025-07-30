@@ -18,6 +18,7 @@ import {
   Star,
   Info,
 } from "lucide-react";
+import { safeFetch, formatErrorForUser } from "@/lib/api-utils";
 import { formatCurrency, formatPercentage } from "@/lib/utils";
 import DonationForm from "@/components/forms/DonationForm";
 
@@ -66,13 +67,11 @@ const DonationSection = () => {
         setIsLoadingCategories(true);
         console.log("Fetching donation categories...");
         try {
-          const response = await fetch(
-            "/api/donations/categories/db?active=true",
-          );
-          console.log("Database categories response status:", response.status);
+          const response = await safeFetch("/api/donations/categories");
+          console.log("Database categories response:", response);
 
-          if (response.ok) {
-            const data = await response.json();
+          if (response.success && response.data) {
+            const data = response.data;
             console.log("Data received from API:", data);
 
             if (
@@ -103,6 +102,8 @@ const DonationSection = () => {
               );
               // Handle cases where data.categories is not an array or data.success is false
             }
+          } else {
+            console.warn("API request failed:", response.error);
           }
         } catch (fetchError) {
           console.error("Error fetching donation categories:", fetchError);

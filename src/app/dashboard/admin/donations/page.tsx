@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,8 @@ import {
   Trash2,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import CampaignManagement from "@/components/admin/donations/CampaignManagement";
+import CategoryManagement from "@/components/admin/donations/CategoryManagement";
 
 interface Donation {
   id: string;
@@ -53,12 +56,13 @@ interface Donation {
 }
 
 const DonationsPage = () => {
+  const router = useRouter();
+  const { data: session, status } = useSession();
   const [user, setUser] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [dateFilter, setDateFilter] = useState("ALL");
-  const router = useRouter();
 
   const [donationList, setDonationList] = useState<Donation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,21 +71,38 @@ const DonationsPage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [currentDonation, setCurrentDonation] = useState<Donation | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState<"donations" | "campaigns" | "categories">("donations");
+  const [summary, setSummary] = useState({
+    totalAmount: 0,
+    totalPaid: 0,
+    totalCount: 0,
+    paidCount: 0,
+  });
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      if (parsedUser.role !== "ADMIN") {
-        router.push("/login");
-      } else {
-        setUser(parsedUser);
-        fetchDonations();
-      }
-    } else {
+    if (status === "loading") return; // Still loading
+
+    if (status === "unauthenticated") {
       router.push("/login");
+      return;
     }
-  }, [router]);
+
+    if (session?.user) {
+      if (session.user.role !== "ADMIN") {
+        router.push("/dashboard");
+        return;
+      }
+      setUser(session.user);
+      fetchDonations();
+    }
+  }, [session, status, router]);
+
+  // Refetch when filters change
+  useEffect(() => {
+    if (user) {
+      fetchDonations();
+    }
+  }, [statusFilter, typeFilter, user]);
 
   const fetchDonations = async () => {
     try {
@@ -91,8 +112,8 @@ const DonationsPage = () => {
       // Build query parameters
       const params = new URLSearchParams({
         limit: "100",
-        ...(filters.type !== "ALL" && { type: filters.type }),
-        ...(filters.status !== "ALL" && { status: filters.status }),
+        ...(typeFilter !== "ALL" && { type: typeFilter }),
+        ...(statusFilter !== "ALL" && { status: statusFilter }),
       });
 
       const response = await fetch(`/api/donations?${params}`);
@@ -128,53 +149,13 @@ const DonationsPage = () => {
       console.error("Error fetching donations:", err);
       setError("Failed to load donations");
       toast.error("Gagal memuat data donasi");
-
-      // Fallback data
-      setDonationList([
-        {
-          id: "1",
-          donorName: "Bapak Ahmad Fulan",
-          donorEmail: "ahmad@email.com",
-          donorPhone: "081234567890",
-          amount: 1000000,
-          type: "GENERAL",
-          method: "BANK_TRANSFER",
-          status: "PAID",
-          reference: "DON001",
-          message: "Semoga bermanfaat untuk kemajuan rumah tahfidz",
-          isAnonymous: false,
-          createdAt: "2024-02-10T10:00:00Z",
-          paidAt: "2024-02-10T10:15:00Z",
-        },
-        {
-          id: "2",
-          donorName: "Donatur Anonim",
-          amount: 500000,
-          type: "SCHOLARSHIP",
-          method: "E_WALLET",
-          status: "PAID",
-          reference: "DON002",
-          message: "Untuk beasiswa santri kurang mampu",
-          isAnonymous: true,
-          createdAt: "2024-02-09T14:30:00Z",
-          paidAt: "2024-02-09T14:35:00Z",
-        },
-        {
-          id: "3",
-          donorName: "Ibu Siti Khadijah",
-          donorEmail: "siti@email.com",
-          donorPhone: "081234567891",
-          amount: 2000000,
-          type: "BUILDING",
-          method: "QRIS",
-          status: "PAID",
-          reference: "DON003",
-          message: "Untuk pembangunan gedung baru",
-          isAnonymous: false,
-          createdAt: "2024-02-08T09:00:00Z",
-          paidAt: "2024-02-08T09:05:00Z",
-        },
-      ]);
+      setDonationList([]);
+      setSummary({
+        totalAmount: 0,
+        totalPaid: 0,
+        totalCount: 0,
+        paidCount: 0,
+      });
     } finally {
       setLoading(false);
     }
@@ -471,6 +452,25 @@ const DonationsPage = () => {
     ).size,
   };
 
+  // Show loading state while session is loading
+  if (status === "loading") {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Memuat halaman...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Don't render if user is not authenticated or not admin
+  if (status === "unauthenticated" || !session?.user || session.user.role !== "ADMIN") {
+    return null;
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -478,9 +478,9 @@ const DonationsPage = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Manajemen Donasi
+              Management Donasi
             </h1>
-            <p className="text-gray-600">Kelola dan pantau donasi yang masuk</p>
+            <p className="text-gray-600">Kelola campaign, kategori, dan data donasi</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline">
@@ -492,6 +492,42 @@ const DonationsPage = () => {
               Catat Donasi Manual
             </Button>
           </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab("donations")}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "donations"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Data Donasi
+            </button>
+            <button
+              onClick={() => setActiveTab("campaigns")}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "campaigns"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Campaign Donasi
+            </button>
+            <button
+              onClick={() => setActiveTab("categories")}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "categories"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Kategori Donasi
+            </button>
+          </nav>
         </div>
 
         {/* Stats Cards */}
@@ -557,80 +593,97 @@ const DonationsPage = () => {
           </Card>
         </div>
 
-        {/* Donation Categories Progress */}
-        <Card>
+        {activeTab === "donations" && (
+          <>
+            {/* Donation Categories Progress */}
+            <Card>
           <CardHeader>
             <CardTitle>Progress Donasi per Kategori</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                {
-                  type: "GENERAL",
-                  name: "Donasi Umum",
-                  target: 100000000,
-                  collected: 75000000,
-                  icon: Heart,
-                },
-                {
-                  type: "BUILDING",
-                  name: "Pembangunan",
-                  target: 500000000,
-                  collected: 320000000,
-                  icon: Building,
-                },
-                {
-                  type: "SCHOLARSHIP",
-                  name: "Beasiswa",
-                  target: 200000000,
-                  collected: 150000000,
-                  icon: GraduationCap,
-                },
-                {
-                  type: "EQUIPMENT",
-                  name: "Peralatan",
-                  target: 50000000,
-                  collected: 35000000,
-                  icon: BookOpen,
-                },
-              ].map((category) => {
-                const Icon = category.icon;
-                const percentage = (category.collected / category.target) * 100;
+              {(() => {
+                // Calculate category totals from actual donation data
+                const categoryTotals = donationList
+                  .filter(d => d.status === "PAID")
+                  .reduce((acc, donation) => {
+                    if (!acc[donation.type]) {
+                      acc[donation.type] = 0;
+                    }
+                    acc[donation.type] += donation.amount;
+                    return acc;
+                  }, {} as Record<string, number>);
 
-                return (
-                  <div
-                    key={category.type}
-                    className="p-4 bg-gray-50 rounded-lg"
-                  >
-                    <div className="flex items-center mb-3">
-                      <Icon className="h-5 w-5 text-teal-600 mr-2" />
-                      <h4 className="font-medium text-gray-900">
-                        {category.name}
-                      </h4>
-                    </div>
+                const categories = [
+                  {
+                    type: "GENERAL",
+                    name: "Donasi Umum",
+                    target: 100000000,
+                    collected: categoryTotals.GENERAL || 0,
+                    icon: Heart,
+                  },
+                  {
+                    type: "BUILDING",
+                    name: "Pembangunan",
+                    target: 500000000,
+                    collected: categoryTotals.BUILDING || 0,
+                    icon: Building,
+                  },
+                  {
+                    type: "SCHOLARSHIP",
+                    name: "Beasiswa",
+                    target: 200000000,
+                    collected: categoryTotals.SCHOLARSHIP || 0,
+                    icon: GraduationCap,
+                  },
+                  {
+                    type: "EQUIPMENT",
+                    name: "Peralatan",
+                    target: 50000000,
+                    collected: categoryTotals.EQUIPMENT || 0,
+                    icon: BookOpen,
+                  },
+                ];
 
-                    <div className="mb-2">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-600">Terkumpul</span>
-                        <span className="font-medium">
-                          {Math.round(percentage)}%
-                        </span>
+                return categories.map((category) => {
+                  const Icon = category.icon;
+                  const percentage = category.target > 0 ? (category.collected / category.target) * 100 : 0;
+
+                  return (
+                    <div
+                      key={category.type}
+                      className="p-4 bg-gray-50 rounded-lg"
+                    >
+                      <div className="flex items-center mb-3">
+                        <Icon className="h-5 w-5 text-teal-600 mr-2" />
+                        <h4 className="font-medium text-gray-900">
+                          {category.name}
+                        </h4>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-teal-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${Math.min(percentage, 100)}%` }}
-                        ></div>
+
+                      <div className="mb-2">
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="text-gray-600">Terkumpul</span>
+                          <span className="font-medium">
+                            {Math.round(percentage)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-teal-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${Math.min(percentage, 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>{formatCurrency(category.collected)}</span>
+                        <span>{formatCurrency(category.target)}</span>
                       </div>
                     </div>
-
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>{formatCurrency(category.collected)}</span>
-                      <span>{formatCurrency(category.target)}</span>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                });
+              })()}
             </div>
           </CardContent>
         </Card>
@@ -823,6 +876,11 @@ const DonationsPage = () => {
             )}
           </CardContent>
         </Card>
+          </>
+        )}
+
+        {activeTab === "campaigns" && <CampaignManagement />}
+        {activeTab === "categories" && <CategoryManagement />}
       </div>
 
       {/* Add Donation Modal */}
