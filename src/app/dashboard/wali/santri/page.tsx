@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,10 +25,54 @@ import {
 
 const WaliSantriPage = () => {
   const { user } = useAuth();
-  const [selectedChild, setSelectedChild] = useState("1");
+  const [selectedChild, setSelectedChild] = useState("");
+  const [children, setChildren] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Mock data for children of this wali
-  const children = [
+  // Load children data from API
+  useEffect(() => {
+    loadChildrenData();
+  }, []);
+
+  const loadChildrenData = async () => {
+    setLoading(true);
+    try {
+      console.log("🔄 Loading children data from API...");
+
+      const response = await fetch("/api/dashboard/wali/santri");
+      console.log("📡 Children API response status:", response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("✅ Children data received:", data);
+
+        if (data.success && data.data.children) {
+          setChildren(data.data.children);
+          // Set first child as selected if none selected
+          if (data.data.children.length > 0 && !selectedChild) {
+            setSelectedChild(data.data.children[0].id);
+          }
+          console.log("✅ Children data set:", data.data.children);
+        } else {
+          console.error("❌ API returned error:", data.message);
+          setError(data.message || "Failed to load children data");
+        }
+      } else {
+        const errorText = await response.text();
+        console.error("❌ Children API Error:", response.status, errorText);
+        setError(`Failed to load children data: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("❌ Error loading children data:", error);
+      setError("Failed to load children data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mock data for fallback (keeping structure for compatibility)
+  const mockChildren = [
     {
       id: "1",
       name: "Ahmad Fauzi",
@@ -137,8 +181,7 @@ const WaliSantriPage = () => {
     },
   ];
 
-  const selectedChildData =
-    children.find((child) => child.id === selectedChild) || children[0];
+  const selectedChildData = children.find((child) => child.id === selectedChild) || children[0];
 
   const getProgressColor = (percentage: number) => {
     if (percentage >= 80) return "text-green-600 bg-green-100";
@@ -164,6 +207,50 @@ const WaliSantriPage = () => {
         return CheckCircle;
     }
   };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Memuat data santri...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Gagal Memuat Data</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <Button onClick={loadChildrenData} className="bg-teal-600 hover:bg-teal-700">
+              Coba Lagi
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (children.length === 0) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Tidak Ada Data Santri</h2>
+            <p className="text-gray-600">Belum ada santri yang terdaftar untuk akun Anda.</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -248,21 +335,21 @@ const WaliSantriPage = () => {
                     {selectedChildData.nis}
                   </div>
                   <div>
-                    <span className="font-medium">Umur:</span>{" "}
-                    {selectedChildData.age} tahun
+                    <span className="font-medium">Bergabung:</span>{" "}
+                    {selectedChildData.joinDate ? new Date(selectedChildData.joinDate).toLocaleDateString('id-ID') : '-'}
                   </div>
                   <div>
-                    <span className="font-medium">Kelas:</span>{" "}
-                    {selectedChildData.class}
+                    <span className="font-medium">Status:</span>{" "}
+                    {selectedChildData.status}
                   </div>
                   <div>
                     <span className="font-medium">Halaqah:</span>{" "}
-                    {selectedChildData.halaqah}
+                    {selectedChildData.halaqah?.name || 'Belum ditentukan'}
                   </div>
                 </div>
                 <div className="mt-2 text-sm text-gray-600">
                   <span className="font-medium">Musyrif:</span>{" "}
-                  {selectedChildData.musyrif}
+                  {selectedChildData.halaqah?.musyrif?.name || 'Belum ditentukan'}
                 </div>
               </div>
             </div>
@@ -282,10 +369,10 @@ const WaliSantriPage = () => {
                     Progress Hafalan
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {selectedChildData.progress.percentage}%
+                    {selectedChildData.hafalan?.progress || 0}%
                   </p>
                   <p className="text-xs text-gray-500">
-                    {selectedChildData.progress.currentSurah}
+                    {selectedChildData.hafalan?.currentLevel || 'Juz 1'}
                   </p>
                 </div>
               </div>
@@ -301,9 +388,9 @@ const WaliSantriPage = () => {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Kehadiran</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {selectedChildData.attendance.percentage}%
+                    {selectedChildData.attendance?.rate || 0}%
                   </p>
-                  <p className="text-xs text-gray-500">Bulan ini</p>
+                  <p className="text-xs text-gray-500">30 hari terakhir</p>
                 </div>
               </div>
             </CardContent>
@@ -320,9 +407,9 @@ const WaliSantriPage = () => {
                     Nilai Terakhir
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {selectedChildData.progress.lastEvaluation.score}
+                    {selectedChildData.hafalan?.averageGrade || 0}
                   </p>
-                  <p className="text-xs text-gray-500">Evaluasi</p>
+                  <p className="text-xs text-gray-500">Rata-rata Nilai</p>
                 </div>
               </div>
             </CardContent>
@@ -339,10 +426,9 @@ const WaliSantriPage = () => {
                     Target Mingguan
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {selectedChildData.progress.weeklyAchieved}/
-                    {selectedChildData.progress.weeklyTarget}
+                    {selectedChildData.hafalan?.approved || 0}
                   </p>
-                  <p className="text-xs text-gray-500">Ayat</p>
+                  <p className="text-xs text-gray-500">Hafalan Disetujui</p>
                 </div>
               </div>
             </CardContent>

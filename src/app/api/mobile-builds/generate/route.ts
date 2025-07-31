@@ -413,9 +413,18 @@ async function copyMobileAppTemplate(
   // Copy base mobile app template
   const templateDir = path.join(process.cwd(), "mobile-app");
 
-  // Copy essential files
+  // Copy specific template based on app type
+  let specificTemplateDir: string;
+  if (appType === "wali") {
+    specificTemplateDir = path.join(process.cwd(), "src/templates/mobile/wali");
+  } else if (appType === "musyrif") {
+    specificTemplateDir = path.join(process.cwd(), "src/templates/mobile/musyrif");
+  } else {
+    specificTemplateDir = path.join(process.cwd(), "src/templates/mobile/modern");
+  }
+
+  // Copy essential files from base template
   const filesToCopy = [
-    "App.tsx",
     "babel.config.js",
     "metro.config.js",
     "tsconfig.json",
@@ -430,13 +439,124 @@ async function copyMobileAppTemplate(
     }
   }
 
-  // Generate App.tsx based on app type and features
-  const appTsx = generateAppTsx(appType, config);
-  await writeFile(path.join(buildDir, "App.tsx"), appTsx);
+  // Copy specific template files if they exist
+  if (existsSync(specificTemplateDir)) {
+    try {
+      // Copy src directory from specific template
+      const srcDir = path.join(specificTemplateDir, "src");
+      if (existsSync(srcDir)) {
+        await execAsync(`cp -r "${srcDir}" "${buildDir}/"`);
+      }
+
+      // Copy App.tsx from specific template if exists
+      const appTsxPath = path.join(specificTemplateDir, "App.tsx");
+      if (existsSync(appTsxPath)) {
+        await execAsync(`cp "${appTsxPath}" "${buildDir}/App.tsx"`);
+      } else {
+        // Generate App.tsx based on app type and features
+        const appTsx = generateAppTsx(appType, config);
+        await writeFile(path.join(buildDir, "App.tsx"), appTsx);
+      }
+    } catch (error) {
+      console.log(`Template copy failed, using generated template: ${error}`);
+      // Fallback to generated App.tsx
+      const appTsx = generateAppTsx(appType, config);
+      await writeFile(path.join(buildDir, "App.tsx"), appTsx);
+    }
+  } else {
+    // Generate App.tsx based on app type and features
+    const appTsx = generateAppTsx(appType, config);
+    await writeFile(path.join(buildDir, "App.tsx"), appTsx);
+  }
 }
 
 function generateAppTsx(appType: string, config: AppConfig): string {
-  if (appType === "musyrif") {
+  if (appType === "wali") {
+    // Use wali template with custom configuration
+    const customBottomTabs = config.customBottomTabs || [
+      { name: "Dashboard", title: "Beranda", icon: "home-outline" },
+      { name: "Children", title: "Anak Saya", icon: "people-outline" },
+      { name: "Payment", title: "Pembayaran", icon: "card-outline" },
+      { name: "Donation", title: "Donasi", icon: "heart-outline" },
+      { name: "Profile", title: "Profil", icon: "person-outline" },
+    ];
+
+    return `
+import React from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+import { NotificationProvider } from './src/contexts/NotificationContext';
+import NotificationHandler from './src/components/NotificationHandler';
+
+// Import screens
+import DashboardScreen from './src/screens/DashboardScreen';
+import ChildrenScreen from './src/screens/ChildrenScreen';
+import PaymentScreen from './src/screens/PaymentScreen';
+import DonationScreen from './src/screens/DonationScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+
+const Tab = createBottomTabNavigator();
+
+const appConfig = {
+  primaryColor: '${config.primaryColor}',
+  secondaryColor: '${config.secondaryColor}',
+  appName: '${config.displayName}',
+  customBottomTabs: ${JSON.stringify(customBottomTabs)},
+  features: {
+    enableNotifications: true,
+    enablePaymentReminder: true,
+    enableProgressTracking: true,
+    enableMessaging: true,
+  },
+};
+
+export default function App() {
+  return (
+    <NotificationProvider>
+      <NavigationContainer>
+        <StatusBar style="auto" />
+        <NotificationHandler />
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
+            tabBarIcon: ({ focused, color, size }) => {
+              const tab = appConfig.customBottomTabs.find(t => t.name === route.name);
+              const iconName = tab?.icon || 'home-outline';
+              return <Ionicons name={iconName} size={size} color={color} />;
+            },
+            tabBarActiveTintColor: appConfig.primaryColor,
+            tabBarInactiveTintColor: 'gray',
+            headerShown: false,
+          })}
+        >
+          ${customBottomTabs
+            .map(
+              (tab) => `
+          <Tab.Screen
+            name="${tab.name}"
+            options={{ title: '${tab.title}' }}
+          >
+            {(props) => {
+              switch('${tab.name}') {
+                case 'Dashboard': return <DashboardScreen {...props} appConfig={appConfig} />;
+                case 'Children': return <ChildrenScreen {...props} appConfig={appConfig} />;
+                case 'Payment': return <PaymentScreen {...props} appConfig={appConfig} />;
+                case 'Donation': return <DonationScreen {...props} appConfig={appConfig} />;
+                case 'Profile': return <ProfileScreen {...props} appConfig={appConfig} />;
+                default: return <DashboardScreen {...props} appConfig={appConfig} />;
+              }
+            }}
+          </Tab.Screen>`,
+            )
+            .join("")}
+        </Tab.Navigator>
+      </NavigationContainer>
+    </NotificationProvider>
+  );
+}
+`;
+  } else if (appType === "musyrif") {
     // Use modern musyrif template with custom configuration
     const customMenuGrid = config.customMenuGrid || [];
     const customBottomTabs = config.customBottomTabs || [

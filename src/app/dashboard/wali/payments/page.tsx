@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,13 +21,101 @@ import {
   Wallet,
 } from "lucide-react";
 
+interface Payment {
+  id: string;
+  type: string;
+  amount: number;
+  status: string;
+  dueDate: string;
+  paidDate?: string;
+  method?: string;
+  reference?: string;
+  notes?: string;
+  createdAt: string;
+  santri: {
+    id: string;
+    name: string;
+    nis: string;
+  };
+}
+
+interface PaymentSummary {
+  total: number;
+  pending: number;
+  paid: number;
+  overdue: number;
+  totalPendingAmount: number;
+  totalPaidAmount: number;
+}
+
 const WaliPaymentsPage = () => {
   const { user } = useAuth();
   const [selectedTab, setSelectedTab] = useState("pending");
   const [searchTerm, setSearchTerm] = useState("");
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [summary, setSummary] = useState<PaymentSummary>({
+    total: 0,
+    pending: 0,
+    paid: 0,
+    overdue: 0,
+    totalPendingAmount: 0,
+    totalPaidAmount: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [filters, setFilters] = useState({
+    status: "",
+    type: "",
+    santriId: "",
+  });
+  const [children, setChildren] = useState([]);
 
-  // Mock payment data
-  const payments = [
+  useEffect(() => {
+    loadPaymentsData();
+  }, [filters]);
+
+  const loadPaymentsData = async () => {
+    setLoading(true);
+    try {
+      console.log("🔄 Loading payments data from API...");
+
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (filters.status) params.append('status', filters.status);
+      if (filters.type) params.append('type', filters.type);
+      if (filters.santriId) params.append('santriId', filters.santriId);
+
+      const response = await fetch(`/api/dashboard/wali/payments?${params}`);
+      console.log("📡 Payments API response status:", response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("✅ Payments data received:", data);
+
+        if (data.success) {
+          setPayments(data.data.payments);
+          setSummary(data.data.summary);
+          setChildren(data.data.filters.children);
+          console.log("✅ Payments data set successfully");
+        } else {
+          console.error("❌ API returned error:", data.message);
+          setError(data.message || "Failed to load payments data");
+        }
+      } else {
+        const errorText = await response.text();
+        console.error("❌ Payments API Error:", response.status, errorText);
+        setError(`Failed to load payments data: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("❌ Error loading payments data:", error);
+      setError("Failed to load payments data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mock payment data (keeping for fallback)
+  const mockPayments = [
     {
       id: "1",
       type: "SPP",

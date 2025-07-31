@@ -9,13 +9,33 @@ import {
 // GET /api/notifications - Get user notifications
 export async function GET(request: NextRequest) {
   try {
+    console.log("🔍 API /notifications GET called");
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
     const limit = parseInt(searchParams.get("limit") || "20");
     const offset = parseInt(searchParams.get("offset") || "0");
     const statsOnly = searchParams.get("statsOnly") === "true";
 
+    // Get filter parameters
+    const filters = {
+      search: searchParams.get("search") || undefined,
+      type: searchParams.get("type") || undefined,
+      status: searchParams.get("status") || undefined,
+      priority: searchParams.get("priority") || undefined,
+      channel: searchParams.get("channel") || undefined,
+    };
+
+    // Remove undefined values
+    Object.keys(filters).forEach(key => {
+      if (filters[key as keyof typeof filters] === undefined) {
+        delete filters[key as keyof typeof filters];
+      }
+    });
+
+    console.log("📋 Request params:", { userId, limit, offset, statsOnly, filters });
+
     if (!userId) {
+      console.log("❌ No userId provided");
       return NextResponse.json(
         { success: false, message: "User ID is required" },
         { status: 400 },
@@ -23,19 +43,30 @@ export async function GET(request: NextRequest) {
     }
 
     if (statsOnly) {
-      const stats = await NotificationService.getNotificationStats(userId);
+      console.log("📊 Getting stats for user:", userId);
+      // For admin (userId="all"), get stats for all notifications
+      const statsUserId = userId === "all" ? undefined : userId;
+      const stats = await NotificationService.getNotificationStats(statsUserId);
+      console.log("✅ Stats result:", stats);
       return NextResponse.json({
         success: true,
         stats,
       });
     }
 
+    console.log("📋 Getting notifications for user:", userId);
+    // For admin (userId="all"), get all notifications
+    const actualUserId = userId === "all" ? undefined : userId;
     const notifications = await NotificationService.getUserNotifications(
-      userId,
+      actualUserId,
       limit,
       offset,
+      filters,
     );
+    console.log(`✅ Found ${notifications.length} notifications`);
+
     const stats = await NotificationService.getNotificationStats(userId);
+    console.log("✅ Stats result:", stats);
 
     return NextResponse.json({
       success: true,

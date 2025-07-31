@@ -158,6 +158,10 @@ const TEMPLATES = {
     name: "Musyrif",
     description: "Template khusus untuk aplikasi musyrif",
   },
+  wali: {
+    name: "Wali",
+    description: "Template khusus untuk aplikasi wali santri",
+  },
   classic: {
     name: "Classic",
     description: "Design klasik dengan warna tradisional",
@@ -464,7 +468,7 @@ export default function MobileAppGenerator() {
           appType,
           config,
           buildId,
-          template: appType === "wali" ? "modern" : "musyrif", // Use musyrif template for musyrif app
+          template: appType === "wali" ? "wali" : "musyrif", // Use wali template for wali app, musyrif template for musyrif app
         }),
       });
 

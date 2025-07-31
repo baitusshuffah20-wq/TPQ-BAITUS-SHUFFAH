@@ -84,8 +84,18 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   const [retryCount, setRetryCount] = useState<number>(0);
   const maxRetries = 3;
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef<boolean>(true);
+
+
 
   const fetchSettings = async () => {
+    // Check if component is still mounted
+    if (!isMountedRef.current) {
+      console.log("Component unmounted, skipping settings fetch");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -101,20 +111,60 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
       const controller = new AbortController();
       abortControllerRef.current = controller;
 
+      // Check if already aborted before starting
+      if (controller.signal.aborted || !isMountedRef.current) {
+        console.log("Controller already aborted or component unmounted, skipping fetch");
+        return;
+      }
+
       const timeoutId = setTimeout(() => {
-        console.log("Settings fetch timeout, aborting request");
-        controller.abort();
-      }, 15000); // 15 second timeout
+        if (!controller.signal.aborted && isMountedRef.current) {
+          console.log("Settings fetch timeout, aborting request");
+          try {
+            controller.abort();
+          } catch (abortError) {
+            console.warn("Error during timeout abort:", abortError);
+          }
+        }
+      }, 3000); // 3 second timeout (reduced from 5)
 
-      const response = await fetch("/api/settings?public=true", {
-        signal: controller.signal,
-        headers: {
-          "Cache-Control": "no-cache",
-          Pragma: "no-cache",
-        },
-      });
+      let response;
+      try {
+        response = await fetch("/api/settings?public=true", {
+          signal: controller.signal,
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
+        });
+      } catch (fetchError) {
+        // Clear timeout on fetch error
+        try {
+          clearTimeout(timeoutId);
+        } catch (clearError) {
+          console.warn("Error clearing timeout on fetch error:", clearError);
+        }
 
-      clearTimeout(timeoutId);
+        // Handle fetch-specific errors including AbortError
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          console.log("Fetch was aborted - this is expected behavior");
+          return;
+        }
+        throw fetchError; // Re-throw non-abort errors
+      }
+
+      // Clear timeout safely
+      try {
+        clearTimeout(timeoutId);
+      } catch (clearError) {
+        console.warn("Error clearing timeout:", clearError);
+      }
+
+      // Check if request was aborted after fetch or component unmounted
+      if (controller.signal.aborted || !isMountedRef.current) {
+        console.log("Request was aborted after fetch or component unmounted");
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(
@@ -124,6 +174,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const data = await response.json();
       console.log("Settings fetched successfully:", data);
+
+      // Check again before updating state
+      if (!isMountedRef.current) {
+        console.log("Component unmounted before updating state");
+        return;
+      }
 
       if (data.success && data.settings) {
         const newSettings = { ...defaultSettings };
@@ -210,83 +266,115 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
             data.settings["about.achievements"].value;
         }
 
-        setSettings(newSettings);
-        setRetryCount(0); // Reset retry count on success
+        // Only update state if component is still mounted
+        if (isMountedRef.current) {
+          setSettings(newSettings);
+          setRetryCount(0); // Reset retry count on success
 
-        // Apply settings to document
-        document.title = newSettings.system.siteName;
-        console.log("Setting document title to:", newSettings.system.siteName);
+          // Apply settings to document
+          try {
+            document.title = newSettings.system.siteName;
+            console.log("Setting document title to:", newSettings.system.siteName);
 
-        // Update favicon
-        const faviconLink = document.querySelector(
-          'link[rel="icon"]',
-        ) as HTMLLinkElement;
-        if (faviconLink) {
-          faviconLink.href = newSettings.system.favicon;
-          console.log("Updated favicon to:", newSettings.system.favicon);
-        } else {
-          const newFaviconLink = document.createElement("link");
-          newFaviconLink.rel = "icon";
-          newFaviconLink.href = newSettings.system.favicon;
-          document.head.appendChild(newFaviconLink);
-          console.log(
-            "Created new favicon link with href:",
-            newSettings.system.favicon,
-          );
+            // Update favicon
+            const faviconLink = document.querySelector(
+              'link[rel="icon"]',
+            ) as HTMLLinkElement;
+            if (faviconLink) {
+              faviconLink.href = newSettings.system.favicon;
+              console.log("Updated favicon to:", newSettings.system.favicon);
+            } else {
+              const newFaviconLink = document.createElement("link");
+              newFaviconLink.rel = "icon";
+              newFaviconLink.href = newSettings.system.favicon;
+              document.head.appendChild(newFaviconLink);
+              console.log(
+                "Created new favicon link with href:",
+                newSettings.system.favicon,
+              );
+            }
+          } catch (domError) {
+            console.warn("Error updating DOM elements:", domError);
+          }
         }
 
-        // Update logo in meta tags
-        let logoMetaTag = document.querySelector(
-          'meta[property="og:image"]',
-        ) as HTMLMetaElement;
-        if (logoMetaTag) {
-          logoMetaTag.content = newSettings.system.logo;
-          console.log("Updated og:image meta tag to:", newSettings.system.logo);
-        } else {
-          logoMetaTag = document.createElement("meta");
-          logoMetaTag.setAttribute("property", "og:image");
-          logoMetaTag.content = newSettings.system.logo;
-          document.head.appendChild(logoMetaTag);
-          console.log(
-            "Created new og:image meta tag with content:",
-            newSettings.system.logo,
-          );
-        }
+          try {
+            // Update logo in meta tags
+            let logoMetaTag = document.querySelector(
+              'meta[property="og:image"]',
+            ) as HTMLMetaElement;
+            if (logoMetaTag) {
+              logoMetaTag.content = newSettings.system.logo;
+              console.log("Updated og:image meta tag to:", newSettings.system.logo);
+            } else {
+              logoMetaTag = document.createElement("meta");
+              logoMetaTag.setAttribute("property", "og:image");
+              logoMetaTag.content = newSettings.system.logo;
+              document.head.appendChild(logoMetaTag);
+              console.log(
+                "Created new og:image meta tag with content:",
+                newSettings.system.logo,
+              );
+            }
 
-        // Update description in meta tags
-        let descMetaTag = document.querySelector(
-          'meta[name="description"]',
-        ) as HTMLMetaElement;
-        if (descMetaTag) {
-          descMetaTag.content = newSettings.system.siteDescription;
-          console.log(
-            "Updated description meta tag to:",
-            newSettings.system.siteDescription,
-          );
-        } else {
-          descMetaTag = document.createElement("meta");
-          descMetaTag.setAttribute("name", "description");
-          descMetaTag.content = newSettings.system.siteDescription;
-          document.head.appendChild(descMetaTag);
-          console.log(
-            "Created new description meta tag with content:",
-            newSettings.system.siteDescription,
-          );
-        }
+            // Update description in meta tags
+            let descMetaTag = document.querySelector(
+              'meta[name="description"]',
+            ) as HTMLMetaElement;
+            if (descMetaTag) {
+              descMetaTag.content = newSettings.system.siteDescription;
+              console.log(
+                "Updated description meta tag to:",
+                newSettings.system.siteDescription,
+              );
+            } else {
+              descMetaTag = document.createElement("meta");
+              descMetaTag.setAttribute("name", "description");
+              descMetaTag.content = newSettings.system.siteDescription;
+              document.head.appendChild(descMetaTag);
+              console.log(
+                "Created new description meta tag with content:",
+                newSettings.system.siteDescription,
+              );
+            }
 
-        // Set language attribute on html tag
-        document.documentElement.lang = newSettings.system.language;
-        console.log("Set document language to:", newSettings.system.language);
+            // Set language attribute on html tag
+            document.documentElement.lang = newSettings.system.language;
+            console.log("Set document language to:", newSettings.system.language);
+          } catch (metaError) {
+            console.warn("Error updating meta tags:", metaError);
+          }
       }
     } catch (err) {
-      console.error("Error fetching settings:", err);
-
-      // Handle AbortError specifically
+      // Handle AbortError specifically first to avoid logging it as an error
       if (err instanceof Error && err.name === 'AbortError') {
-        console.log("Settings fetch was aborted (timeout or component unmount)");
-        setError("Request was cancelled");
-        return; // Don't retry on abort and don't set loading to false here
+        console.log("Settings fetch was aborted (timeout or component unmount) - this is expected behavior");
+
+        // If no settings have been loaded yet, use default settings
+        if (isMountedRef.current && (!settings || Object.keys(settings).length === 0)) {
+          console.log("Using default settings due to aborted fetch");
+          setSettings(defaultSettings);
+          setError(null);
+
+          // Apply default settings to document
+          try {
+            document.title = defaultSettings.system.siteName;
+            const faviconLink = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+            if (faviconLink) {
+              faviconLink.href = defaultSettings.system.favicon;
+            }
+          } catch (domError) {
+            console.warn("Error applying default settings to DOM:", domError);
+          }
+        }
+
+        // Don't set error state for abort errors as they are expected
+        // Don't retry on abort
+        return;
       }
+
+      // Log other errors
+      console.error("Error fetching settings:", err);
 
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
       setError(errorMessage);
@@ -303,6 +391,22 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
         setTimeout(fetchSettings, retryDelay);
       } else {
         console.log("Max retries reached, using default settings");
+
+        // Clear error state and use default settings
+        if (isMountedRef.current) {
+          setError(null);
+          setSettings(defaultSettings);
+
+          // Apply default settings to document
+          document.title = defaultSettings.system.siteName;
+
+          // Update favicon
+          const faviconLink = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+          if (faviconLink) {
+            faviconLink.href = defaultSettings.system.favicon;
+          }
+        }
+
         // Log error to server if available (but don't log abort errors)
         if (!(err instanceof Error && err.name === 'AbortError')) {
           try {
@@ -321,22 +425,70 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       }
     } finally {
-      setIsLoading(false);
+      // Always set loading to false if component is still mounted
+      // This ensures the UI doesn't stay in loading state indefinitely
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    fetchSettings();
+    isMountedRef.current = true;
+
+    const fetchSettingsWithMountCheck = async () => {
+      if (isMountedRef.current) {
+        try {
+          await fetchSettings();
+        } catch (error) {
+          // Handle any uncaught errors, especially AbortError
+          if (error instanceof Error && error.name === 'AbortError') {
+            console.log("Settings fetch aborted during mount check - this is expected");
+          } else {
+            console.error("Unexpected error during settings fetch:", error);
+          }
+        }
+      }
+    };
+
+    // Set a fallback timeout to ensure loading state is cleared
+    const fallbackTimeout = setTimeout(() => {
+      if (isMountedRef.current && isLoading) {
+        console.log("Fallback timeout: Using default settings");
+        setSettings(defaultSettings);
+        setIsLoading(false);
+        setError(null);
+      }
+    }, 2000); // 2 second fallback
+
+    fetchSettingsWithMountCheck();
 
     // Add event listener for when settings are updated
-    window.addEventListener("settings-updated", fetchSettings);
+    const handleSettingsUpdate = () => {
+      if (isMountedRef.current) {
+        fetchSettingsWithMountCheck();
+      }
+    };
+
+    window.addEventListener("settings-updated", handleSettingsUpdate);
 
     return () => {
+      isMountedRef.current = false;
+      // Cleanup fallback timeout
+      clearTimeout(fallbackTimeout);
       // Cleanup: abort any ongoing request and remove event listener
       if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+        try {
+          if (!abortControllerRef.current.signal.aborted) {
+            abortControllerRef.current.abort();
+          }
+        } catch (abortError) {
+          // Silently handle abort errors during cleanup
+          console.log("Cleanup: Request aborted during component unmount");
+        }
+        abortControllerRef.current = null;
       }
-      window.removeEventListener("settings-updated", fetchSettings);
+      window.removeEventListener("settings-updated", handleSettingsUpdate);
     };
   }, []);
 

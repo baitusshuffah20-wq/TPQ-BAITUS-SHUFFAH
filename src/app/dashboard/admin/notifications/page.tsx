@@ -8,6 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   Bell,
   Send,
   MessageSquare,
@@ -21,11 +28,43 @@ import {
   AlertTriangle,
   RefreshCw,
   FileText,
+  X,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { Notification } from "@/lib/quran-data";
 
-// Using Notification interface from quran-data.ts
+// Database Notification interface
+interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type?: string;
+  priority?: string;
+  status?: string;
+  channels?: string;
+  recipientId?: string;
+  recipientType?: string;
+  relatedId?: string;
+  metadata?: string;
+  scheduledAt?: string;
+  sentAt?: string;
+  isRead: boolean;
+  readAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+  creator?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
+}
 
 interface NotificationStats {
   total: number;
@@ -39,6 +78,17 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [stats, setStats] = useState<NotificationStats | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Debug session
+  console.log("🔐 Session data:", session);
+  console.log("🔐 Session status:", session ? "authenticated" : "not authenticated");
+
+  // Force initial load on mount
+  useEffect(() => {
+    console.log("🚀 Component mounted, forcing data load...");
+    loadNotifications();
+    loadStats();
+  }, []);
   const [filters, setFilters] = useState({
     search: "",
     type: "",
@@ -46,34 +96,70 @@ export default function NotificationsPage() {
     priority: "",
     channel: "",
   });
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
+  // Separate useEffect for filter changes
   useEffect(() => {
-    if (session?.user?.id) {
+    if (filters.search || filters.type || filters.status || filters.priority || filters.channel) {
+      console.log("🔄 Filters changed, reloading data...", filters);
       loadNotifications();
-      loadStats();
     }
-  }, [filters, session]);
+  }, [filters]);
 
   const loadNotifications = async () => {
-    if (!session?.user?.id) return;
-
     try {
       setLoading(true);
+
+      // Get current user session to determine role-based access
+      const sessionResponse = await fetch("/api/auth/session");
+      const sessionData = await sessionResponse.json();
+
+      let targetUserId;
+      if (sessionData?.user?.role === "ADMIN") {
+        // Admin can see all notifications
+        targetUserId = "all";
+        console.log("🔍 Loading ALL notifications for ADMIN user");
+      } else {
+        // Non-admin users only see their own notifications
+        targetUserId = sessionData?.user?.id || "cmdqxjrs100005w6299z3eesl";
+        console.log("🔍 Loading notifications for user:", targetUserId, "Role:", sessionData?.user?.role);
+      }
+
+      console.log("🔍 Current filters:", filters);
+
       const params = new URLSearchParams({
-        userId: session.user.id,
+        userId: targetUserId,
         limit: "50",
         offset: "0",
       });
 
+      // Add filter parameters if they exist
+      if (filters.search) params.append("search", filters.search);
+      if (filters.type) params.append("type", filters.type);
+      if (filters.status) params.append("status", filters.status);
+      if (filters.priority) params.append("priority", filters.priority);
+      if (filters.channel) params.append("channel", filters.channel);
+
+      console.log("📡 Fetching notifications with filters:", `/api/notifications?${params}`);
       const response = await fetch(`/api/notifications?${params}`);
+
+      console.log("📡 Response status:", response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log("✅ Notifications data received:", data);
+        console.log("✅ Notifications array:", data.notifications);
+        console.log("✅ Notifications length:", data.notifications?.length);
         setNotifications(data.notifications || []);
+        console.log("✅ State updated, notifications should be:", data.notifications || []);
       } else {
+        const errorText = await response.text();
+        console.error("❌ API Error:", response.status, errorText);
         toast.error("Gagal memuat notifikasi");
       }
     } catch (error) {
-      console.error("Error loading notifications:", error);
+      console.error("❌ Error loading notifications:", error);
       toast.error("Gagal memuat notifikasi");
     } finally {
       setLoading(false);
@@ -81,21 +167,44 @@ export default function NotificationsPage() {
   };
 
   const loadStats = async () => {
-    if (!session?.user?.id) return;
+    try {
+      // Get current user session to determine role-based access
+      const sessionResponse = await fetch("/api/auth/session");
+      const sessionData = await sessionResponse.json();
+
+      let targetUserId;
+      if (sessionData?.user?.role === "ADMIN") {
+        // Admin can see stats for all notifications
+        targetUserId = "all";
+      } else {
+        // Non-admin users only see stats for their own notifications
+        targetUserId = sessionData?.user?.id || "cmdqxjrs100005w6299z3eesl";
+      }
 
     try {
+      console.log("📊 Loading stats for user:", targetUserId);
+
       const params = new URLSearchParams({
-        userId: session.user.id,
+        userId: targetUserId,
         statsOnly: "true",
       });
 
       const response = await fetch(`/api/notifications?${params}`);
+      console.log("📊 Stats response status:", response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log("✅ Stats data received:", data);
         setStats(data.stats);
+      } else {
+        const errorText = await response.text();
+        console.error("❌ Stats API Error:", response.status, errorText);
       }
     } catch (error) {
-      console.error("Error loading stats:", error);
+      console.error("❌ Error loading stats:", error);
+    }
+    } catch (error) {
+      console.error("❌ Error in loadStats:", error);
     }
   };
 
@@ -103,7 +212,19 @@ export default function NotificationsPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
+    console.log("🔄 Filter changed:", { name, value });
     setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const clearFilters = () => {
+    console.log("🧹 Clearing all filters");
+    setFilters({
+      search: "",
+      type: "",
+      status: "",
+      priority: "",
+      channel: "",
+    });
   };
 
   const markAsRead = async (notificationId: string) => {
@@ -128,6 +249,17 @@ export default function NotificationsPage() {
       console.error("Error marking notification as read:", error);
       toast.error("Gagal menandai notifikasi");
     }
+  };
+
+  const handleViewDetail = (notification: Notification) => {
+    console.log("📋 Opening detail for notification:", notification.id);
+    setSelectedNotification(notification);
+    setShowDetailModal(true);
+  };
+
+  const closeDetailModal = () => {
+    setSelectedNotification(null);
+    setShowDetailModal(false);
   };
 
   const getStatusBadge = (status: string) => {
@@ -209,6 +341,12 @@ export default function NotificationsPage() {
       minute: "2-digit",
     });
   };
+
+  // Debug render state
+  console.log("🎨 Render - Loading:", loading);
+  console.log("🎨 Render - Notifications:", notifications);
+  console.log("🎨 Render - Notifications length:", notifications.length);
+  console.log("🎨 Render - Stats:", stats);
 
   if (loading) {
     return (
@@ -372,10 +510,21 @@ export default function NotificationsPage() {
         {/* Filters */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filter Notifikasi
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                Filter Notifikasi
+              </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="text-gray-600 hover:text-gray-800"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Clear Filters
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -519,13 +668,15 @@ export default function NotificationsPage() {
                               Dikirim: {formatDate(notification.sentAt)}
                             </span>
                           )}
-                          {notification.recipientId && (
-                            <span>Penerima: {notification.recipientId}</span>
+                          {notification.user && (
+                            <span className="text-blue-600 font-medium">
+                              Untuk: {notification.user.name} ({notification.user.role})
+                            </span>
                           )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {!notification.readAt && (
+                        {!notification.isRead && (
                           <Button
                             onClick={() => markAsRead(notification.id)}
                             size="sm"
@@ -537,6 +688,7 @@ export default function NotificationsPage() {
                           </Button>
                         )}
                         <Button
+                          onClick={() => handleViewDetail(notification)}
                           size="sm"
                           variant="outline"
                           className="flex items-center gap-1"
@@ -553,6 +705,101 @@ export default function NotificationsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Detail Modal */}
+      <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Detail Notifikasi</DialogTitle>
+            <DialogDescription>
+              Informasi lengkap tentang notifikasi ini
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedNotification && (
+            <div className="space-y-4">
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {selectedNotification.title}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant={selectedNotification.type === 'URGENT' ? 'destructive' : 'secondary'}>
+                      {selectedNotification.type}
+                    </Badge>
+                    <Badge variant={selectedNotification.status === 'SENT' ? 'default' : 'secondary'}>
+                      {selectedNotification.status}
+                    </Badge>
+                    {selectedNotification.priority && (
+                      <Badge variant={selectedNotification.priority === 'HIGH' ? 'destructive' : 'outline'}>
+                        {selectedNotification.priority}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Message */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-2">Pesan:</h4>
+                <p className="text-gray-700 whitespace-pre-wrap">
+                  {selectedNotification.message}
+                </p>
+              </div>
+
+              {/* Metadata */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Informasi Pengiriman:</h4>
+                  <div className="space-y-1 text-sm text-gray-600">
+                    <p><span className="font-medium">Dibuat:</span> {new Date(selectedNotification.createdAt).toLocaleString('id-ID')}</p>
+                    {selectedNotification.sentAt && (
+                      <p><span className="font-medium">Dikirim:</span> {new Date(selectedNotification.sentAt).toLocaleString('id-ID')}</p>
+                    )}
+                    {selectedNotification.readAt && (
+                      <p><span className="font-medium">Dibaca:</span> {new Date(selectedNotification.readAt).toLocaleString('id-ID')}</p>
+                    )}
+                    <p><span className="font-medium">Status Baca:</span> {selectedNotification.isRead ? 'Sudah dibaca' : 'Belum dibaca'}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Channel:</h4>
+                  <div className="space-y-1 text-sm text-gray-600">
+                    {selectedNotification.channels && (
+                      <p>{selectedNotification.channels}</p>
+                    )}
+                    {selectedNotification.recipientType && (
+                      <p><span className="font-medium">Tipe Penerima:</span> {selectedNotification.recipientType}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                {!selectedNotification.isRead && (
+                  <Button
+                    onClick={() => {
+                      markAsRead(selectedNotification.id);
+                      closeDetailModal();
+                    }}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Tandai Dibaca
+                  </Button>
+                )}
+                <Button onClick={closeDetailModal} variant="default" size="sm">
+                  Tutup
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

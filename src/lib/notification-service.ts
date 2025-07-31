@@ -411,6 +411,7 @@ export class NotificationService {
         data: {
           name: template.name,
           title: template.title,
+          content: template.message, // For backward compatibility
           message: template.message,
           type: template.type,
           channels: template.channels.join(","),
@@ -467,12 +468,57 @@ export class NotificationService {
   }
 
   // Get user notifications
-  static async getUserNotifications(userId: string, limit = 20, offset = 0) {
+  static async getUserNotifications(
+    userId?: string, // Made optional to support getting all notifications
+    limit = 20,
+    offset = 0,
+    filters: {
+      search?: string;
+      type?: string;
+      status?: string;
+      priority?: string;
+      channel?: string;
+    } = {}
+  ) {
     try {
-      return await prisma.notification.findMany({
-        where: {
-          userId: userId,
-        },
+      console.log("🔍 NotificationService.getUserNotifications called with:", { userId, limit, offset, filters });
+
+      // Build where clause with filters
+      const where: any = {};
+
+      // Only add userId filter if userId is provided
+      if (userId) {
+        where.userId = userId;
+      }
+
+      // Add filters
+      if (filters.search) {
+        where.OR = [
+          { title: { contains: filters.search } },
+          { message: { contains: filters.search } }
+        ];
+      }
+
+      if (filters.type) {
+        where.type = filters.type;
+      }
+
+      if (filters.status) {
+        where.status = filters.status;
+      }
+
+      if (filters.priority) {
+        where.priority = filters.priority;
+      }
+
+      if (filters.channel) {
+        where.channels = { contains: filters.channel };
+      }
+
+      console.log("🔍 Final where clause:", JSON.stringify(where, null, 2));
+
+      const result = await prisma.notification.findMany({
+        where,
         include: {
           creator: {
             select: {
@@ -481,13 +527,24 @@ export class NotificationService {
               email: true,
             },
           },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
         },
         orderBy: { createdAt: "desc" },
         take: limit,
         skip: offset,
       });
+
+      console.log(`✅ NotificationService found ${result.length} notifications for user ${userId}`);
+      return result;
     } catch (error) {
-      console.error("Error getting user notifications:", error);
+      console.error("❌ Error getting user notifications:", error);
       throw error;
     }
   }
@@ -508,6 +565,7 @@ export class NotificationService {
   // Get notification statistics
   static async getNotificationStats(userId?: string) {
     try {
+      console.log("📊 NotificationService.getNotificationStats called with userId:", userId);
       const where = userId ? { userId: userId } : {};
 
       const [total, unread, byType, byStatus] = await Promise.all([
@@ -530,7 +588,7 @@ export class NotificationService {
         }),
       ]);
 
-      return {
+      const stats = {
         total,
         unread,
         byType: byType.reduce(
@@ -548,8 +606,11 @@ export class NotificationService {
           {} as Record<string, number>,
         ),
       };
+
+      console.log("✅ NotificationService stats result:", stats);
+      return stats;
     } catch (error) {
-      console.error("Error getting notification stats:", error);
+      console.error("❌ Error getting notification stats:", error);
       throw error;
     }
   }

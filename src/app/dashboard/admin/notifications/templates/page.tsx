@@ -28,17 +28,21 @@ interface NotificationTemplate {
   id: string;
   name: string;
   title: string;
-  message: string;
-  type: string;
-  channels: string;
-  variables: string | null;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  creator: {
+  message: string | null;
+  content?: string; // For backward compatibility
+  type: string | null;
+  channels: string | string[] | null; // Support both formats
+  variables: string | string[] | null; // Support both formats
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  creator?: {
     name: string;
     email: string;
   };
+  // For predefined templates
+  description?: string;
+  category?: string;
 }
 
 export default function NotificationTemplatesPage() {
@@ -79,7 +83,16 @@ export default function NotificationTemplatesPage() {
       const response = await fetch(`/api/notifications/templates?${params}`);
       if (response.ok) {
         const data = await response.json();
-        setTemplates(data.templates || []);
+        console.log("Database templates loaded:", data.templates?.length || 0);
+        // Validate template data
+        const validTemplates = (data.templates || []).filter((template: any) => {
+          if (!template || !template.id || !template.name) {
+            console.warn("Invalid database template:", template);
+            return false;
+          }
+          return true;
+        });
+        setTemplates(validTemplates);
       } else {
         toast.error("Gagal memuat template notifikasi");
       }
@@ -101,7 +114,16 @@ export default function NotificationTemplatesPage() {
       const response = await fetch(`/api/notifications/templates?${params}`);
       if (response.ok) {
         const data = await response.json();
-        setPredefinedTemplates(data.templates || []);
+        console.log("Predefined templates loaded:", data.templates?.length || 0);
+        // Validate predefined template data
+        const validPredefinedTemplates = (data.templates || []).filter((template: any) => {
+          if (!template || !template.id || !template.name) {
+            console.warn("Invalid predefined template:", template);
+            return false;
+          }
+          return true;
+        });
+        setPredefinedTemplates(validPredefinedTemplates);
         if (data.categories) {
           setCategories(data.categories);
         }
@@ -239,8 +261,69 @@ export default function NotificationTemplatesPage() {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const getChannelIcons = (channels: string) => {
-    const channelList = channels.split(",");
+  // Helper function to safely get variable count
+  const getVariableCount = (variables: string | string[] | null | undefined): number => {
+    try {
+      if (!variables) return 0;
+
+      if (Array.isArray(variables)) {
+        // Predefined template format
+        return variables.length;
+      } else if (typeof variables === 'string') {
+        // Database template format (JSON string)
+        const parsed = JSON.parse(variables);
+        return parsed && typeof parsed === 'object' ? Object.keys(parsed).length : 0;
+      } else {
+        console.warn("Unexpected variables format:", typeof variables, variables);
+        return 0;
+      }
+    } catch (error) {
+      console.error("Error parsing variables:", error);
+      return 0;
+    }
+  };
+
+  // Helper function to safely format variables for display
+  const formatVariablesForDisplay = (variables: string | string[] | null | undefined): string => {
+    try {
+      if (!variables) return 'No variables';
+
+      if (Array.isArray(variables)) {
+        // Predefined template format
+        const variableObj = variables.reduce((acc, variable) => {
+          acc[variable] = 'string';
+          return acc;
+        }, {} as Record<string, string>);
+        return JSON.stringify(variableObj, null, 2);
+      } else if (typeof variables === 'string') {
+        // Database template format (JSON string)
+        const parsed = JSON.parse(variables);
+        return JSON.stringify(parsed, null, 2);
+      } else {
+        return `Unexpected variables format: ${typeof variables}`;
+      }
+    } catch (error) {
+      console.error("Error formatting variables:", error);
+      return `Error parsing variables: ${variables}`;
+    }
+  };
+
+  const getChannelIcons = (channels: string | string[] | undefined | null) => {
+    // Handle cases where channels is not a string or array
+    if (!channels) {
+      return <div className="flex gap-1"></div>;
+    }
+
+    // Handle array format (predefined templates)
+    let channelList: string[];
+    if (Array.isArray(channels)) {
+      channelList = channels;
+    } else if (typeof channels === 'string') {
+      channelList = channels.split(",");
+    } else {
+      console.error("Unexpected channels format:", channels);
+      return <div className="flex gap-1"></div>;
+    }
     return (
       <div className="flex gap-1">
         {channelList.map((channel, index) => {
@@ -285,7 +368,8 @@ export default function NotificationTemplatesPage() {
     );
   };
 
-  const getTypeLabel = (type: string) => {
+  const getTypeLabel = (type: string | null) => {
+    if (!type) return "Tidak ada tipe";
     const typeLabels: Record<string, string> = {
       PAYMENT_REMINDER: "Pengingat Pembayaran",
       PAYMENT_CONFIRMATION: "Konfirmasi Pembayaran",
@@ -537,7 +621,14 @@ export default function NotificationTemplatesPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {(showPredefined ? predefinedTemplates : filteredTemplates).map((template) => (
+                {(showPredefined ? predefinedTemplates : filteredTemplates).map((template) => {
+                  // Add safety check for template data
+                  if (!template || !template.id || !template.name) {
+                    console.warn('Invalid template data:', template);
+                    return null;
+                  }
+
+                  return (
                   <div
                     key={template.id}
                     className="p-4 border rounded-lg hover:shadow-md transition-shadow"
@@ -577,15 +668,15 @@ export default function NotificationTemplatesPage() {
                           {template.title}
                         </h4>
                         <p className="text-gray-600 text-sm mb-2 line-clamp-2">
-                          {showPredefined ? template.description : template.message}
+                          {showPredefined ? template.description : (template.message || template.content)}
                         </p>
                         <div className="flex items-center gap-4 text-xs text-gray-500">
                           {showPredefined ? (
                             <>
                               <span>Template Bawaan</span>
-                              {template.variables && template.variables.length > 0 && (
+                              {template.variables && (
                                 <span>
-                                  Variables: {template.variables.length}
+                                  Variables: {getVariableCount(template.variables)}
                                 </span>
                               )}
                             </>
@@ -595,11 +686,7 @@ export default function NotificationTemplatesPage() {
                               <span>Oleh: {template.creator?.name}</span>
                               {template.variables && (
                                 <span>
-                                  Variables:{" "}
-                                  {JSON.parse(template.variables)
-                                    ? Object.keys(JSON.parse(template.variables))
-                                        .length
-                                    : 0}
+                                  Variables: {getVariableCount(template.variables)}
                                 </span>
                               )}
                             </>
@@ -660,7 +747,8 @@ export default function NotificationTemplatesPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                }).filter(Boolean)}
               </div>
             )}
           </CardContent>
@@ -702,7 +790,7 @@ export default function NotificationTemplatesPage() {
                   </label>
                   <div className="bg-gray-50 p-3 rounded-md">
                     <pre className="whitespace-pre-wrap text-sm text-gray-900">
-                      {selectedTemplate.message}
+                      {selectedTemplate.message || selectedTemplate.content}
                     </pre>
                   </div>
                 </div>
@@ -724,7 +812,7 @@ export default function NotificationTemplatesPage() {
                     <div className="flex items-center gap-2">
                       {getChannelIcons(selectedTemplate.channels)}
                       <span className="text-sm text-gray-600">
-                        {selectedTemplate.channels}
+                        {selectedTemplate.channels || 'Tidak ada channel'}
                       </span>
                     </div>
                   </div>
@@ -737,11 +825,7 @@ export default function NotificationTemplatesPage() {
                     </label>
                     <div className="bg-gray-50 p-3 rounded-md">
                       <pre className="text-sm text-gray-900">
-                        {JSON.stringify(
-                          JSON.parse(selectedTemplate.variables),
-                          null,
-                          2,
-                        )}
+                        {formatVariablesForDisplay(selectedTemplate.variables)}
                       </pre>
                     </div>
                   </div>

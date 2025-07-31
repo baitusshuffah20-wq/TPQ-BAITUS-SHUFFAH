@@ -48,6 +48,7 @@ export async function middleware(request: NextRequest) {
     "/api/achievements",
     "/api/test",
     "/api/health",
+    "/api/notifications", // Added for testing
     "/uploads",
   ];
 

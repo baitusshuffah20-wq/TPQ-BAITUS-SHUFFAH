@@ -162,7 +162,10 @@ export async function PUT(request: NextRequest) {
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
     if (title !== undefined) updateData.title = title;
-    if (message !== undefined) updateData.message = message;
+    if (message !== undefined) {
+      updateData.message = message;
+      updateData.content = message; // For backward compatibility
+    }
     if (type !== undefined) updateData.type = type;
     if (channels !== undefined) updateData.channels = channels.join(",");
     if (variables !== undefined)

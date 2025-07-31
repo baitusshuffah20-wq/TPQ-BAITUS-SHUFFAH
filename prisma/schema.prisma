@@ -571,7 +571,11 @@ model NotificationTemplate {
   id          String   @id @default(cuid())
   name        String
   title       String
-  content     String
+  content     String   // Keep for backward compatibility
+  message     String?  @db.Text // Add message field that the app expects
+  type        String?  // Add type field for notification categorization
+  channels    String?  // Add channels field (comma-separated)
+  variables   String?  @db.Text // Add variables field (JSON string)
   description String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())

@@ -22,12 +22,60 @@ import {
   Bell,
   BarChart3,
   Activity,
+  Receipt,
+  CalendarCheck,
+  Trophy,
+  Send,
+  DollarSign,
+  PlusCircle,
+  BookOpen,
+  TrendingUp,
+  Settings,
+  Users,
 } from "lucide-react";
+
+interface DashboardStats {
+  totalChildren: number;
+  pendingPayments: number;
+  completedHafalan: number;
+  attendanceRate: number;
+  unreadMessages: number;
+  unreadNotifications: number;
+  totalDonations: number;
+  monthlyProgress: number;
+}
+
+interface Child {
+  id: string;
+  name: string;
+  nis: string;
+  halaqah: string;
+  musyrif: string;
+  progress: number;
+  lastHafalan: string;
+  attendanceRate: number;
+  photo?: string;
+  currentLevel: string;
+  achievements: string[];
+}
+
+interface QuickAction {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ComponentType<any>;
+  color: string;
+  bgColor: string;
+  route: string;
+  enabled: boolean;
+}
 
 const WaliDashboard = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState<DashboardStats | null>(null);
+  const [showBalance, setShowBalance] = useState(false);
 
   // Check authentication and role
   useEffect(() => {
@@ -40,9 +88,76 @@ const WaliDashboard = () => {
       router.push("/dashboard");
       return;
     }
+
+    // Load dashboard data when authenticated
+    if (status === "authenticated" && session?.user.role === "WALI") {
+      loadDashboardData();
+    }
   }, [session, status, router]);
 
-  if (status === "loading") {
+  const loadDashboardData = async () => {
+    setLoading(true);
+    try {
+      console.log("🔄 Loading real dashboard data from API...");
+
+      const response = await fetch("/api/dashboard/wali");
+      console.log("📡 Dashboard API response status:", response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("✅ Dashboard data received:", data);
+
+        if (data.success) {
+          setDashboardData(data.data.stats);
+          console.log("✅ Dashboard stats set:", data.data.stats);
+        } else {
+          console.error("❌ API returned error:", data.message);
+          // Fallback to mock data
+          setDashboardData({
+            totalChildren: 0,
+            pendingPayments: 0,
+            completedHafalan: 0,
+            attendanceRate: 0,
+            unreadMessages: 0,
+            unreadNotifications: 0,
+            totalDonations: 0,
+            monthlyProgress: 0,
+          });
+        }
+      } else {
+        const errorText = await response.text();
+        console.error("❌ Dashboard API Error:", response.status, errorText);
+        // Fallback to mock data
+        setDashboardData({
+          totalChildren: 0,
+          pendingPayments: 0,
+          completedHafalan: 0,
+          attendanceRate: 0,
+          unreadMessages: 0,
+          unreadNotifications: 0,
+          totalDonations: 0,
+          monthlyProgress: 0,
+        });
+      }
+    } catch (error) {
+      console.error("❌ Error loading dashboard data:", error);
+      // Fallback to mock data
+      setDashboardData({
+        totalChildren: 0,
+        pendingPayments: 0,
+        completedHafalan: 0,
+        attendanceRate: 0,
+        unreadMessages: 0,
+        unreadNotifications: 0,
+        totalDonations: 0,
+        monthlyProgress: 0,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (status === "loading" || loading) {
     return (
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] space-y-4">
@@ -63,18 +178,117 @@ const WaliDashboard = () => {
     return null;
   }
 
-  // Mock data for Wali
-  const children = [
+  // Mock data for Wali - sesuai permission wali
+  const children: Child[] = [
     {
       id: "1",
       name: "Ahmad Fauzi",
       nis: "24001",
       halaqah: "Halaqah Al-Fatihah",
       musyrif: "Ustadz Abdullah",
-      progress: 75, // percentage of Quran memorized
+      progress: 75,
       lastHafalan: "Al-Baqarah 1-10",
       attendanceRate: 95,
       photo: null,
+      currentLevel: "Juz 1",
+      achievements: ["Hafal Juz 30", "Juara 1 Tilawah"],
+    },
+    {
+      id: "2",
+      name: "Fatimah Zahra",
+      nis: "24002",
+      halaqah: "Halaqah An-Nur",
+      musyrif: "Ustadzah Aisyah",
+      progress: 60,
+      lastHafalan: "Al-Fatihah",
+      attendanceRate: 88,
+      photo: null,
+      currentLevel: "Juz 30",
+      achievements: ["Hafal Al-Fatihah", "Rajin Mengaji"],
+    },
+  ];
+
+  // Quick Actions sesuai permission wali
+  const quickActions: QuickAction[] = [
+    {
+      id: "children-progress",
+      title: "Perkembangan Anak",
+      description: "Pantau progress hafalan dan nilai anak",
+      icon: TrendingUp,
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+      route: "/dashboard/wali/santri",
+      enabled: true,
+    },
+    {
+      id: "spp-payment",
+      title: "Tagihan SPP",
+      description: "Cek dan bayar tagihan SPP bulanan",
+      icon: Receipt,
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      route: "/dashboard/wali/spp",
+      enabled: true,
+    },
+    {
+      id: "donations",
+      title: "Donasi",
+      description: "Lihat kategori dan campaign donasi",
+      icon: Heart,
+      color: "text-red-600",
+      bgColor: "bg-red-50",
+      route: "/dashboard/wali/donations",
+      enabled: true,
+    },
+    {
+      id: "attendance",
+      title: "Kehadiran",
+      description: "Lihat kehadiran anak di TPQ",
+      icon: CalendarCheck,
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      route: "/dashboard/wali/attendance",
+      enabled: true,
+    },
+    {
+      id: "messages",
+      title: "Pesan Ustadz",
+      description: "Komunikasi dengan ustadz dan admin",
+      icon: MessageSquare,
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+      route: "/dashboard/wali/messages",
+      enabled: true,
+    },
+    {
+      id: "notifications",
+      title: "Notifikasi",
+      description: "Lihat notifikasi terbaru",
+      icon: Bell,
+      color: "text-indigo-600",
+      bgColor: "bg-indigo-50",
+      route: "/dashboard/wali/notifications",
+      enabled: true,
+    },
+    {
+      id: "profile",
+      title: "Edit Profil",
+      description: "Kelola informasi profil",
+      icon: User,
+      color: "text-gray-600",
+      bgColor: "bg-gray-50",
+      route: "/dashboard/wali/profile",
+      enabled: true,
+    },
+    {
+      id: "payments",
+      title: "Riwayat Pembayaran",
+      description: "Lihat riwayat pembayaran SPP dan donasi",
+      icon: CreditCard,
+      color: "text-teal-600",
+      bgColor: "bg-teal-50",
+      route: "/dashboard/wali/payments",
+      enabled: true,
     },
   ];
 
@@ -83,7 +297,7 @@ const WaliDashboard = () => {
       id: 1,
       surah: "Al-Baqarah",
       ayah: "1-10",
-      status: "APPROVED",
+      status: "APPROVED" as const,
       grade: 85,
       date: "2024-02-10",
       musyrif: "Ustadz Abdullah",
@@ -92,7 +306,7 @@ const WaliDashboard = () => {
       id: 2,
       surah: "Al-Baqarah",
       ayah: "11-20",
-      status: "PENDING",
+      status: "PENDING" as const,
       grade: null,
       date: "2024-02-11",
       musyrif: "Ustadz Abdullah",
@@ -101,7 +315,7 @@ const WaliDashboard = () => {
       id: 3,
       surah: "Al-Fatihah",
       ayah: "1-7",
-      status: "APPROVED",
+      status: "APPROVED" as const,
       grade: 90,
       date: "2024-02-08",
       musyrif: "Ustadz Abdullah",
@@ -111,25 +325,48 @@ const WaliDashboard = () => {
   const payments = [
     {
       id: "1",
-      type: "SPP",
-      amount: 500000,
+      type: "SPP" as const,
+      amount: 150000,
       dueDate: "2024-02-15",
-      status: "PENDING",
+      status: "PENDING" as const,
+      description: "SPP Februari 2024",
+      month: "Februari 2024",
     },
     {
       id: "2",
-      type: "SPP",
-      amount: 500000,
+      type: "SPP" as const,
+      amount: 150000,
       dueDate: "2024-01-15",
-      paidDate: "2024-01-10",
-      status: "PAID",
+      status: "PAID" as const,
+      description: "SPP Januari 2024",
+      month: "Januari 2024",
     },
     {
       id: "3",
-      type: "BOOK",
-      amount: 200000,
+      type: "DONATION" as const,
+      amount: 500000,
       dueDate: "2024-02-20",
-      status: "PENDING",
+      status: "PENDING" as const,
+      description: "Donasi Pembangunan Masjid",
+    },
+  ];
+
+  const donationCategories = [
+    {
+      id: "1",
+      name: "Pembangunan Masjid",
+      description: "Donasi untuk pembangunan masjid TPQ",
+      target: 50000000,
+      collected: 35000000,
+      progress: 70,
+    },
+    {
+      id: "2",
+      name: "Beasiswa Santri",
+      description: "Bantuan biaya pendidikan untuk santri kurang mampu",
+      target: 20000000,
+      collected: 12000000,
+      progress: 60,
     },
   ];
 
@@ -295,113 +532,172 @@ const WaliDashboard = () => {
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            {unreadMessages > 0 && (
-              <div className="relative">
-                <Button variant="outline">
-                  <Bell className="h-4 w-4 mr-2" />
-                  Notifikasi
-                </Button>
+            <div className="relative">
+              <Button
+                variant="outline"
+                onClick={() => router.push("/dashboard/wali/notifications")}
+              >
+                <Bell className="h-4 w-4 mr-2" />
+                Notifikasi
+              </Button>
+              {dashboardData?.unreadNotifications && dashboardData.unreadNotifications > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {unreadMessages}
+                  {dashboardData.unreadNotifications}
                 </span>
-              </div>
-            )}
-            <Button variant="outline">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Hubungi Musyrif
-            </Button>
+              )}
+            </div>
+            <div className="relative">
+              <Button
+                variant="outline"
+                onClick={() => router.push("/dashboard/wali/messages")}
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Pesan
+              </Button>
+              {dashboardData?.unreadMessages && dashboardData.unreadMessages > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {dashboardData.unreadMessages}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Child Profile Card */}
-        <Card className="bg-gradient-to-r from-teal-50 to-blue-50 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden relative">
-                <div className="w-full h-full bg-teal-100 rounded-full flex items-center justify-center">
-                  <User className="h-8 w-8 text-teal-600" />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Anak Terdaftar</p>
+                  <p className="text-2xl font-bold text-gray-900">{dashboardData?.totalChildren || 0}</p>
                 </div>
               </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-gray-900">
-                  {child.name}
-                </h3>
-                <p className="text-gray-600">NIS: {child.nis}</p>
-                <p className="text-sm text-gray-500">
-                  {child.halaqah} � {child.musyrif}
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-teal-600">
-                  {child.progress}%
-                </div>
-                <div className="text-sm text-gray-500">Progress Hafalan</div>
-              </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="mt-4 grid grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-lg font-semibold text-gray-900">
-                  {child.attendanceRate}%
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <Receipt className="h-6 w-6 text-red-600" />
                 </div>
-                <div className="text-xs text-gray-500">Kehadiran</div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Tagihan Pending</p>
+                  <p className="text-2xl font-bold text-gray-900">{dashboardData?.pendingPayments || 0}</p>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-gray-900">15</div>
-                <div className="text-xs text-gray-500">Juz Selesai</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <BookOpen className="h-6 w-6 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Hafalan Selesai</p>
+                  <p className="text-2xl font-bold text-gray-900">{dashboardData?.completedHafalan || 0}</p>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-gray-900">A</div>
-                <div className="text-xs text-gray-500">Rata-rata Nilai</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <CalendarCheck className="h-6 w-6 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Kehadiran</p>
+                  <p className="text-2xl font-bold text-gray-900">{dashboardData?.attendanceRate || 0}%</p>
+                </div>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Target className="h-5 w-5 mr-2 text-teal-600" />
+              Aksi Cepat
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {quickActions.filter(action => action.enabled).map((action) => (
+                <Button
+                  key={action.id}
+                  variant="outline"
+                  className={`h-auto p-4 flex flex-col items-center space-y-2 ${action.bgColor} hover:${action.bgColor} border-gray-200`}
+                  onClick={() => router.push(action.route)}
+                >
+                  <div className={`p-2 rounded-lg ${action.bgColor}`}>
+                    <action.icon className={`h-6 w-6 ${action.color}`} />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-medium text-gray-900 text-sm">{action.title}</p>
+                    <p className="text-xs text-gray-500 mt-1">{action.description}</p>
+                  </div>
+                </Button>
+              ))}
             </div>
           </CardContent>
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Hafalan */}
+          {/* Informasi Anak */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <GraduationCap className="h-5 w-5 mr-2 text-teal-600" />
-                  Hafalan Terbaru
+                  <Users className="h-5 w-5 mr-2 text-teal-600" />
+                  Informasi Anak
                 </div>
-                <Button variant="ghost" size="sm">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push("/dashboard/wali/santri")}
+                >
                   <Eye className="h-4 w-4 mr-1" />
-                  Lihat Semua
+                  Lihat Detail
                 </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {recentHafalan.map((hafalan) => (
+              <div className="space-y-4">
+                {children.map((child) => (
                   <div
-                    key={hafalan.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    key={child.id}
+                    className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg"
                   >
+                    <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
+                      <User className="h-6 w-6 text-teal-600" />
+                    </div>
                     <div className="flex-1">
                       <h4 className="text-sm font-medium text-gray-900">
-                        {hafalan.surah} ayat {hafalan.ayah}
+                        {child.name}
                       </h4>
                       <p className="text-xs text-gray-500">
-                        {new Date(hafalan.date).toLocaleDateString("id-ID")} �{" "}
-                        {hafalan.musyrif}
+                        {child.halaqah} • {child.musyrif}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Progress: {child.progress}% • Kehadiran: {child.attendanceRate}%
                       </p>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      {hafalan.grade && (
-                        <span className="text-sm font-medium text-gray-900">
-                          {hafalan.grade}
-                        </span>
-                      )}
-                      <div className="flex items-center space-x-1">
-                        {getStatusIcon(hafalan.status)}
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(hafalan.status)}`}
-                        >
-                          {hafalan.status}
-                        </span>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-teal-600">
+                        {child.currentLevel}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {child.lastHafalan}
                       </div>
                     </div>
                   </div>
@@ -410,15 +706,19 @@ const WaliDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Attendance */}
+          {/* Tagihan & Pembayaran */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <Calendar className="h-5 w-5 mr-2 text-teal-600" />
-                  Kehadiran Terbaru
+                  <CreditCard className="h-5 w-5 mr-2 text-red-600" />
+                  Tagihan & Pembayaran
                 </div>
-                <Button variant="ghost" size="sm">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push("/dashboard/wali/payments")}
+                >
                   <Eye className="h-4 w-4 mr-1" />
                   Lihat Semua
                 </Button>
@@ -426,45 +726,130 @@ const WaliDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {recentAttendance.map((attendance, index) => (
+                {payments.slice(0, 3).map((payment) => (
                   <div
-                    key={index}
+                    key={payment.id}
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                   >
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {new Date(attendance.date).toLocaleDateString("id-ID", {
-                          weekday: "long",
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </p>
+                    <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-1">
+                        {getStatusIcon(payment.status)}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-900">
+                          {payment.description}
+                        </h4>
+                        <p className="text-xs text-gray-500">
+                          Jatuh tempo: {new Date(payment.dueDate).toLocaleDateString("id-ID")}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      {getStatusIcon(attendance.status)}
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-gray-900">
+                        {formatCurrency(payment.amount)}
+                      </div>
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(attendance.status)}`}
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                          payment.status,
+                        )}`}
                       >
-                        {attendance.status}
+                        {payment.status === "PENDING" ? "Belum Bayar" :
+                         payment.status === "PAID" ? "Lunas" : payment.status}
                       </span>
                     </div>
                   </div>
                 ))}
               </div>
+              {payments.filter(p => p.status === "PENDING").length > 0 && (
+                <div className="mt-4">
+                  <Button
+                    className="w-full"
+                    onClick={() => router.push("/dashboard/wali/spp")}
+                  >
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Bayar Sekarang
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Payments */}
+        {/* Kategori Donasi */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center">
-                <CreditCard className="h-5 w-5 mr-2 text-teal-600" />
-                Status Pembayaran
+                <Heart className="h-5 w-5 mr-2 text-red-600" />
+                Kategori Donasi
               </div>
-              <Button variant="ghost" size="sm">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push("/dashboard/wali/donations")}
+              >
+                <Eye className="h-4 w-4 mr-1" />
+                Lihat Semua
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {donationCategories.map((category) => (
+                <div
+                  key={category.id}
+                  className="p-4 bg-gray-50 rounded-lg"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-medium text-gray-900">
+                      {category.name}
+                    </h4>
+                    <span className="text-sm font-medium text-gray-600">
+                      {category.progress}%
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-3">
+                    {category.description}
+                  </p>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                    <div
+                      className="bg-red-500 h-2 rounded-full"
+                      style={{ width: `${category.progress}%` }}
+                    ></div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-gray-600">
+                    <span>Terkumpul: {formatCurrency(category.collected)}</span>
+                    <span>Target: {formatCurrency(category.target)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4">
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={() => router.push("/dashboard/wali/donations")}
+              >
+                <Heart className="h-4 w-4 mr-2" />
+                Berdonasi Sekarang
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Messages */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <MessageSquare className="h-5 w-5 mr-2 text-green-600" />
+                Pesan Terbaru
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push("/dashboard/wali/messages")}
+              >
                 <Eye className="h-4 w-4 mr-1" />
                 Lihat Semua
               </Button>
@@ -472,312 +857,49 @@ const WaliDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {payments.map((payment) => (
+              {messages.slice(0, 3).map((message) => (
                 <div
-                  key={payment.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                  key={message.id}
+                  className={`p-3 border rounded-lg ${
+                    message.isRead
+                      ? "border-gray-200 bg-white"
+                      : "border-teal-200 bg-teal-50"
+                  }`}
                 >
-                  <div className="flex-1">
-                    <h4 className="text-sm font-medium text-gray-900">
-                      {payment.type}
-                    </h4>
-                    <p className="text-xs text-gray-500">
-                      Jatuh tempo:{" "}
-                      {new Date(payment.dueDate).toLocaleDateString("id-ID")}
-                      {payment.paidDate && (
-                        <span>
-                          {" "}
-                          � Dibayar:{" "}
-                          {new Date(payment.paidDate).toLocaleDateString(
-                            "id-ID",
-                          )}
-                        </span>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <h4 className="text-sm font-medium text-gray-900">
+                        {message.subject}
+                      </h4>
+                      {!message.isRead && (
+                        <span className="w-2 h-2 bg-teal-600 rounded-full"></span>
                       )}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-sm font-medium text-gray-900">
-                      {formatCurrency(payment.amount)}
-                    </span>
-                    <div className="flex items-center space-x-1">
-                      {getStatusIcon(payment.status)}
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(payment.status)}`}
-                      >
-                        {payment.status}
-                      </span>
                     </div>
-                    {payment.status === "PENDING" && (
-                      <Button size="sm">Bayar</Button>
-                    )}
+                    <span className="text-xs text-gray-500">
+                      {new Date(message.date).toLocaleDateString("id-ID")}
+                    </span>
                   </div>
+                  <p className="text-xs text-gray-600 mb-1">
+                    Dari: {message.from}
+                  </p>
+                  <p className="text-sm text-gray-700 line-clamp-2">{message.message}</p>
                 </div>
               ))}
             </div>
+            {messages.filter(m => !m.isRead).length > 0 && (
+              <div className="mt-4">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => router.push("/dashboard/wali/messages")}
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Baca Semua Pesan
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
-
-        {/* Tabs Navigation */}
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            {[
-              { id: "overview", name: "Ringkasan", icon: BarChart3 },
-              { id: "behavior", name: "Perilaku", icon: Heart },
-              { id: "goals", name: "Goal Karakter", icon: Target },
-              { id: "activities", name: "Aktivitas", icon: Activity },
-              { id: "messages", name: "Pesan", icon: MessageSquare },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.id
-                    ? "border-teal-500 text-teal-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                <tab.icon className="h-4 w-4" />
-                <span>{tab.name}</span>
-                {tab.id === "messages" && unreadMessages > 0 && (
-                  <span className="bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                    {unreadMessages}
-                  </span>
-                )}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* Tab Content */}
-        <div className="mt-6">
-          {activeTab === "overview" && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Behavior Summary */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Heart className="h-5 w-5 text-red-600" />
-                    <span>Ringkasan Perilaku</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                      <div className="text-lg font-bold text-green-600">
-                        {behaviorSummary.positiveCount}
-                      </div>
-                      <div className="text-xs text-gray-600">Positif</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-red-600">
-                        {behaviorSummary.negativeCount}
-                      </div>
-                      <div className="text-xs text-gray-600">Negatif</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-gray-900">
-                        {behaviorSummary.behaviorScore}
-                      </div>
-                      <div className="text-xs text-gray-600">Skor</div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-gray-700">
-                      Kekuatan:
-                    </h4>
-                    <ul className="text-sm text-gray-600 space-y-1">
-                      {behaviorSummary.strengths
-                        .slice(0, 2)
-                        .map((strength, index) => (
-                          <li
-                            key={index}
-                            className="flex items-start space-x-2"
-                          >
-                            <CheckCircle className="h-3 w-3 text-green-600 mt-0.5 flex-shrink-0" />
-                            <span>{strength}</span>
-                          </li>
-                        ))}
-                    </ul>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-gray-700">
-                      Area Pengembangan:
-                    </h4>
-                    <ul className="text-sm text-gray-600 space-y-1">
-                      {behaviorSummary.areasForImprovement.map(
-                        (area, index) => (
-                          <li
-                            key={index}
-                            className="flex items-start space-x-2"
-                          >
-                            <Target className="h-3 w-3 text-orange-600 mt-0.5 flex-shrink-0" />
-                            <span>{area}</span>
-                          </li>
-                        ),
-                      )}
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Active Goals */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Target className="h-5 w-5 text-purple-600" />
-                    <span>Goal Karakter Aktif</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {activeGoals.map((goal) => (
-                    <div key={goal.id} className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-gray-900">
-                          {goal.title}
-                        </h4>
-                        <span className="px-2 py-1 text-xs font-medium rounded-full text-purple-600 bg-purple-100">
-                          {goal.category}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600">
-                        {goal.description}
-                      </p>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-700">
-                          Progress
-                        </span>
-                        <span className="text-sm font-bold text-gray-900">
-                          {goal.progress}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-purple-600 h-2 rounded-full"
-                          style={{ width: `${goal.progress}%` }}
-                        ></div>
-                      </div>
-                      <div className="flex items-center justify-between text-sm text-gray-600">
-                        <span>Target: {goal.targetDate}</span>
-                        <span>
-                          {goal.completedMilestones}/{goal.milestones} milestone
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeTab === "activities" && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Activity className="h-5 w-5 text-blue-600" />
-                  <span>Aktivitas Terbaru</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentActivities.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg"
-                    >
-                      <div className="p-2 rounded-lg bg-blue-100">
-                        {activity.type === "BEHAVIOR_POSITIVE" && (
-                          <Heart className="h-4 w-4 text-blue-600" />
-                        )}
-                        {activity.type === "GOAL_PROGRESS" && (
-                          <Target className="h-4 w-4 text-blue-600" />
-                        )}
-                        {activity.type === "ACHIEVEMENT" && (
-                          <Award className="h-4 w-4 text-blue-600" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-gray-900">
-                            {activity.title}
-                          </h4>
-                          <span className="text-sm font-medium text-green-600">
-                            +{activity.points} poin
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {activity.description}
-                        </p>
-                        <div className="flex items-center space-x-2 mt-2 text-xs text-gray-500">
-                          <span>{activity.date}</span>
-                          <span>�</span>
-                          <span>{activity.time}</span>
-                          <span>�</span>
-                          <span>{activity.musyrifName}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {activeTab === "messages" && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <MessageSquare className="h-5 w-5 text-green-600" />
-                  <span>Pesan dari TPQ</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`p-4 border rounded-lg ${
-                        message.isRead
-                          ? "border-gray-200 bg-white"
-                          : "border-teal-200 bg-teal-50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <h4 className="font-medium text-gray-900">
-                            {message.subject}
-                          </h4>
-                          {!message.isRead && (
-                            <span className="w-2 h-2 bg-teal-600 rounded-full"></span>
-                          )}
-                        </div>
-                        <span className="text-xs text-gray-500">
-                          {message.date} {message.time}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        Dari: {message.from}
-                      </p>
-                      <p className="text-sm text-gray-700">{message.message}</p>
-                      <div className="flex space-x-2 mt-3">
-                        <Button variant="outline" size="sm">
-                          <MessageSquare className="h-3 w-3 mr-1" />
-                          Balas
-                        </Button>
-                        {!message.isRead && (
-                          <Button variant="outline" size="sm">
-                            Tandai Dibaca
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
       </div>
     </DashboardLayout>
   );

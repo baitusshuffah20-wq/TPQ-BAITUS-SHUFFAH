@@ -736,6 +736,129 @@ function generateWaliPreviewHTML(
             }
         }
 
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(135deg, ${config.primaryColor || "#eca825"} 0%, ${config.secondaryColor || "#ffd700"} 100%);
+            color: white;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: calc(80vh - 80px);
+            overflow-y: auto;
+        }
+
+        .all-menus-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .menu-item-full {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #e2e8f0;
+        }
+
+        .menu-item-full:hover {
+            background: #e2e8f0;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .menu-icon-full {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, ${config.primaryColor || "#eca825"} 0%, ${config.secondaryColor || "#ffd700"} 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .menu-content-full {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .menu-label-full {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            line-height: 1.2;
+        }
+
+        .menu-desc-full {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.3;
+        }
+
         /* Smooth scrolling */
         .features-container {
             scroll-behavior: smooth;
@@ -979,16 +1102,47 @@ function generateWaliPreviewHTML(
                     <h4 class="section-title">Menu Utama</h4>
                     <div class="menu-grid">
                         ${enabledFeatures
-                          .slice(0, 8)
+                          .slice(0, 7)
                           .map(
                             (feature) => `
-                            <div class="menu-item">
+                            <div class="menu-item" onclick="showScreen('${feature}')">
                                 <div class="menu-icon">${getFeatureIcon(feature)}</div>
                                 <span class="menu-label">${getFeatureName(feature)}</span>
                             </div>
                         `,
                           )
                           .join("")}
+                        <div class="menu-item" onclick="showAllMenus()">
+                            <div class="menu-icon">📋</div>
+                            <span class="menu-label">Lainnya</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- All Menus Modal (Hidden by default) -->
+                <div id="allMenusModal" class="modal-overlay" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Semua Menu</h3>
+                            <button onclick="hideAllMenus()" class="close-btn">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="all-menus-grid">
+                                ${enabledFeatures
+                                  .map(
+                                    (feature) => `
+                                    <div class="menu-item-full" onclick="showScreen('${feature}')">
+                                        <div class="menu-icon-full">${getFeatureIcon(feature)}</div>
+                                        <div class="menu-content-full">
+                                            <span class="menu-label-full">${getFeatureName(feature)}</span>
+                                            <span class="menu-desc-full">${getFeatureDescription(feature)}</span>
+                                        </div>
+                                    </div>
+                                `,
+                                  )
+                                  .join("")}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1088,6 +1242,38 @@ function generateWaliPreviewHTML(
         // Fallback timeout in case something goes wrong
         setTimeout(hideLoadingScreen, 3000);
 
+        // Modal functions
+        function showAllMenus() {
+            const modal = document.getElementById('allMenusModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function hideAllMenus() {
+            const modal = document.getElementById('allMenusModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('allMenusModal');
+            if (event.target === modal) {
+                hideAllMenus();
+            }
+        });
+
+        // Screen navigation function
+        function showScreen(screenName) {
+            console.log('Navigating to:', screenName);
+            // In a real app, this would navigate to the actual screen
+            alert('Navigasi ke: ' + screenName);
+            hideAllMenus();
+        }
 
     </script>
 </body>
@@ -1100,6 +1286,27 @@ function generateMusyrifPreviewHTML(
   enabledFeatures: string[],
   isInline: boolean = false,
 ): string {
+  // Helper function for menu descriptions
+  const getMenuDescription = (route: string) => {
+    const descriptions: { [key: string]: string } = {
+      'santri': 'Kelola data santri, lihat profil, dan pantau perkembangan hafalan setiap santri.',
+      'halaqah': 'Atur jadwal halaqah, kelola kelas, dan pantau kehadiran santri.',
+      'hafalan': 'Pantau progress hafalan santri, berikan penilaian, dan catat pencapaian.',
+      'attendance': 'Catat kehadiran santri, lihat statistik absensi, dan buat laporan.',
+      'assessment': 'Berikan penilaian kepada santri, input nilai, dan evaluasi kemajuan.',
+      'behavior': 'Catat perilaku santri, berikan reward atau teguran, dan pantau akhlak.',
+      'reports': 'Lihat berbagai laporan seperti progress hafalan, kehadiran, dan penilaian.',
+      'profile': 'Kelola profil Anda, ubah password, dan atur preferensi aplikasi.',
+      'schedule': 'Lihat jadwal mengajar, atur waktu halaqah, dan kelola kalender kegiatan.',
+      'communication': 'Berkomunikasi dengan wali santri, kirim pesan, dan buat pengumuman.',
+      'achievements': 'Catat prestasi santri, berikan penghargaan, dan pantau pencapaian.',
+      'settings': 'Atur pengaturan aplikasi, notifikasi, dan preferensi tampilan.',
+      'help': 'Panduan penggunaan aplikasi, FAQ, dan bantuan teknis.',
+      'notifications': 'Kelola notifikasi, pengingat, dan pemberitahuan penting.'
+    };
+    return descriptions[route] || 'Fitur ini sedang dalam pengembangan.';
+  };
+
   // Use custom menu grid from config or default
   const musyrifMenus = (config as any).customMenuGrid || [
     { id: 1, title: "Data Santri", icon: "👥", color: "#3B82F6", route: "santri" },
@@ -1110,6 +1317,12 @@ function generateMusyrifPreviewHTML(
     { id: 6, title: "Perilaku", icon: "❤️", color: "#EC4899", route: "behavior" },
     { id: 7, title: "Laporan", icon: "📊", color: "#06B6D4", route: "reports" },
     { id: 8, title: "Profil", icon: "👤", color: "#84CC16", route: "profile" },
+    { id: 9, title: "Jadwal", icon: "📅", color: "#10B981", route: "schedule" },
+    { id: 10, title: "Komunikasi", icon: "💬", color: "#F97316", route: "communication" },
+    { id: 11, title: "Prestasi", icon: "🏆", color: "#EAB308", route: "achievements" },
+    { id: 12, title: "Pengaturan", icon: "⚙️", color: "#6B7280", route: "settings" },
+    { id: 13, title: "Bantuan", icon: "❓", color: "#14B8A6", route: "help" },
+    { id: 14, title: "Notifikasi", icon: "🔔", color: "#F43F5E", route: "notifications" },
   ];
 
   // Use custom bottom tabs from config or default
@@ -1131,7 +1344,13 @@ function generateMusyrifPreviewHTML(
       'assessment': 'Berikan penilaian kepada santri, input nilai, dan evaluasi kemajuan.',
       'behavior': 'Catat perilaku santri, berikan reward atau teguran, dan pantau akhlak.',
       'reports': 'Lihat berbagai laporan seperti progress hafalan, kehadiran, dan penilaian.',
-      'profile': 'Kelola profil Anda, ubah password, dan atur preferensi aplikasi.'
+      'profile': 'Kelola profil Anda, ubah password, dan atur preferensi aplikasi.',
+      'schedule': 'Lihat dan kelola jadwal mengajar, jadwal halaqah, dan agenda kegiatan.',
+      'communication': 'Berkomunikasi dengan wali santri, kirim pesan, dan buat pengumuman.',
+      'achievements': 'Lihat dan kelola prestasi santri, berikan penghargaan dan sertifikat.',
+      'settings': 'Atur preferensi aplikasi, notifikasi, dan konfigurasi personal.',
+      'help': 'Panduan penggunaan aplikasi, FAQ, dan kontak dukungan teknis.',
+      'notifications': 'Kelola notifikasi, pengingat, dan pemberitahuan penting.'
     };
     return descriptions[route] || 'Fitur ini sedang dalam pengembangan.';
   };
@@ -1496,13 +1715,14 @@ function generateMusyrifPreviewHTML(
 
         /* Menu Grid */
         .menu-section {
-            margin: 20px 20px 24px 20px;
+            margin: 20px 20px 40px 20px;
             background: white;
             border-radius: 20px;
             padding: 24px;
             box-shadow:
                 0 4px 16px rgba(0,0,0,0.06),
                 0 0 0 1px rgba(0,0,0,0.02);
+            min-height: 250px; /* Ensure enough space for menu grid */
         }
 
         .section-title {
@@ -1518,6 +1738,7 @@ function generateMusyrifPreviewHTML(
             grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             padding: 0 4px;
+            min-height: 200px; /* Ensure enough height for 2 rows */
         }
 
         .menu-item {
@@ -2030,6 +2251,129 @@ function generateMusyrifPreviewHTML(
             margin-bottom: 100px;
         }
 
+        /* Modal Styles for Musyrif */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(135deg, ${config.primaryColor || "#eca825"} 0%, ${config.secondaryColor || "#ffd700"} 100%);
+            color: white;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: calc(80vh - 80px);
+            overflow-y: auto;
+        }
+
+        .all-menus-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .menu-item-full {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #e2e8f0;
+        }
+
+        .menu-item-full:hover {
+            background: #e2e8f0;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .menu-icon-full {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 16px;
+            flex-shrink: 0;
+            color: white;
+        }
+
+        .menu-content-full {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .menu-label-full {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            line-height: 1.2;
+        }
+
+        .menu-desc-full {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.3;
+        }
+
         /* Smooth scrolling for musyrif template */
         #dashboard-screen {
             scroll-behavior: smooth;
@@ -2269,7 +2613,7 @@ function generateMusyrifPreviewHTML(
                 <div class="menu-section">
                     <h4 class="section-title">Menu Utama</h4>
                     <div class="menu-grid">
-                        ${musyrifMenus.map(menu => `
+                        ${musyrifMenus.slice(0, 7).map(menu => `
                             <div class="menu-item" onclick="showScreen('${menu.route}')">
                                 <div class="menu-icon" style="background-color: ${menu.color}20; color: ${menu.color};">
                                     ${menu.icon}
@@ -2277,6 +2621,37 @@ function generateMusyrifPreviewHTML(
                                 <div class="menu-label">${menu.title}</div>
                             </div>
                         `).join('')}
+                        <div class="menu-item" onclick="showAllMenusMusyrif()">
+                            <div class="menu-icon" style="background-color: #6B728020; color: #6B7280;">
+                                📋
+                            </div>
+                            <div class="menu-label">Lainnya</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- All Menus Modal (Hidden by default) -->
+                <div id="allMenusModalMusyrif" class="modal-overlay" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Semua Menu</h3>
+                            <button onclick="hideAllMenusMusyrif()" class="close-btn">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="all-menus-grid">
+                                ${musyrifMenus.map(menu => `
+                                    <div class="menu-item-full" onclick="showScreen('${menu.route}')">
+                                        <div class="menu-icon-full" style="background: linear-gradient(135deg, ${menu.color} 0%, ${menu.color}CC 100%);">
+                                            ${menu.icon}
+                                        </div>
+                                        <div class="menu-content-full">
+                                            <span class="menu-label-full">${menu.title}</span>
+                                            <span class="menu-desc-full">${getMenuDescription(menu.route)}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -2429,7 +2804,13 @@ function generateMusyrifPreviewHTML(
                 'assessment': 'Berikan penilaian kepada santri, input nilai, dan evaluasi kemajuan.',
                 'behavior': 'Catat perilaku santri, berikan reward atau teguran, dan pantau akhlak.',
                 'reports': 'Lihat berbagai laporan seperti progress hafalan, kehadiran, dan penilaian.',
-                'profile': 'Kelola profil Anda, ubah password, dan atur preferensi aplikasi.'
+                'profile': 'Kelola profil Anda, ubah password, dan atur preferensi aplikasi.',
+                'schedule': 'Lihat jadwal mengajar, atur waktu halaqah, dan kelola kalender kegiatan.',
+                'communication': 'Berkomunikasi dengan wali santri, kirim pesan, dan buat pengumuman.',
+                'achievements': 'Catat prestasi santri, berikan penghargaan, dan pantau pencapaian.',
+                'settings': 'Atur pengaturan aplikasi, notifikasi, dan preferensi tampilan.',
+                'help': 'Panduan penggunaan aplikasi, FAQ, dan bantuan teknis.',
+                'notifications': 'Kelola notifikasi, pengingat, dan pemberitahuan penting.'
             };
             return descriptions[route] || 'Fitur ini sedang dalam pengembangan.';
         }
@@ -2537,8 +2918,35 @@ function generateMusyrifPreviewHTML(
             }
         });
 
+        // Modal functions for all menus
+        function showAllMenusMusyrif() {
+            const modal = document.getElementById('allMenusModalMusyrif');
+            if (modal) {
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function hideAllMenusMusyrif() {
+            const modal = document.getElementById('allMenusModalMusyrif');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('allMenusModalMusyrif');
+            if (event.target === modal) {
+                hideAllMenusMusyrif();
+            }
+        });
+
         // Add global function to window for inline onclick handlers
         window.getMenuDescription = getMenuDescription;
+        window.showAllMenusMusyrif = showAllMenusMusyrif;
+        window.hideAllMenusMusyrif = hideAllMenusMusyrif;
     </script>
 </body>
 </html>
@@ -2685,4 +3093,25 @@ function getFeatureName(feature: string): string {
     assessments: "Penilaian",
   };
   return names[feature] || feature;
+}
+
+function getFeatureDescription(feature: string): string {
+  const descriptions: { [key: string]: string } = {
+    dashboard: "Dashboard dengan ringkasan informasi santri",
+    progress: "Melihat perkembangan belajar santri",
+    payment: "Sistem pembayaran SPP online",
+    messages: "Komunikasi dengan musyrif dan admin",
+    profile: "Manajemen profil dan data wali",
+    attendance: "Melihat kehadiran santri",
+    schedule: "Melihat jadwal pelajaran santri",
+    achievements: "Melihat pencapaian dan prestasi",
+    donations: "Sistem donasi untuk TPQ",
+    events: "Informasi event dan kegiatan TPQ",
+    students: "Kelola data santri binaan",
+    grades: "Input dan kelola nilai santri",
+    reports: "Generate laporan progress",
+    materials: "Kelola materi pelajaran",
+    assessments: "Sistem penilaian santri",
+  };
+  return descriptions[feature] || "Fitur ini sedang dalam pengembangan.";
 }

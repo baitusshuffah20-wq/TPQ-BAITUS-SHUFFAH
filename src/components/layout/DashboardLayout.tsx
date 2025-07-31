@@ -139,6 +139,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           roles: ["ADMIN", "MUSYRIF"], // Musyrif can only view santri in their halaqah (no create/edit)
         },
         {
+          name: "Data Anak",
+          href: `/dashboard/${user?.role?.toLowerCase()}/santri`,
+          icon: Users,
+          roles: ["WALI"], // Wali can view their children's data
+        },
+        {
           name: "Data Musyrif",
           href: `/dashboard/${user?.role?.toLowerCase()}/musyrif`,
           icon: GraduationCap,
@@ -157,6 +163,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           roles: ["ADMIN", "MUSYRIF"], // Musyrif can give grades/scores to their santri
         },
         {
+          name: "Progress Hafalan",
+          href: `/dashboard/${user?.role?.toLowerCase()}/hafalan`,
+          icon: BookOpen,
+          roles: ["WALI"], // Wali can view their children's hafalan progress
+        },
+        {
           name: "Penilaian Santri",
           href: `/dashboard/${user?.role?.toLowerCase()}/penilaian`,
           icon: Star,
@@ -167,6 +179,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           href: `/dashboard/${user?.role?.toLowerCase()}/attendance`,
           icon: Calendar,
           roles: ["ADMIN", "MUSYRIF"],
+        },
+        {
+          name: "Kehadiran Anak",
+          href: `/dashboard/${user?.role?.toLowerCase()}/attendance`,
+          icon: Calendar,
+          roles: ["WALI"], // Wali can view their children's attendance
         },
         {
           name: "Evaluasi Perilaku",
@@ -196,6 +214,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           href: `/dashboard/${user?.role?.toLowerCase()}/spp`,
           icon: CreditCard,
           roles: ["ADMIN"],
+        },
+        {
+          name: "Pembayaran",
+          href: `/dashboard/${user?.role?.toLowerCase()}/payments`,
+          icon: CreditCard,
+          roles: ["WALI"], // Wali can view and pay their children's fees
         },
         {
           name: "Keuangan",
@@ -319,13 +343,42 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       ],
     },
     {
+      name: "KOMUNIKASI & WALI",
+      items: [
+        {
+          name: "Komunikasi dengan Musyrif",
+          href: `/dashboard/${user?.role?.toLowerCase()}/communication`,
+          icon: MessageSquare,
+          roles: ["WALI"], // Wali can communicate with musyrif
+        },
+        {
+          name: "Jadwal Kegiatan",
+          href: `/dashboard/${user?.role?.toLowerCase()}/schedule`,
+          icon: Calendar,
+          roles: ["WALI"], // Wali can view TPQ schedule and events
+        },
+        {
+          name: "Prestasi Anak",
+          href: `/dashboard/${user?.role?.toLowerCase()}/achievements`,
+          icon: Award,
+          roles: ["WALI"], // Wali can view their children's achievements
+        },
+        {
+          name: "Laporan Bulanan",
+          href: `/dashboard/${user?.role?.toLowerCase()}/reports`,
+          icon: FileText,
+          roles: ["WALI"], // Wali can view monthly reports of their children
+        },
+      ],
+    },
+    {
       name: "KOMUNIKASI",
       items: [
         {
           name: "Notifikasi",
           href: `/dashboard/${user?.role?.toLowerCase()}/notifications`,
           icon: Bell,
-          roles: ["ADMIN"],
+          roles: ["ADMIN", "WALI"], // Wali can view notifications
         },
         {
           name: "Trigger Notifikasi",
