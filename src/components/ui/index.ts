@@ -1,6 +1,7 @@
 // Export all UI components for easier imports
 export { Button, buttonVariants } from "./ui-button";
 export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui-card";
+export { Input } from "./ui-input";
 export { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 export { Badge, badgeVariants } from "./badge";
 export { Checkbox } from "./checkbox";
