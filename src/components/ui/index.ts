@@ -19,8 +19,7 @@ export { Textarea } from "./textarea";
 export { toast, useToast } from "./toast";
 
 // Legacy exports for backward compatibility
-export { default as Button } from "./Button";
-export { default as Card } from "./Card";
+// Note: Button and Card are now exported from lowercase files above
 export { default as Input } from "./Input";
 export { default as LoadingSpinner } from "./LoadingSpinner";
 export { default as Logo } from "./Logo";
