@@ -17,8 +17,8 @@ import {
   Clock,
   GraduationCap,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/ui-card";
+import { Button } from "@/components/ui/ui-button";
 
 export default function AboutPage() {
   const achievements = [
