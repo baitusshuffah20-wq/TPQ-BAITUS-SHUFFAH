@@ -42,7 +42,11 @@ interface DebugResponse {
 export default function DebugAdminPage() {
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [data, setData] = useState<DebugResponse | null>(null);
+  const [usersData, setUsersData] = useState<any>(null);
+  const [loginTest, setLoginTest] = useState<any>(null);
 
   const checkDatabase = async () => {
     setLoading(true);
@@ -77,7 +81,7 @@ export default function DebugAdminPage() {
       });
       const result = await response.json();
       setData(result);
-      
+
       if (result.success) {
         toast.success("Admin user ready!");
       } else {
@@ -96,6 +100,65 @@ export default function DebugAdminPage() {
     }
   };
 
+  const checkUsers = async () => {
+    setChecking(true);
+    try {
+      const response = await fetch("/api/debug/check-users");
+      const result = await response.json();
+      setUsersData(result);
+
+      if (result.success) {
+        toast.success(`Found ${result.totalUsers} users`);
+      } else {
+        toast.error(result.error || "Failed to check users");
+      }
+    } catch (error) {
+      console.error("Error checking users:", error);
+      toast.error("Failed to check users");
+      setUsersData({
+        success: false,
+        error: "Network error",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const testLogin = async () => {
+    setTesting(true);
+    try {
+      const response = await fetch("/api/debug/check-users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: "admin@tpqbaitusshuffah.com",
+          password: "admin123"
+        })
+      });
+      const result = await response.json();
+      setLoginTest(result);
+
+      if (result.success && result.passwordCheck?.isValid) {
+        toast.success("Login credentials are valid!");
+      } else if (result.success && !result.passwordCheck?.isValid) {
+        toast.error("Password is incorrect");
+      } else {
+        toast.error(result.error || "Login test failed");
+      }
+    } catch (error) {
+      console.error("Error testing login:", error);
+      toast.error("Failed to test login");
+      setLoginTest({
+        success: false,
+        error: "Network error",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    } finally {
+      setTesting(false);
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="space-y-6">
@@ -107,7 +170,7 @@ export default function DebugAdminPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-4 justify-center">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 justify-center">
           <Button
             onClick={checkDatabase}
             disabled={loading}
@@ -122,6 +185,19 @@ export default function DebugAdminPage() {
           </Button>
 
           <Button
+            onClick={checkUsers}
+            disabled={checking}
+            variant="outline"
+          >
+            {checking ? (
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <User className="h-4 w-4 mr-2" />
+            )}
+            Check Users
+          </Button>
+
+          <Button
             onClick={createAdmin}
             disabled={creating}
           >
@@ -130,7 +206,20 @@ export default function DebugAdminPage() {
             ) : (
               <Shield className="h-4 w-4 mr-2" />
             )}
-            Create Admin User
+            Create Admin
+          </Button>
+
+          <Button
+            onClick={testLogin}
+            disabled={testing}
+            variant="secondary"
+          >
+            {testing ? (
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Key className="h-4 w-4 mr-2" />
+            )}
+            Test Login
           </Button>
         </div>
 
@@ -254,6 +343,124 @@ export default function DebugAdminPage() {
               </Card>
             )}
           </div>
+        )}
+
+        {/* Users Data */}
+        {usersData && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                All Users ({usersData.totalUsers || 0})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {usersData.success ? (
+                <div className="space-y-4">
+                  {/* Role Summary */}
+                  {usersData.roleCounts && (
+                    <div className="grid grid-cols-3 gap-4">
+                      {usersData.roleCounts.map((roleCount: any) => (
+                        <div key={roleCount.role} className="text-center p-3 border rounded">
+                          <div className="font-medium">{roleCount.role}</div>
+                          <div className="text-2xl font-bold text-blue-600">{roleCount._count.role}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Users List */}
+                  {usersData.users && usersData.users.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Users:</h4>
+                      {usersData.users.map((user: any) => (
+                        <div key={user.id} className="flex items-center justify-between p-3 border rounded">
+                          <div>
+                            <div className="font-medium">{user.name || 'No Name'}</div>
+                            <div className="text-sm text-gray-600">{user.email}</div>
+                            <div className="text-xs text-gray-500">
+                              Created: {new Date(user.createdAt).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Badge variant="outline">{user.role}</Badge>
+                            <Badge variant={user.isActive ? "default" : "secondary"}>
+                              {user.isActive ? "Active" : "Inactive"}
+                            </Badge>
+                            {user.emailVerified && (
+                              <Badge variant="default" className="bg-green-600">
+                                Verified
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-red-600">
+                  <strong>Error:</strong> {usersData.error}
+                  {usersData.details && (
+                    <div className="text-xs mt-1 opacity-75">{usersData.details}</div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Login Test Results */}
+        {loginTest && (
+          <Card className={loginTest.success && loginTest.passwordCheck?.isValid ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                Login Test Results
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loginTest.success ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <strong>Email:</strong> admin@tpqbaitusshuffah.com
+                    </div>
+                    <div>
+                      <strong>Password:</strong> admin123
+                    </div>
+                  </div>
+
+                  {loginTest.user && (
+                    <div className="p-3 border rounded">
+                      <h4 className="font-medium mb-2">User Found:</h4>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div><strong>Name:</strong> {loginTest.user.name}</div>
+                        <div><strong>Role:</strong> {loginTest.user.role}</div>
+                        <div><strong>Active:</strong> {loginTest.user.isActive ? 'Yes' : 'No'}</div>
+                        <div><strong>Verified:</strong> {loginTest.user.emailVerified ? 'Yes' : 'No'}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {loginTest.passwordCheck && (
+                    <div className={`p-3 rounded ${loginTest.passwordCheck.isValid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      <strong>Password Check:</strong> {loginTest.passwordCheck.message}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-red-600">
+                  <strong>Error:</strong> {loginTest.error}
+                  {loginTest.suggestion && (
+                    <div className="mt-2 p-2 bg-yellow-100 text-yellow-800 rounded">
+                      <strong>Suggestion:</strong> {loginTest.suggestion}
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* Quick Links */}
