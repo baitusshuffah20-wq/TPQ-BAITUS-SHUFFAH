@@ -96,6 +96,24 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // If user is trying to access a specific page, redirect there
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+
+      // If URL contains callbackUrl, use it
+      if (url.includes("callbackUrl=")) {
+        const callbackUrl = new URL(url).searchParams.get("callbackUrl");
+        if (callbackUrl) {
+          return decodeURIComponent(callbackUrl);
+        }
+      }
+
+      // Default redirect based on URL or baseUrl
+      if (url.startsWith(baseUrl)) return url;
+
+      // Default to dashboard
+      return `${baseUrl}/dashboard`;
+    },
   },
   pages: {
     signIn: "/login",

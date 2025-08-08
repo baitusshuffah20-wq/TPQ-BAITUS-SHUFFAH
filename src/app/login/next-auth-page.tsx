@@ -116,6 +116,19 @@ const NextAuthLoginPage = () => {
 
       if (result?.error) {
         setAuthError("Email atau password salah");
+      } else if (result?.ok) {
+        // Login successful, force redirect
+        setAuthError(null);
+
+        // Wait a bit for session to update, then redirect
+        setTimeout(() => {
+          // Force redirect based on callbackUrl or default admin dashboard
+          if (callbackUrl && callbackUrl !== "/dashboard") {
+            window.location.href = callbackUrl;
+          } else {
+            window.location.href = "/dashboard/admin";
+          }
+        }, 500);
       }
       // If successful, the session will update and the useEffect will handle redirect
     } catch (error) {
