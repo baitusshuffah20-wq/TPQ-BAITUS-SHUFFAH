@@ -39,54 +39,21 @@ const NextAuthLoginPage = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
-  // Redirect if already logged in
+  // Simple redirect check - only run once when status changes
   useEffect(() => {
-    // Prevent multiple redirects
-    if (isRedirecting) {
-      console.log("🚫 Already redirecting, skipping...");
-      return;
-    }
+    console.log("🔍 Login status check:", { status, hasSession: !!session });
 
-    console.log("🔍 Login useEffect triggered:", { status, session: !!session, callbackUrl, isRedirecting });
-
-    // Only redirect if authenticated and not already redirecting
+    // If already authenticated, redirect immediately
     if (status === "authenticated" && session && !isRedirecting) {
+      console.log("✅ User already authenticated, redirecting...");
       setIsRedirecting(true);
 
-      const user = session.user;
-      console.log("✅ User authenticated:", { email: user.email, role: user.role });
-
-      let redirectUrl = "/dashboard";
-
-      // Determine redirect URL based on user role
-      if (user?.role === "ADMIN") {
-        redirectUrl = "/dashboard/admin";
-      } else if (user?.role === "MUSYRIF") {
-        redirectUrl = "/dashboard/musyrif";
-      } else if (user?.role === "WALI") {
-        redirectUrl = "/dashboard/wali";
-      } else {
-        // Use callbackUrl if provided and not default
-        if (callbackUrl && callbackUrl !== "/dashboard") {
-          redirectUrl = callbackUrl;
-        } else {
-          redirectUrl = "/dashboard/user";
-        }
-      }
-
-      console.log("🚀 Attempting redirect to:", redirectUrl);
-
-      // Use single redirect method to avoid conflicts
-      try {
-        console.log("🔄 Using window.location.replace for redirect");
-        window.location.replace(redirectUrl);
-      } catch (error) {
-        console.error("❌ Redirect error:", error);
-        // Fallback
-        window.location.href = redirectUrl;
-      }
+      // Simple redirect to admin dashboard
+      setTimeout(() => {
+        window.location.href = "/dashboard/admin";
+      }, 100);
     }
-  }, [session, status, callbackUrl, isRedirecting]);
+  }, [status]); // Only depend on status, not session
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -150,20 +117,15 @@ const NextAuthLoginPage = () => {
         console.error("❌ Login failed:", result.error);
         setAuthError("Email atau password salah");
       } else if (result?.ok) {
-        console.log("✅ Login successful, waiting for session update...");
+        console.log("✅ Login successful, redirecting immediately...");
         setAuthError(null);
 
-        // Set timeout to prevent infinite loading
+        // Immediate redirect without waiting for session
         setTimeout(() => {
-          console.log("⏰ Login timeout reached, forcing redirect...");
-          setIsLoading(false);
+          console.log("🚀 Redirecting to dashboard...");
+          window.location.href = "/dashboard/admin";
+        }, 1000); // 1 second delay
 
-          // Force redirect if session update takes too long
-          const redirectUrl = "/dashboard/admin"; // Default for now
-          window.location.replace(redirectUrl);
-        }, 3000); // 3 second timeout
-
-        console.log("⏳ Waiting for session to update and useEffect to trigger redirect...");
       } else {
         console.warn("⚠️ Unexpected login result:", result);
         setAuthError("Terjadi kesalahan yang tidak diketahui");
