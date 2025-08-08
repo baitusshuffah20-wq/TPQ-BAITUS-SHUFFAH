@@ -33,11 +33,26 @@ NODE_ENV = production
 
 ### 2. Database Setup
 
-#### Option A: Aiven MySQL (Recommended)
-1. Create account at https://aiven.io
-2. Create MySQL service
-3. Copy connection details
-4. Update DATABASE_URL in Vercel
+#### Option A: Aiven MySQL (Current Setup)
+1. Login to Aiven Console: https://console.aiven.io
+2. Select your MySQL service: mysql-175b5c3d-baitusshuffah20-3624
+3. **IMPORTANT**: Add your IP to "Allowed IP addresses":
+   - Go to service Overview tab
+   - Scroll to "Allowed IP addresses" section
+   - Click "Add IP address"
+   - Add your current IP (check at whatismyipaddress.com)
+   - For development: add `0.0.0.0/0` (not recommended for production)
+   - For Vercel: add `76.76.19.0/24` and `64.23.132.0/24`
+4. Connection details:
+   - Host: mysql-175b5c3d-baitusshuffah20-3624.b.aivencloud.com
+   - Port: 28379
+   - Database: defaultdb
+   - User: avnadmin
+   - Password: [Check Aiven Console]
+5. Update DATABASE_URL in Vercel:
+   ```
+   mysql://avnadmin:PASSWORD@mysql-175b5c3d-baitusshuffah20-3624.b.aivencloud.com:28379/defaultdb
+   ```
 
 #### Option B: Railway MySQL (Alternative)
 1. Go to https://railway.app
