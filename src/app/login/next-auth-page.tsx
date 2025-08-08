@@ -14,9 +14,6 @@ import {
   Mail,
   Lock,
   ArrowLeft,
-  Shield,
-  UserCheck,
-  Users,
 } from "lucide-react";
 
 interface LoginForm {
@@ -128,44 +125,7 @@ const NextAuthLoginPage = () => {
     }
   };
 
-  const demoAccounts = [
-    {
-      role: "Admin",
-      email: "admin@rumahtahfidz.com",
-      password: "password",
-      icon: Shield,
-      color: "text-red-600",
-      bgColor: "bg-red-50",
-    },
-    {
-      role: "Musyrif",
-      email: "musyrif@rumahtahfidz.com",
-      password: "password",
-      icon: UserCheck,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-    },
-    {
-      role: "Wali Santri",
-      email: "wali@rumahtahfidz.com",
-      password: "password",
-      icon: Users,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-    },
-  ];
 
-  const fillDemoAccount = (email: string, password: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      email,
-      password,
-    }));
-
-    // Clear any errors
-    setErrors({});
-    setAuthError(null);
-  };
 
   if (status === "loading") {
     return (
@@ -287,48 +247,6 @@ const NextAuthLoginPage = () => {
                   Masuk
                 </LoadingButton>
               </form>
-
-              {/* Demo Accounts */}
-              <div className="mt-8">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300" />
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-gray-500">
-                      Demo Akun
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-6 space-y-3">
-                  {demoAccounts.map((account) => {
-                    const Icon = account.icon;
-                    return (
-                      <button
-                        key={account.role}
-                        type="button"
-                        onClick={() =>
-                          fillDemoAccount(account.email, account.password)
-                        }
-                        className={`w-full flex items-center p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors ${account.bgColor}`}
-                      >
-                        <div className={`p-2 rounded ${account.color}`}>
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <div className="ml-3 text-left">
-                          <div className="text-sm font-medium text-gray-900">
-                            Login sebagai {account.role}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {account.email}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
             </CardContent>
           </Card>
 
