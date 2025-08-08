@@ -9,6 +9,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { signIn, useSession } from "next-auth/react";
 import Logo from "@/components/ui/Logo";
+import { SessionDebug } from "@/components/debug/session-debug";
 import {
   BookOpen,
   Mail,
@@ -39,24 +40,48 @@ const NextAuthLoginPage = () => {
 
   // Redirect if already logged in
   useEffect(() => {
+    console.log("🔍 Login useEffect triggered:", { status, session: !!session, callbackUrl });
+
     // Only check NextAuth session to avoid conflicts
     if (status === "authenticated" && session) {
       const user = session.user;
+      console.log("✅ User authenticated:", { email: user.email, role: user.role });
 
-      // Redirect based on user role instead of using the default callbackUrl
+      let redirectUrl = "/dashboard";
+
+      // Determine redirect URL based on user role
       if (user?.role === "ADMIN") {
-        router.push("/dashboard/admin");
+        redirectUrl = "/dashboard/admin";
       } else if (user?.role === "MUSYRIF") {
-        router.push("/dashboard/musyrif");
+        redirectUrl = "/dashboard/musyrif";
       } else if (user?.role === "WALI") {
-        router.push("/dashboard/wali");
+        redirectUrl = "/dashboard/wali";
       } else {
-        // Default dashboard or use callbackUrl if it's not the default
-        if (callbackUrl !== "/dashboard") {
-          router.push(callbackUrl);
+        // Use callbackUrl if provided and not default
+        if (callbackUrl && callbackUrl !== "/dashboard") {
+          redirectUrl = callbackUrl;
         } else {
-          router.push("/dashboard/user");
+          redirectUrl = "/dashboard/user";
         }
+      }
+
+      console.log("🚀 Attempting redirect to:", redirectUrl);
+
+      // Try multiple redirect methods
+      try {
+        // Method 1: Next.js router
+        router.push(redirectUrl);
+
+        // Method 2: Fallback with window.location after delay
+        setTimeout(() => {
+          console.log("⏰ Fallback redirect triggered");
+          window.location.href = redirectUrl;
+        }, 1000);
+
+      } catch (error) {
+        console.error("❌ Redirect error:", error);
+        // Method 3: Direct window.location as last resort
+        window.location.href = redirectUrl;
       }
     }
   }, [session, status, router, callbackUrl]);
@@ -105,8 +130,11 @@ const NextAuthLoginPage = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    setAuthError(null);
 
     try {
+      console.log("🔐 Attempting login with:", { email: formData.email });
+
       // Use NextAuth signIn directly
       const result = await signIn("credentials", {
         redirect: false,
@@ -114,24 +142,24 @@ const NextAuthLoginPage = () => {
         password: formData.password,
       });
 
+      console.log("🔍 Login result:", { ok: result?.ok, error: result?.error, url: result?.url });
+
       if (result?.error) {
+        console.error("❌ Login failed:", result.error);
         setAuthError("Email atau password salah");
       } else if (result?.ok) {
-        // Login successful, force redirect
+        console.log("✅ Login successful, waiting for session update...");
         setAuthError(null);
 
-        // Wait a bit for session to update, then redirect
-        setTimeout(() => {
-          // Force redirect based on callbackUrl or default admin dashboard
-          if (callbackUrl && callbackUrl !== "/dashboard") {
-            window.location.href = callbackUrl;
-          } else {
-            window.location.href = "/dashboard/admin";
-          }
-        }, 500);
+        // Wait for session to update, then let useEffect handle redirect
+        // Don't force redirect here, let the useEffect handle it
+        console.log("⏳ Waiting for session to update and useEffect to trigger redirect...");
+      } else {
+        console.warn("⚠️ Unexpected login result:", result);
+        setAuthError("Terjadi kesalahan yang tidak diketahui");
       }
-      // If successful, the session will update and the useEffect will handle redirect
     } catch (error) {
+      console.error("💥 Login exception:", error);
       setAuthError("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
@@ -273,6 +301,9 @@ const NextAuthLoginPage = () => {
               Kembali ke Beranda
             </Link>
           </div>
+
+          {/* Debug Component */}
+          <SessionDebug />
         </div>
       </div>
     </div>

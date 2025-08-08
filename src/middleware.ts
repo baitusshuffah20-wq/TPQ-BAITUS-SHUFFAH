@@ -71,6 +71,17 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
+  // Debug logging for login issues (only in development)
+  if (process.env.NODE_ENV === "development" && (path.startsWith("/login") || path.startsWith("/dashboard"))) {
+    console.log("🔍 Middleware:", {
+      path,
+      hasToken: !!token,
+      userRole: token?.role,
+      userEmail: token?.email,
+      timestamp: new Date().toISOString()
+    });
+  }
+
   // Maintenance mode check is now handled by a cookie or header instead of database
   // This avoids using Prisma in middleware which is not supported in Edge Runtime
   const maintenanceModeHeader = request.headers.get("x-maintenance-mode");
