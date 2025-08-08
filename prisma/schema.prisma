@@ -8,58 +8,56 @@ datasource db {
 }
 
 model User {
-  id                    String                 @id @default(cuid())
-  email                 String                 @unique
-  name                  String
-  phone                 String?
-  role                  String
-  password              String
-  avatar                String?
-  isActive              Boolean                @default(true)
-  status                String                 @default("ACTIVE") // Added for compatibility
-  halaqahId             String?                // Added for musyrif assignment
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  attendanceAsMusyrif   Attendance[]           @relation("MusyrifAttendance")
-  musyrifAttendance     MusyrifAttendance[]    @relation("MusyrifAttendanceRecord")
-  auditLogs             AuditLog[]
-  errorLogs             ErrorLog[]
-  cartItems             CartItem[]
-  productCartItems      ProductCartItem[]      @relation("ProductCartItems")
-  donationsConfirmed    Donation[]             @relation("DonationConfirmer")
-  emailMessages         EmailMessage[]
-  emailTemplates        EmailTemplate[]
-  reportsGenerated      FinancialReport[]      @relation("ReportGenerator")
-  scheduledReports      ScheduledReport[]      @relation("ScheduledReportCreator")
-  hafalanAsMusyrif      Hafalan[]              @relation("MusyrifHafalan")
-  musyrif               Musyrif[]
-  notificationTemplates NotificationTemplate[]
-  notificationsCreated  Notification[]         @relation("NotificationCreator")
-  notifications         Notification[]
-  orders                Order[]
-  paymentTransactions   PaymentTransaction[]
-  santriAsWali          Santri[]               @relation("WaliSantri")
-  subscriptions         Subscription[]
-  testimonials          Testimonial[]          @relation("Testimonials")
-  themes                Theme[]
-  transactionsCreated   Transaction[]          @relation("TransactionCreator")
-  whatsappIncoming      WhatsAppIncoming[]     @relation("WhatsAppIncoming")
-  whatsappLogs          WhatsAppLog[]          @relation("WhatsAppLogs")
-  whatsappMessages      WhatsAppMessage[]
-  behaviorRecords       Behavior[]             @relation("BehaviorRecorder")
-  campaignsCreated      DonationCampaign[]     @relation("CampaignCreator")
-  campaignUpdatesCreated CampaignUpdate[]      @relation("CampaignUpdateCreator")
-
-  // Salary System Relations
-  earningsApproved      MusyrifEarning[]       @relation("EarningApprover")
-  withdrawalsApproved   MusyrifWithdrawal[]    @relation("WithdrawalApprover")
+  id                     String                 @id @default(cuid())
+  email                  String                 @unique
+  name                   String
+  phone                  String?
+  role                   String
+  password               String
+  avatar                 String?
+  isActive               Boolean                @default(true)
+  status                 String                 @default("ACTIVE")
+  halaqahId              String?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  attendanceAsMusyrif    Attendance[]           @relation("MusyrifAttendance")
+  auditLogs              AuditLog[]
+  behaviorRecords        Behavior[]             @relation("BehaviorRecorder")
+  campaignUpdatesCreated CampaignUpdate[]       @relation("CampaignUpdateCreator")
+  cartItems              CartItem[]
+  campaignsCreated       DonationCampaign[]     @relation("CampaignCreator")
+  donationsConfirmed     Donation[]             @relation("DonationConfirmer")
+  emailMessages          EmailMessage[]
+  emailTemplates         EmailTemplate[]
+  errorLogs              ErrorLog[]
+  reportsGenerated       FinancialReport[]      @relation("ReportGenerator")
+  hafalanAsMusyrif       Hafalan[]              @relation("MusyrifHafalan")
+  musyrif                Musyrif[]
+  musyrifAttendance      MusyrifAttendance[]    @relation("MusyrifAttendanceRecord")
+  earningsApproved       MusyrifEarning[]       @relation("EarningApprover")
+  withdrawalsApproved    MusyrifWithdrawal[]    @relation("WithdrawalApprover")
+  notificationTemplates  NotificationTemplate[]
+  notificationsCreated   Notification[]         @relation("NotificationCreator")
+  notifications          Notification[]
+  orders                 Order[]
+  paymentTransactions    PaymentTransaction[]
+  productCartItems       ProductCartItem[]      @relation("ProductCartItems")
+  santriAsWali           Santri[]               @relation("WaliSantri")
+  scheduledReports       ScheduledReport[]      @relation("ScheduledReportCreator")
+  subscriptions          Subscription[]
+  testimonials           Testimonial[]          @relation("Testimonials")
+  themes                 Theme[]
+  transactionsCreated    Transaction[]          @relation("TransactionCreator")
+  whatsappIncoming       WhatsAppIncoming[]     @relation("WhatsAppIncoming")
+  whatsappLogs           WhatsAppLog[]          @relation("WhatsAppLogs")
+  whatsappMessages       WhatsAppMessage[]
 
   @@map("users")
 }
 
 model Santri {
-  id              String            @id @default(cuid())
-  nis             String            @unique
+  id              String              @id @default(cuid())
+  nis             String              @unique
   name            String
   birthDate       DateTime
   birthPlace      String
@@ -68,24 +66,24 @@ model Santri {
   phone           String?
   email           String?
   photo           String?
-  status          String            @default("ACTIVE")
-  enrollmentDate  DateTime          @default(now())
+  status          String              @default("ACTIVE")
+  enrollmentDate  DateTime            @default(now())
   graduationDate  DateTime?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
   waliId          String
   halaqahId       String?
   attendance      Attendance[]
-  hafalan         Hafalan[]
-  hafalanProgress HafalanProgress[] @relation("SantriHafalanProgress")
-  payments        Payment[]
-  halaqah         Halaqah?          @relation("SantriHalaqah", fields: [halaqahId], references: [id])
-  wali            User              @relation("WaliSantri", fields: [waliId], references: [id])
-  sppRecords      SPPRecord[]       @relation("SantriSPP")
-  testimonials    Testimonial[]
-  transactions    Transaction[]     @relation("SantriTransactions")
-  achievements    SantriAchievement[]
   behaviorRecords Behavior[]
+  hafalan         Hafalan[]
+  hafalanProgress HafalanProgress[]   @relation("SantriHafalanProgress")
+  payments        Payment[]
+  halaqah         Halaqah?            @relation("SantriHalaqah", fields: [halaqahId], references: [id])
+  wali            User                @relation("WaliSantri", fields: [waliId], references: [id])
+  achievements    SantriAchievement[]
+  sppRecords      SPPRecord[]         @relation("SantriSPP")
+  testimonials    Testimonial[]
+  transactions    Transaction[]       @relation("SantriTransactions")
 
   @@index([halaqahId], map: "santri_halaqahId_fkey")
   @@index([waliId], map: "santri_waliId_fkey")
@@ -93,7 +91,7 @@ model Santri {
 }
 
 model Musyrif {
-  id               String   @id @default(cuid())
+  id               String              @id @default(cuid())
   name             String
   gender           String
   birthDate        DateTime
@@ -102,23 +100,21 @@ model Musyrif {
   phone            String
   email            String
   specialization   String?
-  joinDate         DateTime @default(now())
-  status           String   @default("ACTIVE")
+  joinDate         DateTime            @default(now())
+  status           String              @default("ACTIVE")
   photo            String?
   educationData    String?
   experienceData   String?
   certificatesData String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
   userId           String?
-  halaqahId        String?  @unique
-  halaqah          Halaqah? @relation("MusyrifHalaqah")
-  user             User?    @relation(fields: [userId], references: [id])
-
-  // Salary & Wallet Relations
+  halaqahId        String?             @unique
+  halaqah          Halaqah?            @relation("MusyrifHalaqah")
+  user             User?               @relation(fields: [userId], references: [id])
+  earnings         MusyrifEarning[]    @relation("MusyrifEarnings")
   salaryRates      MusyrifSalaryRate[] @relation("MusyrifSalaryRates")
   wallet           MusyrifWallet?      @relation("MusyrifWallet")
-  earnings         MusyrifEarning[]    @relation("MusyrifEarnings")
   withdrawals      MusyrifWithdrawal[] @relation("MusyrifWithdrawals")
 
   @@index([userId], map: "musyrif_userId_fkey")
@@ -126,24 +122,24 @@ model Musyrif {
 }
 
 model Halaqah {
-  id          String            @id @default(cuid())
-  name        String
-  description String?
-  capacity    Int               @default(20)
-  level       String            @default("BEGINNER")
-  room        String?
-  schedule    String?           // JSON string for schedule data
-  status      String            @default("ACTIVE")
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  musyrifId   String?           @unique
-  attendance  Attendance[]
+  id                String              @id @default(cuid())
+  name              String
+  description       String?
+  capacity          Int                 @default(20)
+  level             String              @default("BEGINNER")
+  room              String?
+  schedule          String?
+  status            String              @default("ACTIVE")
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  musyrifId         String?             @unique
+  attendance        Attendance[]
+  behaviorRecords   Behavior[]
+  musyrif           Musyrif?            @relation("MusyrifHalaqah", fields: [musyrifId], references: [id])
+  schedules         HalaqahSchedule[]
   musyrifAttendance MusyrifAttendance[] @relation("MusyrifAttendanceHalaqah")
-  qrCodeSessions QRCodeSession[] @relation("QRCodeSessions")
-  musyrif     Musyrif?          @relation("MusyrifHalaqah", fields: [musyrifId], references: [id])
-  schedules   HalaqahSchedule[]
-  santri      Santri[]          @relation("SantriHalaqah")
-  behaviorRecords Behavior[]
+  qrCodeSessions    QRCodeSession[]     @relation("QRCodeSessions")
+  santri            Santri[]            @relation("SantriHalaqah")
 
   @@map("halaqah")
 }
@@ -236,24 +232,22 @@ model Attendance {
 }
 
 model MusyrifAttendance {
-  id           String    @id @default(cuid())
+  id           String           @id @default(cuid())
   date         DateTime
-  status       String    // PRESENT, ABSENT, LATE
+  status       String
   checkInTime  DateTime?
   checkOutTime DateTime?
   notes        String?
-  sessionType  String    @default("REGULAR") // REGULAR, EXTRA, MAKEUP
-  qrCodeUsed   String?   // QR code that was scanned
+  sessionType  String           @default("REGULAR")
+  qrCodeUsed   String?
   latitude     Float?
   longitude    Float?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
   musyrifId    String
   halaqahId    String
-  halaqah      Halaqah   @relation("MusyrifAttendanceHalaqah", fields: [halaqahId], references: [id])
-  musyrif      User      @relation("MusyrifAttendanceRecord", fields: [musyrifId], references: [id])
-
-  // Salary Relations
+  halaqah      Halaqah          @relation("MusyrifAttendanceHalaqah", fields: [halaqahId], references: [id])
+  musyrif      User             @relation("MusyrifAttendanceRecord", fields: [musyrifId], references: [id])
   earnings     MusyrifEarning[] @relation("AttendanceEarnings")
 
   @@unique([musyrifId, halaqahId, date])
@@ -263,19 +257,19 @@ model MusyrifAttendance {
 }
 
 model QRCodeSession {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   halaqahId   String
   sessionDate DateTime
-  sessionType String    @default("REGULAR")
-  qrCode      String    @unique
-  isActive    Boolean   @default(true)
+  sessionType String   @default("REGULAR")
+  qrCode      String   @unique
+  isActive    Boolean  @default(true)
   expiresAt   DateTime
   createdBy   String
-  usageCount  Int       @default(0)
-  maxUsage    Int       @default(1)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  halaqah     Halaqah   @relation("QRCodeSessions", fields: [halaqahId], references: [id])
+  usageCount  Int      @default(0)
+  maxUsage    Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  halaqah     Halaqah  @relation("QRCodeSessions", fields: [halaqahId], references: [id])
 
   @@index([halaqahId])
   @@index([qrCode])
@@ -364,14 +358,15 @@ model ErrorLog {
   id        String   @id @default(cuid())
   message   String   @db.Text
   stack     String?  @db.Text
-  level     String   @default("ERROR") // ERROR, WARNING, INFO
+  level     String   @default("ERROR")
   source    String?
   url       String?
   userAgent String?  @db.Text
   userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
 
+  @@index([userId], map: "error_logs_userId_fkey")
   @@map("error_logs")
 }
 
@@ -483,38 +478,38 @@ model Testimonial {
 }
 
 model AchievementBadge {
-  id                String              @id @default(cuid())
-  name              String
-  nameArabic        String
-  description       String
-  icon              String
-  color             String
-  category          String
-  criteriaType      String
-  criteriaValue     Int
-  criteriaCondition String
-  timeframe         String?
-  rarity            String
-  points            Int
-  isActive          Boolean             @default(true)
-  unlockMessage     String
-  shareMessage      String
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  id                 String              @id @default(cuid())
+  name               String
+  nameArabic         String
+  description        String
+  icon               String
+  color              String
+  category           String
+  criteriaType       String
+  criteriaValue      Int
+  criteriaCondition  String
+  timeframe          String?
+  rarity             String
+  points             Int
+  isActive           Boolean             @default(true)
+  unlockMessage      String
+  shareMessage       String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
   santriAchievements SantriAchievement[]
 
   @@map("achievement_badges")
 }
 
 model SantriAchievement {
-  id                String           @id @default(cuid())
-  santriId          String
-  badgeId           String
-  awardedAt         DateTime         @default(now())
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  badge             AchievementBadge @relation(fields: [badgeId], references: [id])
-  santri            Santri           @relation(fields: [santriId], references: [id], onDelete: Cascade)
+  id        String           @id @default(cuid())
+  santriId  String
+  badgeId   String
+  awardedAt DateTime         @default(now())
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  badge     AchievementBadge @relation(fields: [badgeId], references: [id])
+  santri    Santri           @relation(fields: [santriId], references: [id], onDelete: Cascade)
 
   @@unique([santriId, badgeId])
   @@index([badgeId], map: "santri_achievements_badgeId_fkey")
@@ -571,11 +566,11 @@ model NotificationTemplate {
   id          String   @id @default(cuid())
   name        String
   title       String
-  content     String   // Keep for backward compatibility
-  message     String?  @db.Text // Add message field that the app expects
-  type        String?  // Add type field for notification categorization
-  channels    String?  // Add channels field (comma-separated)
-  variables   String?  @db.Text // Add variables field (JSON string)
+  content     String
+  message     String?  @db.Text
+  type        String?
+  channels    String?
+  variables   String?  @db.Text
   description String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -591,30 +586,30 @@ model Notification {
   id            String    @id @default(cuid())
   userId        String
   title         String
-  message       String    @db.Text // Changed from content to message and made it TEXT
-  type          String?   // Added type field for notification categorization
-  priority      String?   @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
-  status        String?   @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
-  channels      String?   // Comma-separated list of channels: IN_APP,EMAIL,WHATSAPP,SMS
-  recipientId   String?   // ID of the recipient (can be different from userId)
-  recipientType String?   // Type of recipient: SANTRI, WALI, MUSYRIF, ADMIN
-  relatedId     String?   // Added relatedId for linking to related records
-  metadata      String?   @db.Text // Added metadata field for additional data
-  scheduledAt   DateTime? // When to send the notification
-  sentAt        DateTime? // When the notification was sent
+  message       String    @db.Text
+  type          String?
+  priority      String?   @default("NORMAL")
+  status        String?   @default("PENDING")
+  channels      String?
+  recipientId   String?
+  recipientType String?
+  relatedId     String?
+  metadata      String?   @db.Text
+  scheduledAt   DateTime?
+  sentAt        DateTime?
   isRead        Boolean   @default(false)
   readAt        DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  createdBy     String?   // Made optional since system can create notifications
+  createdBy     String?
   creator       User?     @relation("NotificationCreator", fields: [createdBy], references: [id])
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([createdBy], map: "notifications_createdBy_fkey")
   @@index([userId], map: "notifications_userId_fkey")
-  @@index([userId, isRead], map: "notifications_userId_isRead_idx")
-  @@index([status], map: "notifications_status_idx")
-  @@index([scheduledAt], map: "notifications_scheduledAt_idx")
+  @@index([userId, isRead])
+  @@index([status])
+  @@index([scheduledAt])
   @@map("notifications")
 }
 
@@ -633,29 +628,29 @@ model FinancialAccount {
 }
 
 model Transaction {
-  id                String          @id @default(cuid())
-  transactionType   String
-  amount            Float
-  description       String?
-  date              DateTime
-  reference         String?
-  status            String          @default("COMPLETED")
-  paymentMethod     String?         // GATEWAY, BANK_TRANSFER, CASH
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  accountId         String
-  createdById       String
-  santriId          String?
-  paymentId         String?
-  paymentGatewayId  String?         // Reference to PaymentGateway
-  bankAccountId     String?         // Reference to BankAccount for manual transfers
-  account           FinancialAccount @relation(fields: [accountId], references: [id])
-  createdBy         User            @relation("TransactionCreator", fields: [createdById], references: [id])
-  payment           Payment?        @relation(fields: [paymentId], references: [id])
-  santri            Santri?         @relation("SantriTransactions", fields: [santriId], references: [id])
-  sppRecord         SPPRecord?      @relation("SPPTransaction")
-  paymentGateway    PaymentGateway? @relation("PaymentGatewayTransactions", fields: [paymentGatewayId], references: [id])
-  bankAccount       BankAccount?    @relation("BankAccountTransactions", fields: [bankAccountId], references: [id])
+  id               String           @id @default(cuid())
+  transactionType  String
+  amount           Float
+  description      String?
+  date             DateTime
+  reference        String?
+  status           String           @default("COMPLETED")
+  paymentMethod    String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  accountId        String
+  createdById      String
+  santriId         String?
+  paymentId        String?
+  paymentGatewayId String?
+  bankAccountId    String?
+  sppRecord        SPPRecord?       @relation("SPPTransaction")
+  account          FinancialAccount @relation(fields: [accountId], references: [id])
+  bankAccount      BankAccount?     @relation("BankAccountTransactions", fields: [bankAccountId], references: [id])
+  createdBy        User             @relation("TransactionCreator", fields: [createdById], references: [id])
+  paymentGateway   PaymentGateway?  @relation("PaymentGatewayTransactions", fields: [paymentGatewayId], references: [id])
+  payment          Payment?         @relation(fields: [paymentId], references: [id])
+  santri           Santri?          @relation("SantriTransactions", fields: [santriId], references: [id])
 
   @@index([accountId], map: "transactions_accountId_fkey")
   @@index([createdById], map: "transactions_createdById_fkey")
@@ -684,40 +679,40 @@ model FinancialReport {
 }
 
 model ScheduledReport {
-  id           String   @id @default(cuid())
-  reportType   String   // financial-summary, spp-reports, etc.
+  id           String    @id @default(cuid())
+  reportType   String
   reportName   String
-  frequency    String   // DAILY, WEEKLY, MONTHLY
-  scheduleTime String   // HH:MM format
-  recipients   String   // JSON array of email addresses
-  filters      String   // JSON object for report filters
-  isActive     Boolean  @default(true)
+  frequency    String
+  scheduleTime String
+  recipients   String
+  filters      String
+  isActive     Boolean   @default(true)
   lastRunDate  DateTime?
   nextRunDate  DateTime
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   createdBy    String
-  creator      User     @relation("ScheduledReportCreator", fields: [createdBy], references: [id])
+  creator      User      @relation("ScheduledReportCreator", fields: [createdBy], references: [id])
 
   @@index([createdBy], map: "scheduled_reports_createdBy_fkey")
-  @@index([nextRunDate], map: "scheduled_reports_nextRunDate_idx")
-  @@index([isActive], map: "scheduled_reports_isActive_idx")
+  @@index([nextRunDate])
+  @@index([isActive])
   @@map("scheduled_reports")
 }
 
 model Product {
-  id          String     @id @default(cuid())
+  id          String            @id @default(cuid())
   name        String
   description String
   price       Float
-  stock       Int        @default(0)
+  stock       Int               @default(0)
   image       String?
   category    String
-  isActive    Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  cartItems   ProductCartItem[]
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
   orderItems  OrderItem[]
+  cartItems   ProductCartItem[]
 
   @@map("products")
 }
@@ -726,17 +721,15 @@ model CartItem {
   id          String   @id @default(cuid())
   cartId      String
   userId      String?
-  itemType    String   // SPP, DONATION, PRODUCT, etc.
-  itemId      String   // Reference to the actual item
+  itemType    String
+  itemId      String
   name        String
   description String?
   price       Float
   quantity    Int
-  metadata    String?  // JSON string for additional data
+  metadata    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  // Optional relations
   user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([cartId])
@@ -745,7 +738,6 @@ model CartItem {
   @@map("cart_items")
 }
 
-// Keep the old CartItem as ProductCartItem for e-commerce
 model ProductCartItem {
   id        String   @id @default(cuid())
   quantity  Int
@@ -762,21 +754,21 @@ model ProductCartItem {
 }
 
 model Order {
-  id              String          @id @default(cuid())
-  orderNumber     String          @unique
-  status          String          @default("PENDING")
+  id              String               @id @default(cuid())
+  orderNumber     String               @unique
+  status          String               @default("PENDING")
   totalAmount     Float
   notes           String?
   shippingAddress String?
   paymentMethod   String?
-  paymentStatus   String          @default("PENDING")
+  paymentStatus   String               @default("PENDING")
   paidAt          DateTime?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
   userId          String
   items           OrderItem[]
+  user            User                 @relation(fields: [userId], references: [id])
   transactions    PaymentTransaction[]
-  user            User            @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "orders_userId_fkey")
   @@map("orders")
@@ -799,19 +791,19 @@ model OrderItem {
 }
 
 model PaymentTransaction {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   amount        Float
   paymentMethod String
-  status        String   @default("PENDING")
+  status        String    @default("PENDING")
   reference     String?
   notes         String?
   paidAt        DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   orderId       String
   userId        String
-  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  user          User     @relation(fields: [userId], references: [id])
+  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id])
 
   @@index([orderId], map: "payment_transactions_orderId_fkey")
   @@index([userId], map: "payment_transactions_userId_fkey")
@@ -819,78 +811,78 @@ model PaymentTransaction {
 }
 
 model DonationCategory {
-  id          String            @id @default(cuid())
-  title       String            @map("name")
-  slug        String            @unique
+  id          String             @id @default(cuid())
+  title       String             @map("name")
+  slug        String             @unique
   description String?
-  target      Int               @default(0)
-  collected   Int               @default(0)
+  target      Int                @default(0)
+  collected   Int                @default(0)
   icon        String?
   color       String?
   bgColor     String?
-  urgent      Boolean           @default(false)
-  isActive    Boolean           @default(true)
-  order       Int               @default(0)
-  image       String?           // Featured image for category
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  donations   Donation[]
+  urgent      Boolean            @default(false)
+  isActive    Boolean            @default(true)
+  order       Int                @default(0)
+  image       String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
   campaigns   DonationCampaign[]
+  donations   Donation[]
 
   @@map("donation_categories")
 }
 
 model DonationCampaign {
-  id            String    @id @default(cuid())
+  id            String            @id @default(cuid())
   title         String
-  slug          String    @unique
-  description   String?   @db.Text
-  shortDesc     String?   // Short description for cards
-  content       String?   @db.Text // Rich content/story
-  target        Float     @default(0)
-  collected     Float     @default(0)
-  startDate     DateTime  @default(now())
+  slug          String            @unique
+  description   String?           @db.Text
+  shortDesc     String?
+  content       String?           @db.Text
+  target        Float             @default(0)
+  collected     Float             @default(0)
+  startDate     DateTime          @default(now())
   endDate       DateTime?
-  status        String    @default("ACTIVE") // ACTIVE, PAUSED, COMPLETED, CANCELLED
-  priority      Int       @default(0) // Higher number = higher priority
-  featured      Boolean   @default(false)
-  urgent        Boolean   @default(false)
-  image         String?   // Main campaign image
-  gallery       Json?     // Array of additional images
-  videoUrl      String?   // YouTube/Vimeo URL
-  location      String?   // Campaign location if applicable
-  beneficiaries Int?      // Number of people who will benefit
-  tags          Json?     // Array of tags for filtering
+  status        String            @default("ACTIVE")
+  priority      Int               @default(0)
+  featured      Boolean           @default(false)
+  urgent        Boolean           @default(false)
+  image         String?
+  gallery       Json?
+  videoUrl      String?
+  location      String?
+  beneficiaries Int?
+  tags          Json?
   seoTitle      String?
   seoDesc       String?
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  isActive      Boolean           @default(true)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
   categoryId    String?
   createdById   String
-  category      DonationCategory? @relation(fields: [categoryId], references: [id])
-  createdBy     User      @relation("CampaignCreator", fields: [createdById], references: [id])
-  donations     Donation[]
   updates       CampaignUpdate[]
+  category      DonationCategory? @relation(fields: [categoryId], references: [id])
+  createdBy     User              @relation("CampaignCreator", fields: [createdById], references: [id])
+  donations     Donation[]
 
   @@index([categoryId], map: "donation_campaigns_categoryId_fkey")
   @@index([createdById], map: "donation_campaigns_createdById_fkey")
-  @@index([status], map: "donation_campaigns_status_idx")
-  @@index([featured], map: "donation_campaigns_featured_idx")
+  @@index([status])
+  @@index([featured])
   @@map("donation_campaigns")
 }
 
 model CampaignUpdate {
-  id          String    @id @default(cuid())
+  id          String           @id @default(cuid())
   title       String
-  content     String    @db.Text
+  content     String           @db.Text
   image       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
   campaignId  String
   createdById String
   campaign    DonationCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  createdBy   User      @relation("CampaignUpdateCreator", fields: [createdById], references: [id])
+  createdBy   User             @relation("CampaignUpdateCreator", fields: [createdById], references: [id])
 
   @@index([campaignId], map: "campaign_updates_campaignId_fkey")
   @@index([createdById], map: "campaign_updates_createdById_fkey")
@@ -898,31 +890,31 @@ model CampaignUpdate {
 }
 
 model Donation {
-  id            String    @id @default(cuid())
+  id            String            @id @default(cuid())
   amount        Float
   donorName     String
   donorEmail    String?
   donorPhone    String?
   purpose       String
   message       String?
-  isAnonymous   Boolean   @default(false)
-  status        String    @default("PENDING") // PENDING, PAID, CANCELLED, REFUNDED
+  isAnonymous   Boolean           @default(false)
+  status        String            @default("PENDING")
   paymentMethod String?
-  reference     String?   // Payment reference/transaction ID
+  reference     String?
   confirmedAt   DateTime?
   confirmedBy   String?
   categoryId    String?
-  campaignId    String?   // New field for campaign donations
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  category      DonationCategory? @relation(fields: [categoryId], references: [id])
+  campaignId    String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
   campaign      DonationCampaign? @relation(fields: [campaignId], references: [id])
-  confirmer     User?     @relation("DonationConfirmer", fields: [confirmedBy], references: [id])
+  category      DonationCategory? @relation(fields: [categoryId], references: [id])
+  confirmer     User?             @relation("DonationConfirmer", fields: [confirmedBy], references: [id])
 
   @@index([categoryId], map: "donations_categoryId_fkey")
   @@index([campaignId], map: "donations_campaignId_fkey")
   @@index([confirmedBy], map: "donations_confirmedBy_fkey")
-  @@index([status], map: "donations_status_idx")
+  @@index([status])
   @@map("donations")
 }
 
@@ -941,32 +933,32 @@ model Subscription {
 }
 
 model SiteSettings {
-  id                String   @id @default(cuid())
-  siteName          String   @default("Rumah Tahfidz Baitus Shuffah")
-  siteDescription   String   @default("Sistem Informasi Rumah Tahfidz")
-  contactEmail      String   @default("info@rumahtahfidz.com")
-  contactPhone      String   @default("+62123456789")
-  address           String   @default("Jl. Contoh No. 123, Jakarta")
-  socialFacebook    String?
-  socialInstagram   String?
-  socialTwitter     String?
-  socialYoutube     String?
-  logoUrl           String?
-  faviconUrl        String?
-  maintenanceMode   Boolean  @default(false)
-  registrationOpen  Boolean  @default(true)
-  paymentGateway    String   @default("MANUAL")
-  paymentApiKey     String?
-  whatsappApiKey    String?
-  whatsappInstance  String?
-  emailSmtpHost     String?
-  emailSmtpPort     Int?
-  emailSmtpUser     String?
-  emailSmtpPass     String?
-  emailFromAddress  String?
-  emailFromName     String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               String   @id @default(cuid())
+  siteName         String   @default("Rumah Tahfidz Baitus Shuffah")
+  siteDescription  String   @default("Sistem Informasi Rumah Tahfidz")
+  contactEmail     String   @default("info@rumahtahfidz.com")
+  contactPhone     String   @default("+62123456789")
+  address          String   @default("Jl. Contoh No. 123, Jakarta")
+  socialFacebook   String?
+  socialInstagram  String?
+  socialTwitter    String?
+  socialYoutube    String?
+  logoUrl          String?
+  faviconUrl       String?
+  maintenanceMode  Boolean  @default(false)
+  registrationOpen Boolean  @default(true)
+  paymentGateway   String   @default("MANUAL")
+  paymentApiKey    String?
+  whatsappApiKey   String?
+  whatsappInstance String?
+  emailSmtpHost    String?
+  emailSmtpPort    Int?
+  emailSmtpUser    String?
+  emailSmtpPass    String?
+  emailFromAddress String?
+  emailFromName    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@map("site_settings")
 }
@@ -975,8 +967,8 @@ model SiteSetting {
   id          String   @id @default(cuid())
   key         String   @unique
   value       String
-  type        String   @default("STRING") // STRING, BOOLEAN, NUMBER, JSON, IMAGE
-  category    String   @default("GENERAL") // GENERAL, SYSTEM, CONTACT, ABOUT, INTEGRATION, APPEARANCE
+  type        String   @default("STRING")
+  category    String   @default("GENERAL")
   label       String
   description String?
   isPublic    Boolean  @default(true)
@@ -1005,33 +997,32 @@ model Theme {
 }
 
 model Behavior {
-  id              String    @id @default(cuid())
-  santriId        String
-  halaqahId       String?
-  criteriaId      String
-  criteriaName    String
-  category        String    // AKHLAQ, IBADAH, SOSIAL, AKADEMIK
-  type            String    // POSITIVE, NEGATIVE
-  severity        String    @default("LOW") // LOW, MEDIUM, HIGH
-  points          Int       @default(0)
-  date            DateTime  @default(now())
-  time            String?
-  description     String
-  context         String?
-  location        String?
-  status          String    @default("ACTIVE") // ACTIVE, RESOLVED, ARCHIVED
-  recordedBy      String
-  recordedAt      DateTime  @default(now())
-  followUpRequired Boolean  @default(false)
-  parentNotified  Boolean   @default(false)
+  id               String    @id @default(cuid())
+  santriId         String
+  halaqahId        String?
+  criteriaId       String
+  criteriaName     String
+  category         String
+  type             String
+  severity         String    @default("LOW")
+  points           Int       @default(0)
+  date             DateTime  @default(now())
+  time             String?
+  description      String
+  context          String?
+  location         String?
+  status           String    @default("ACTIVE")
+  recordedBy       String
+  recordedAt       DateTime  @default(now())
+  followUpRequired Boolean   @default(false)
+  parentNotified   Boolean   @default(false)
   parentNotifiedAt DateTime?
-  metadata        Json?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  santri          Santri    @relation(fields: [santriId], references: [id], onDelete: Cascade)
-  halaqah         Halaqah?  @relation(fields: [halaqahId], references: [id])
-  recordedByUser  User      @relation("BehaviorRecorder", fields: [recordedBy], references: [id])
+  metadata         Json?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  halaqah          Halaqah?  @relation(fields: [halaqahId], references: [id])
+  recordedByUser   User      @relation("BehaviorRecorder", fields: [recordedBy], references: [id])
+  santri           Santri    @relation(fields: [santriId], references: [id], onDelete: Cascade)
 
   @@index([santriId], map: "behavior_santriId_fkey")
   @@index([halaqahId], map: "behavior_halaqahId_fkey")
@@ -1040,128 +1031,118 @@ model Behavior {
 }
 
 model PaymentGateway {
-  id            String   @id @default(cuid())
-  name          String   @unique
-  type          String   // BANK_TRANSFER, E_WALLET, QRIS, VIRTUAL_ACCOUNT, CREDIT_CARD
-  provider      String   // MIDTRANS, XENDIT, DOKU, etc.
-  isActive      Boolean  @default(true)
-  config        Json     // Configuration data (API keys, etc.)
-  fees          Json     // Fee structure
-  description   String?  // Description of the payment method
-  logo          String?  // Logo URL
-  sortOrder     Int      @default(0) // For ordering in UI
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // Relations
-  transactions  Transaction[] @relation("PaymentGatewayTransactions")
+  id           String        @id @default(cuid())
+  name         String        @unique
+  type         String
+  provider     String
+  isActive     Boolean       @default(true)
+  config       Json
+  fees         Json
+  description  String?
+  logo         String?
+  sortOrder    Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[] @relation("PaymentGatewayTransactions")
 
   @@map("payment_gateways")
 }
 
 model BankAccount {
-  id            String   @id @default(cuid())
-  bankName      String   // Nama Bank (BCA, BNI, BRI, etc.)
-  accountNumber String   // Nomor Rekening
-  accountName   String   // Nama Pemilik Rekening
-  branch        String?  // Cabang Bank
-  isActive      Boolean  @default(true)
-  isDefault     Boolean  @default(false) // Rekening utama
-  description   String?  // Keterangan tambahan
-  logo          String?  // Logo bank
-  sortOrder     Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // Relations
+  id            String        @id @default(cuid())
+  bankName      String
+  accountNumber String
+  accountName   String
+  branch        String?
+  isActive      Boolean       @default(true)
+  isDefault     Boolean       @default(false)
+  description   String?
+  logo          String?
+  sortOrder     Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   transactions  Transaction[] @relation("BankAccountTransactions")
 
   @@map("bank_accounts")
 }
 
-// ===== SALARY & WALLET SYSTEM MODELS =====
-
 model MusyrifSalaryRate {
-  id            String   @id @default(cuid())
-  musyrifId     String
-  ratePerSession Decimal @db.Decimal(10, 2)
-  ratePerHour   Decimal  @db.Decimal(10, 2)
-  effectiveDate DateTime @db.Date
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id             String   @id @default(cuid())
+  musyrifId      String
+  ratePerSession Decimal  @db.Decimal(10, 2)
+  ratePerHour    Decimal  @db.Decimal(10, 2)
+  effectiveDate  DateTime @db.Date
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  musyrif        Musyrif  @relation("MusyrifSalaryRates", fields: [musyrifId], references: [id], onDelete: Cascade)
 
-  // Relations
-  musyrif       Musyrif  @relation("MusyrifSalaryRates", fields: [musyrifId], references: [id], onDelete: Cascade)
-
+  @@index([musyrifId], map: "musyrif_salary_rates_musyrifId_fkey")
   @@map("musyrif_salary_rates")
 }
 
 model MusyrifWallet {
-  id              String   @id @default(cuid())
-  musyrifId       String   @unique
-  balance         Decimal  @default(0.00) @db.Decimal(12, 2)
-  totalEarned     Decimal  @default(0.00) @db.Decimal(12, 2)
-  totalWithdrawn  Decimal  @default(0.00) @db.Decimal(12, 2)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  musyrif         Musyrif  @relation("MusyrifWallet", fields: [musyrifId], references: [id], onDelete: Cascade)
-  earnings        MusyrifEarning[]
-  withdrawals     MusyrifWithdrawal[]
+  id             String              @id @default(cuid())
+  musyrifId      String              @unique
+  balance        Decimal             @default(0.00) @db.Decimal(12, 2)
+  totalEarned    Decimal             @default(0.00) @db.Decimal(12, 2)
+  totalWithdrawn Decimal             @default(0.00) @db.Decimal(12, 2)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  earnings       MusyrifEarning[]    @relation("MusyrifEarnings")
+  musyrif        Musyrif             @relation("MusyrifWallet", fields: [musyrifId], references: [id], onDelete: Cascade)
+  withdrawals    MusyrifWithdrawal[] @relation("MusyrifWithdrawals")
 
   @@map("musyrif_wallets")
 }
 
 model MusyrifEarning {
-  id               String   @id @default(cuid())
-  musyrifId        String
-  attendanceId     String
-  amount           Decimal  @db.Decimal(10, 2)
-  calculationType  CalculationType
-  sessionDuration  Int?     // dalam menit
-  rate             Decimal  @db.Decimal(10, 2)
-  status           EarningStatus @default(PENDING)
-  approvedBy       String?
-  approvedAt       DateTime?
-  notes            String?  @db.Text
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id              String            @id @default(cuid())
+  musyrifId       String
+  attendanceId    String
+  amount          Decimal           @db.Decimal(10, 2)
+  calculationType CalculationType
+  sessionDuration Int?
+  rate            Decimal           @db.Decimal(10, 2)
+  status          EarningStatus     @default(PENDING)
+  approvedBy      String?
+  approvedAt      DateTime?
+  notes           String?           @db.Text
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  approver        User?             @relation("EarningApprover", fields: [approvedBy], references: [id], map: "earnings_approver_fkey")
+  attendance      MusyrifAttendance @relation("AttendanceEarnings", fields: [attendanceId], references: [id], onDelete: Cascade, map: "earnings_attendance_fkey")
+  musyrif         Musyrif           @relation("MusyrifEarnings", fields: [musyrifId], references: [id], onDelete: Cascade, map: "earnings_musyrif_fkey")
+  wallet          MusyrifWallet     @relation("MusyrifEarnings", fields: [musyrifId], references: [musyrifId], map: "earnings_wallet_fkey")
 
-  // Relations
-  musyrif          Musyrif  @relation("MusyrifEarnings", fields: [musyrifId], references: [id], onDelete: Cascade, map: "earnings_musyrif_fkey")
-  attendance       MusyrifAttendance @relation("AttendanceEarnings", fields: [attendanceId], references: [id], onDelete: Cascade, map: "earnings_attendance_fkey")
-  approver         User?    @relation("EarningApprover", fields: [approvedBy], references: [id], map: "earnings_approver_fkey")
-  wallet           MusyrifWallet @relation(fields: [musyrifId], references: [musyrifId], map: "earnings_wallet_fkey")
-
+  @@index([approvedBy], map: "earnings_approver_fkey")
+  @@index([attendanceId], map: "earnings_attendance_fkey")
+  @@index([musyrifId], map: "earnings_wallet_fkey")
   @@map("musyrif_earnings")
 }
 
 model MusyrifWithdrawal {
-  id              String   @id @default(cuid())
+  id              String           @id @default(cuid())
   musyrifId       String
-  amount          Decimal  @db.Decimal(10, 2)
+  amount          Decimal          @db.Decimal(10, 2)
   bankAccount     String
   bankName        String
   accountHolder   String
   status          WithdrawalStatus @default(PENDING)
-  requestedAt     DateTime @default(now())
+  requestedAt     DateTime         @default(now())
   approvedBy      String?
   approvedAt      DateTime?
   completedAt     DateTime?
-  rejectionReason String?  @db.Text
-  notes           String?  @db.Text
+  rejectionReason String?          @db.Text
+  notes           String?          @db.Text
+  approver        User?            @relation("WithdrawalApprover", fields: [approvedBy], references: [id], map: "withdrawals_approver_fkey")
+  musyrif         Musyrif          @relation("MusyrifWithdrawals", fields: [musyrifId], references: [id], onDelete: Cascade, map: "withdrawals_musyrif_fkey")
+  wallet          MusyrifWallet    @relation("MusyrifWithdrawals", fields: [musyrifId], references: [musyrifId], map: "withdrawals_wallet_fkey")
 
-  // Relations
-  musyrif         Musyrif  @relation("MusyrifWithdrawals", fields: [musyrifId], references: [id], onDelete: Cascade, map: "withdrawals_musyrif_fkey")
-  approver        User?    @relation("WithdrawalApprover", fields: [approvedBy], references: [id], map: "withdrawals_approver_fkey")
-  wallet          MusyrifWallet @relation(fields: [musyrifId], references: [musyrifId], map: "withdrawals_wallet_fkey")
-
+  @@index([approvedBy], map: "withdrawals_approver_fkey")
+  @@index([musyrifId], map: "withdrawals_wallet_fkey")
   @@map("musyrif_withdrawals")
 }
-
-// ===== ENUMS FOR SALARY SYSTEM =====
 
 enum CalculationType {
   PER_SESSION
