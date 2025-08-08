@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import {
   Heart,
@@ -1066,9 +1067,13 @@ const DonationsPage = () => {
                   >
                     Batal
                   </Button>
-                  <Button type="submit" loading={isSubmitting}>
+                  <LoadingButton
+                    type="submit"
+                    loading={isSubmitting}
+                    loadingText="Menyimpan..."
+                  >
                     Simpan Donasi
-                  </Button>
+                  </LoadingButton>
                 </div>
               </form>
             </div>
@@ -1257,9 +1262,13 @@ const DonationsPage = () => {
                   >
                     Batal
                   </Button>
-                  <Button type="submit" loading={isSubmitting}>
+                  <LoadingButton
+                    type="submit"
+                    loading={isSubmitting}
+                    loadingText="Menyimpan..."
+                  >
                     Simpan Perubahan
-                  </Button>
+                  </LoadingButton>
                 </div>
               </form>
             </div>

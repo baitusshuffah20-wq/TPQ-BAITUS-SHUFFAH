@@ -29,7 +29,7 @@ export default function DonationErrorPage() {
 
         <div className="flex flex-col space-y-3 mt-6">
           <Link href="/donation" passHref>
-            <Button variant="primary" className="w-full">
+            <Button variant="default" className="w-full">
               Coba Lagi
             </Button>
           </Link>

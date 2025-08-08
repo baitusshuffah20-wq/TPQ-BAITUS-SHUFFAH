@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-hot-toast";
 
@@ -251,14 +252,15 @@ export default function ContactPage() {
                   </div>
 
                   <div>
-                    <Button
+                    <LoadingButton
                       type="submit"
                       className="w-full bg-teal-600 hover:bg-teal-700"
                       loading={loading}
+                      loadingText="Mengirim..."
                     >
                       <Send className="h-4 w-4 mr-2" />
                       Kirim Pesan
-                    </Button>
+                    </LoadingButton>
                   </div>
                 </form>
               </CardContent>

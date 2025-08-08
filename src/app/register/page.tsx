@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import {
   BookOpen,
@@ -561,9 +562,13 @@ const RegisterPage = () => {
                   {currentStep < 3 ? (
                     <Button onClick={nextStep}>Selanjutnya</Button>
                   ) : (
-                    <Button onClick={handleSubmit} loading={isLoading}>
-                      {isLoading ? "Memproses..." : "Daftar Sekarang"}
-                    </Button>
+                    <LoadingButton
+                      onClick={handleSubmit}
+                      loading={isLoading}
+                      loadingText="Memproses..."
+                    >
+                      Daftar Sekarang
+                    </LoadingButton>
                   )}
                 </div>
               </div>

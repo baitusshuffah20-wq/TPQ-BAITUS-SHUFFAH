@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function TestButtonPage() {
@@ -43,8 +44,8 @@ export default function TestButtonPage() {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Loading States</h3>
               <div className="flex flex-wrap gap-4">
-                <Button loading={true}>Loading Button</Button>
-                <Button loading={false}>Normal Button</Button>
+                <LoadingButton loading={true} loadingText="Processing...">Loading Button</LoadingButton>
+                <LoadingButton loading={false}>Normal Button</LoadingButton>
                 <Button disabled>Disabled Button</Button>
               </div>
             </div>

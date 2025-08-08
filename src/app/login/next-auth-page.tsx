@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { signIn, useSession } from "next-auth/react";
 import Logo from "@/components/ui/Logo";
@@ -276,14 +277,15 @@ const NextAuthLoginPage = () => {
                 </div>
 
                 {/* Submit Button */}
-                <Button
+                <LoadingButton
                   type="submit"
                   className="w-full"
                   size="lg"
                   loading={isLoading}
+                  loadingText="Memproses..."
                 >
-                  {isLoading ? "Memproses..." : "Masuk"}
-                </Button>
+                  Masuk
+                </LoadingButton>
               </form>
 
               {/* Demo Accounts */}
