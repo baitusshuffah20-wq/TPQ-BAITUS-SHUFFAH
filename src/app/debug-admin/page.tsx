@@ -221,6 +221,36 @@ export default function DebugAdminPage() {
             )}
             Test Login
           </Button>
+
+          <Button
+            onClick={async () => {
+              setChecking(true);
+              try {
+                const response = await fetch("/api/debug/env-check");
+                const envData = await response.json();
+                setData(prevData => ({ ...prevData, environment: envData }));
+                if (!envData.success) {
+                  toast.error("Environment issues detected!");
+                } else {
+                  toast.success("Environment configuration OK");
+                }
+              } catch (error) {
+                toast.error("Failed to check environment");
+              } finally {
+                setChecking(false);
+              }
+            }}
+            disabled={checking}
+            variant="outline"
+            className="bg-purple-50 hover:bg-purple-100"
+          >
+            {checking ? (
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Settings className="h-4 w-4 mr-2" />
+            )}
+            Check Environment
+          </Button>
         </div>
 
         {/* Results */}
