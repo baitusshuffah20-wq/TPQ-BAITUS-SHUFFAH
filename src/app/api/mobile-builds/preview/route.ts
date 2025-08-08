@@ -1334,26 +1334,6 @@ function generateMusyrifPreviewHTML(
     { name: "Profil", icon: "👤", active: false },
   ];
 
-  // Helper function for menu descriptions
-  const getMenuDescription = (route: string): string => {
-    const descriptions: { [key: string]: string } = {
-      'santri': 'Kelola data santri, lihat profil, dan pantau perkembangan hafalan setiap santri.',
-      'halaqah': 'Atur jadwal halaqah, kelola kelas, dan pantau kehadiran santri.',
-      'hafalan': 'Pantau progress hafalan santri, berikan penilaian, dan catat pencapaian.',
-      'attendance': 'Catat kehadiran santri, lihat statistik absensi, dan buat laporan.',
-      'assessment': 'Berikan penilaian kepada santri, input nilai, dan evaluasi kemajuan.',
-      'behavior': 'Catat perilaku santri, berikan reward atau teguran, dan pantau akhlak.',
-      'reports': 'Lihat berbagai laporan seperti progress hafalan, kehadiran, dan penilaian.',
-      'profile': 'Kelola profil Anda, ubah password, dan atur preferensi aplikasi.',
-      'schedule': 'Lihat dan kelola jadwal mengajar, jadwal halaqah, dan agenda kegiatan.',
-      'communication': 'Berkomunikasi dengan wali santri, kirim pesan, dan buat pengumuman.',
-      'achievements': 'Lihat dan kelola prestasi santri, berikan penghargaan dan sertifikat.',
-      'settings': 'Atur preferensi aplikasi, notifikasi, dan konfigurasi personal.',
-      'help': 'Panduan penggunaan aplikasi, FAQ, dan kontak dukungan teknis.',
-      'notifications': 'Kelola notifikasi, pengingat, dan pemberitahuan penting.'
-    };
-    return descriptions[route] || 'Fitur ini sedang dalam pengembangan.';
-  };
 
   return `
 <!DOCTYPE html>
