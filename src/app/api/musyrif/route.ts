@@ -1,13 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import mysql from "mysql2/promise";
-
-// Database connection configuration
-const dbConfig = {
-  host: "localhost",
-  user: "root",
-  password: "admin123",
-  database: "db_tpq",
-};
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   let connection;

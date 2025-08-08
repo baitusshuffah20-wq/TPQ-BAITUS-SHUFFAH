@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import mysql from "mysql2/promise";
 import { v4 as uuidv4 } from "uuid";
-
-// Database connection configuration
-const dbConfig = {
-  host: "localhost",
-  user: "root",
-  password: "admin123",
-  database: "db_tpq",
-};
+import { prisma } from "@/lib/prisma";
 
 interface SantriImportData {
   nis: string;
@@ -37,8 +29,6 @@ interface ImportResult {
 
 // POST /api/santri/import - Import santri from Excel
 export async function POST(request: NextRequest) {
-  let connection: mysql.Connection | null = null;
-
   try {
     console.log("📥 Starting santri import process...");
 
@@ -55,9 +45,6 @@ export async function POST(request: NextRequest) {
     const santriData: SantriImportData[] = JSON.parse(dataString);
     console.log(`📊 Processing ${santriData.length} santri records`);
 
-    // Create database connection
-    connection = await mysql.createConnection(dbConfig);
-
     const result: ImportResult = {
       success: true,
       imported: 0,
@@ -73,12 +60,12 @@ export async function POST(request: NextRequest) {
 
       try {
         // Check if NIS already exists
-        const [existingRows] = await connection.execute(
-          "SELECT id, nis FROM santri WHERE nis = ?",
-          [santri.nis],
-        );
+        const existingSantri = await prisma.santri.findUnique({
+          where: { nis: santri.nis },
+          select: { id: true, nis: true }
+        });
 
-        if ((existingRows as any[]).length > 0) {
+        if (existingSantri) {
           result.duplicates.push(
             `Baris ${rowNumber}: NIS ${santri.nis} sudah ada`,
           );
@@ -104,7 +91,7 @@ export async function POST(request: NextRequest) {
         // Handle wali (parent) - create if not exists
         let waliId = santri.waliId;
         if (!waliId && santri.parentName) {
-          waliId = await createOrGetWali(connection, {
+          waliId = await createOrGetWali({
             name: santri.parentName,
             phone: santri.parentPhone,
             email: santri.parentEmail,
@@ -132,31 +119,24 @@ export async function POST(request: NextRequest) {
           updatedAt: new Date(),
         };
 
-        // Insert santri
-        await connection.execute(
-          `INSERT INTO santri (
-            id, nis, name, birthDate, birthPlace, gender, address,
-            phone, email, waliId, halaqahId,
-            enrollmentDate, status, createdAt, updatedAt
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            insertData.id,
-            insertData.nis,
-            insertData.name,
-            insertData.birthDate,
-            insertData.birthPlace,
-            insertData.gender,
-            insertData.address,
-            insertData.phone,
-            insertData.email,
-            insertData.waliId,
-            insertData.halaqahId,
-            insertData.enrollmentDate,
-            insertData.status,
-            insertData.createdAt,
-            insertData.updatedAt,
-          ],
-        );
+        // Insert santri using Prisma
+        await prisma.santri.create({
+          data: {
+            id: insertData.id,
+            nis: insertData.nis,
+            name: insertData.name,
+            birthDate: insertData.birthDate,
+            birthPlace: insertData.birthPlace,
+            gender: insertData.gender,
+            address: insertData.address,
+            phone: insertData.phone,
+            email: insertData.email,
+            waliId: insertData.waliId,
+            halaqahId: insertData.halaqahId,
+            enrollmentDate: insertData.enrollmentDate,
+            status: insertData.status,
+          }
+        });
 
         result.imported++;
         console.log(`✅ Imported santri ${santri.nis} - ${santri.name}`);
@@ -191,45 +171,39 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 },
     );
-  } finally {
-    if (connection) {
-      await connection.end();
-      console.log("🔌 Database connection closed");
-    }
   }
 }
 
 // Helper function to create or get wali
 async function createOrGetWali(
-  connection: mysql.Connection,
   waliData: { name: string; phone: string; email?: string },
 ): Promise<string> {
   try {
     // Check if wali already exists by phone
-    const [existingWali] = await connection.execute(
-      "SELECT id FROM users WHERE phone = ? AND role = 'WALI'",
-      [waliData.phone],
-    );
+    const existingWali = await prisma.user.findFirst({
+      where: {
+        phone: waliData.phone,
+        role: 'WALI'
+      },
+      select: { id: true }
+    });
 
-    if ((existingWali as any[]).length > 0) {
-      return (existingWali as any[])[0].id;
+    if (existingWali) {
+      return existingWali.id;
     }
 
     // Create new wali
     const waliId = uuidv4();
-    await connection.execute(
-      `INSERT INTO users (
-        id, name, email, phone, role, status, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, 'WALI', 'ACTIVE', ?, ?)`,
-      [
-        waliId,
-        waliData.name,
-        waliData.email || null,
-        waliData.phone,
-        new Date(),
-        new Date(),
-      ],
-    );
+    await prisma.user.create({
+      data: {
+        id: waliId,
+        name: waliData.name,
+        email: waliData.email || null,
+        phone: waliData.phone,
+        role: 'WALI',
+        status: 'ACTIVE',
+      }
+    });
 
     console.log(`✅ Created new wali: ${waliData.name}`);
     return waliId;

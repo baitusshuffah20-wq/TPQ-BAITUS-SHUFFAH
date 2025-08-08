@@ -3,15 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleDatabaseError } from "@/lib/errorHandler";
-import mysql from "mysql2/promise";
-
-// Database connection configuration for MySQL
-const dbConfig = {
-  host: "localhost",
-  user: "root",
-  password: "admin123",
-  database: "db_tpq",
-};
 
 export async function GET() {
   let mysqlConnection;
