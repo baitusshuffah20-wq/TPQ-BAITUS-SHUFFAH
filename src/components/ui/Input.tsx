@@ -21,7 +21,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       onRightIconClick,
       ...props
     },
-    ref,
+    ref
   ) => {
     return (
       <div className="w-full">
@@ -43,7 +43,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               leftIcon && "pl-10",
               rightIcon && "pr-10",
               error && "border-red-500 focus-visible:ring-red-500",
-              className,
+              className
             )}
             ref={ref}
             {...props}
@@ -52,7 +52,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             <div
               className={cn(
                 "absolute inset-y-0 right-0 pr-3 flex items-center",
-                onRightIconClick ? "cursor-pointer" : "pointer-events-none",
+                onRightIconClick ? "cursor-pointer" : "pointer-events-none"
               )}
               onClick={onRightIconClick}
             >
@@ -60,12 +60,15 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             </div>
           )}
         </div>
-        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+        {error && (
+          <p className="mt-1 text-sm text-red-600">{error}</p>
+        )}
       </div>
     );
-  },
+  }
 );
 
 Input.displayName = "Input";
 
 export { Input };
+export type { InputProps };
