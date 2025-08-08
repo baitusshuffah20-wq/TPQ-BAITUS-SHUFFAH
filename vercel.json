@@ -6,7 +6,8 @@
   "devCommand": "npm run dev",
   "env": {
     "NEXTAUTH_URL": "https://your-vercel-app-url.vercel.app",
-    "NEXTAUTH_SECRET": "your-nextauth-secret-here"
+    "NEXTAUTH_SECRET": "your-nextauth-secret-here",
+    "DATABASE_URL": "@database_url"
   },
   "build": {
     "env": {
