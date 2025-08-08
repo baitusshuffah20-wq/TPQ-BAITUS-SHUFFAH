@@ -14,6 +14,10 @@ const nextConfig = {
     // Disable SWC minification to avoid potential issues
     removeConsole: false,
   },
+  // Ensure proper module resolution for Vercel deployment
+  experimental: {
+    esmExternals: false,
+  },
   images: {
     domains: ['localhost', 'example.com'],
     unoptimized: true, // For static export if needed
