@@ -37,13 +37,22 @@ const NextAuthLoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<LoginForm>>({});
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
-    console.log("🔍 Login useEffect triggered:", { status, session: !!session, callbackUrl });
+    // Prevent multiple redirects
+    if (isRedirecting) {
+      console.log("🚫 Already redirecting, skipping...");
+      return;
+    }
 
-    // Only check NextAuth session to avoid conflicts
-    if (status === "authenticated" && session) {
+    console.log("🔍 Login useEffect triggered:", { status, session: !!session, callbackUrl, isRedirecting });
+
+    // Only redirect if authenticated and not already redirecting
+    if (status === "authenticated" && session && !isRedirecting) {
+      setIsRedirecting(true);
+
       const user = session.user;
       console.log("✅ User authenticated:", { email: user.email, role: user.role });
 
@@ -67,31 +76,17 @@ const NextAuthLoginPage = () => {
 
       console.log("🚀 Attempting redirect to:", redirectUrl);
 
-      // Try multiple redirect methods with shorter timeout
+      // Use single redirect method to avoid conflicts
       try {
-        // Method 1: Direct window.location (most reliable)
-        console.log("🔄 Using window.location.replace for immediate redirect");
+        console.log("🔄 Using window.location.replace for redirect");
         window.location.replace(redirectUrl);
-
-        // Method 2: Fallback with router.push after short delay
-        setTimeout(() => {
-          console.log("⏰ Fallback router.push triggered");
-          router.push(redirectUrl);
-        }, 100);
-
-        // Method 3: Final fallback with window.location.href
-        setTimeout(() => {
-          console.log("🆘 Final fallback redirect triggered");
-          window.location.href = redirectUrl;
-        }, 500);
-
       } catch (error) {
         console.error("❌ Redirect error:", error);
-        // Emergency fallback
+        // Fallback
         window.location.href = redirectUrl;
       }
     }
-  }, [session, status, router, callbackUrl]);
+  }, [session, status, callbackUrl, isRedirecting]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -158,8 +153,16 @@ const NextAuthLoginPage = () => {
         console.log("✅ Login successful, waiting for session update...");
         setAuthError(null);
 
-        // Wait for session to update, then let useEffect handle redirect
-        // Don't force redirect here, let the useEffect handle it
+        // Set timeout to prevent infinite loading
+        setTimeout(() => {
+          console.log("⏰ Login timeout reached, forcing redirect...");
+          setIsLoading(false);
+
+          // Force redirect if session update takes too long
+          const redirectUrl = "/dashboard/admin"; // Default for now
+          window.location.replace(redirectUrl);
+        }, 3000); // 3 second timeout
+
         console.log("⏳ Waiting for session to update and useEffect to trigger redirect...");
       } else {
         console.warn("⚠️ Unexpected login result:", result);
@@ -178,7 +181,23 @@ const NextAuthLoginPage = () => {
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Memuat session...</p>
+          <p className="text-sm text-gray-400 mt-2">Jika loading terlalu lama, refresh halaman</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show redirecting state
+  if (isRedirecting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Mengalihkan ke dashboard...</p>
+        </div>
       </div>
     );
   }

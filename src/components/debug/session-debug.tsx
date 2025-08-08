@@ -140,13 +140,29 @@ export function SessionDebug() {
 
         {/* Manual Redirect Button */}
         {status === "authenticated" && (
-          <div className="pt-2 border-t">
+          <div className="pt-2 border-t space-y-2">
             <Button
               onClick={handleManualRedirect}
               size="sm"
               className="w-full"
             >
               🚀 Manual Redirect to Dashboard
+            </Button>
+
+            <Button
+              onClick={() => {
+                console.log("🔄 Emergency reset - clearing session and reloading");
+                // Clear any stuck states
+                localStorage.clear();
+                sessionStorage.clear();
+                // Force reload
+                window.location.href = "/login";
+              }}
+              size="sm"
+              variant="destructive"
+              className="w-full"
+            >
+              🆘 Emergency Reset
             </Button>
           </div>
         )}
