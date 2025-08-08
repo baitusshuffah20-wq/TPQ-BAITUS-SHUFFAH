@@ -71,13 +71,17 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  // Debug logging for login issues (only in development)
-  if (process.env.NODE_ENV === "development" && (path.startsWith("/login") || path.startsWith("/dashboard"))) {
-    console.log("🔍 Middleware:", {
+  // Debug logging for login issues
+  if (path.startsWith("/login") || path.startsWith("/dashboard")) {
+    console.log("🔍 Middleware Debug:", {
       path,
       hasToken: !!token,
       userRole: token?.role,
       userEmail: token?.email,
+      isPublicPath,
+      isAdminPath,
+      isMusyrifPath,
+      isWaliPath,
       timestamp: new Date().toISOString()
     });
   }
@@ -105,13 +109,20 @@ export async function middleware(request: NextRequest) {
 
   // If user is not logged in and trying to access protected route, redirect to login
   if (!token && !isPublicPath) {
+    // Avoid redirect loop - don't redirect if already on login page
+    if (path === "/login") {
+      return NextResponse.next();
+    }
+
     const url = new URL("/login", request.url);
     url.searchParams.set("callbackUrl", encodeURI(request.url));
+    console.log("🔄 Redirecting to login:", { from: path, to: url.toString() });
     return NextResponse.redirect(url);
   }
 
   // If user is logged in but trying to access admin path without admin role, redirect to dashboard
   if (token && isAdminPath && token.role !== "ADMIN") {
+    console.log("🚫 Access denied to admin path:", { path, userRole: token.role });
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

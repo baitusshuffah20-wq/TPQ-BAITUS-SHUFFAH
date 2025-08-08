@@ -67,20 +67,27 @@ const NextAuthLoginPage = () => {
 
       console.log("🚀 Attempting redirect to:", redirectUrl);
 
-      // Try multiple redirect methods
+      // Try multiple redirect methods with shorter timeout
       try {
-        // Method 1: Next.js router
-        router.push(redirectUrl);
+        // Method 1: Direct window.location (most reliable)
+        console.log("🔄 Using window.location.replace for immediate redirect");
+        window.location.replace(redirectUrl);
 
-        // Method 2: Fallback with window.location after delay
+        // Method 2: Fallback with router.push after short delay
         setTimeout(() => {
-          console.log("⏰ Fallback redirect triggered");
+          console.log("⏰ Fallback router.push triggered");
+          router.push(redirectUrl);
+        }, 100);
+
+        // Method 3: Final fallback with window.location.href
+        setTimeout(() => {
+          console.log("🆘 Final fallback redirect triggered");
           window.location.href = redirectUrl;
-        }, 1000);
+        }, 500);
 
       } catch (error) {
         console.error("❌ Redirect error:", error);
-        // Method 3: Direct window.location as last resort
+        // Emergency fallback
         window.location.href = redirectUrl;
       }
     }

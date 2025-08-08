@@ -29,13 +29,34 @@ export function SessionDebug() {
     fetchDebugInfo();
   }, [session, status]);
 
-  const handleManualRedirect = () => {
-    if (callbackUrl) {
-      window.location.href = decodeURIComponent(callbackUrl);
-    } else if (session?.user?.role === "ADMIN") {
-      window.location.href = "/dashboard/admin";
-    } else {
-      window.location.href = "/dashboard";
+  const handleManualRedirect = async () => {
+    try {
+      // Try API-based redirect first
+      const response = await fetch("/api/debug/force-redirect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ callbackUrl })
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.redirectUrl) {
+        console.log("🚀 API redirect successful:", data.redirectUrl);
+        window.location.replace(data.redirectUrl);
+      } else {
+        throw new Error(data.error || "API redirect failed");
+      }
+    } catch (error) {
+      console.error("❌ API redirect failed, using fallback:", error);
+
+      // Fallback to manual redirect
+      if (callbackUrl) {
+        window.location.href = decodeURIComponent(callbackUrl);
+      } else if (session?.user?.role === "ADMIN") {
+        window.location.href = "/dashboard/admin";
+      } else {
+        window.location.href = "/dashboard";
+      }
     }
   };
 

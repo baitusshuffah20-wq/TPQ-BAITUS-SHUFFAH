@@ -97,22 +97,46 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
+      console.log("🔄 NextAuth redirect called:", { url, baseUrl });
+
+      // Prevent redirect loops
+      if (url.includes("/login")) {
+        console.log("🚫 Preventing login redirect loop");
+        return `${baseUrl}/dashboard`;
+      }
+
       // If user is trying to access a specific page, redirect there
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (url.startsWith("/")) {
+        const fullUrl = `${baseUrl}${url}`;
+        console.log("✅ Redirecting to relative path:", fullUrl);
+        return fullUrl;
+      }
 
       // If URL contains callbackUrl, use it
       if (url.includes("callbackUrl=")) {
-        const callbackUrl = new URL(url).searchParams.get("callbackUrl");
-        if (callbackUrl) {
-          return decodeURIComponent(callbackUrl);
+        try {
+          const urlObj = new URL(url);
+          const callbackUrl = urlObj.searchParams.get("callbackUrl");
+          if (callbackUrl) {
+            const decodedUrl = decodeURIComponent(callbackUrl);
+            console.log("✅ Using callbackUrl:", decodedUrl);
+            return decodedUrl;
+          }
+        } catch (error) {
+          console.error("❌ Error parsing callbackUrl:", error);
         }
       }
 
       // Default redirect based on URL or baseUrl
-      if (url.startsWith(baseUrl)) return url;
+      if (url.startsWith(baseUrl)) {
+        console.log("✅ Using provided URL:", url);
+        return url;
+      }
 
       // Default to dashboard
-      return `${baseUrl}/dashboard`;
+      const defaultUrl = `${baseUrl}/dashboard`;
+      console.log("✅ Using default redirect:", defaultUrl);
+      return defaultUrl;
     },
   },
   pages: {
