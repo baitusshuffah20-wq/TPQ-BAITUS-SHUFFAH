@@ -1,14 +1,14 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-// import { PrismaAdapter } from '@next-auth/prisma-adapter';
-// import { prisma } from './prisma';
+import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import { prisma } from './prisma';
 import * as bcrypt from "bcryptjs";
 
 // Define UserRole type
 export type UserRole = "ADMIN" | "MUSYRIF" | "WALI";
 
 export const authOptions: NextAuthOptions = {
-  // adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -21,59 +21,48 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        // Mock user data for testing
-        const mockUsers = [
-          {
-            id: "1",
-            email: "admin@rumahtahfidz.com",
-            password:
-              "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", // password
-            name: "Administrator",
-            role: "ADMIN" as UserRole,
-            avatar: undefined,
-          },
-          {
-            id: "2",
-            email: "musyrif@rumahtahfidz.com",
-            password:
-              "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", // password
-            name: "Ustadz Abdullah",
-            role: "MUSYRIF" as UserRole,
-            avatar: undefined,
-          },
-          {
-            id: "3",
-            email: "wali@rumahtahfidz.com",
-            password:
-              "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", // password
-            name: "Bapak Ahmad",
-            role: "WALI" as UserRole,
-            avatar: undefined,
-          },
-        ];
+        try {
+          // Find user in database
+          const user = await prisma.user.findUnique({
+            where: {
+              email: credentials.email,
+            },
+          });
 
-        const user = mockUsers.find((u) => u.email === credentials.email);
+          if (!user) {
+            console.log("❌ User not found:", credentials.email);
+            return null;
+          }
 
-        if (!user) {
+          if (!user.isActive) {
+            console.log("❌ User is not active:", credentials.email);
+            return null;
+          }
+
+          // Verify password
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+
+          if (!isPasswordValid) {
+            console.log("❌ Invalid password for:", credentials.email);
+            return null;
+          }
+
+          console.log("✅ Login successful:", user.email, "Role:", user.role);
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role as UserRole,
+            avatar: user.avatar,
+          };
+        } catch (error) {
+          console.error("❌ Auth error:", error);
           return null;
         }
-
-        // For demo purposes, accept 'password' as password
-        const isPasswordValid =
-          credentials.password === "password" ||
-          (await bcrypt.compare(credentials.password, user.password));
-
-        if (!isPasswordValid) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          avatar: user.avatar,
-        };
       },
     }),
   ],

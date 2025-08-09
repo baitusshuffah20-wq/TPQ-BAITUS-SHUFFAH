@@ -157,6 +157,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           roles: ["ADMIN", "MUSYRIF"], // Musyrif can view their assigned halaqah
         },
         {
+          name: "Program",
+          href: `/dashboard/${user?.role?.toLowerCase()}/programs`,
+          icon: GraduationCap,
+          roles: ["ADMIN"], // Only admin can manage programs
+        },
+        {
           name: "Hafalan & Progress",
           href: `/dashboard/${user?.role?.toLowerCase()}/hafalan`,
           icon: BookOpen,

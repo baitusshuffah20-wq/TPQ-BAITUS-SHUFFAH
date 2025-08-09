@@ -19,6 +19,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "node --loader ts-node/esm prisma/seed.ts",
+    "db:seed-complete": "node prisma/seed-complete.js",
     "setup:planetscale": "node setup-planetscale.js",
     "setup:aiven": "node setup-aiven.js",
     "test": "vitest",
