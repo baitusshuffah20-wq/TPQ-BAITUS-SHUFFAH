@@ -220,3 +220,99 @@ export async function DELETE(
     return handleDatabaseError(error);
   }
 }
+
+// PATCH - Update program status
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    let body;
+    try {
+      body = await request.json();
+    } catch (error) {
+      console.error("Error parsing request body:", error);
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
+
+    const { isActive } = body;
+
+    if (typeof isActive !== "boolean") {
+      return NextResponse.json(
+        { error: "isActive must be a boolean" },
+        { status: 400 }
+      );
+    }
+
+    // Check if program exists
+    let existingProgram;
+    try {
+      existingProgram = await prisma.program.findUnique({
+        where: { id: params.id },
+      });
+    } catch (error) {
+      console.error("Error finding program:", error);
+      return NextResponse.json(
+        { error: "Database error while finding program" },
+        { status: 500 }
+      );
+    }
+
+    if (!existingProgram) {
+      return NextResponse.json(
+        { error: "Program not found" },
+        { status: 404 }
+      );
+    }
+
+    // Update program status
+    let program;
+    try {
+      program = await prisma.program.update({
+        where: { id: params.id },
+        data: { isActive },
+      });
+    } catch (error) {
+      console.error("Error updating program status:", error);
+      return NextResponse.json(
+        { error: "Database error while updating program status" },
+        { status: 500 }
+      );
+    }
+
+    // Parse features JSON string back to array for frontend response
+    const programWithParsedFeatures = {
+      ...program,
+      features: (() => {
+        try {
+          return typeof program.features === 'string'
+            ? JSON.parse(program.features)
+            : program.features;
+        } catch {
+          return [];
+        }
+      })()
+    };
+
+    return NextResponse.json({
+      message: "Program status updated successfully",
+      program: programWithParsedFeatures,
+    });
+
+  } catch (error) {
+    console.error("Error updating program status:", error);
+    return handleDatabaseError(error);
+  }
+}

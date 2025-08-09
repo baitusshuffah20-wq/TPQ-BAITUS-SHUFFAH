@@ -59,7 +59,7 @@ const ProgramsPage = () => {
     const fetchPrograms = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/programs");
+        const response = await fetch("/api/admin/programs");
         const data = await response.json();
 
         if (data.success) {
@@ -250,8 +250,8 @@ const ProgramsPage = () => {
       setIsSubmitting(true);
       const isEditing = showEditModal && currentProgram;
       const url = isEditing
-        ? `/api/programs/${currentProgram?.id}`
-        : "/api/programs";
+        ? `/api/admin/programs/${currentProgram?.id}`
+        : "/api/admin/programs";
       const method = isEditing ? "PUT" : "POST";
 
       // Show loading toast
@@ -356,7 +356,7 @@ const ProgramsPage = () => {
   const handleDeleteProgram = async (id: string) => {
     if (window.confirm("Apakah Anda yakin ingin menghapus program ini?")) {
       try {
-        const response = await fetch(`/api/programs/${id}`, {
+        const response = await fetch(`/api/admin/programs/${id}`, {
           method: "DELETE",
         });
 
@@ -374,7 +374,7 @@ const ProgramsPage = () => {
 
   const handleToggleStatus = async (id: string, isActive: boolean) => {
     try {
-      const response = await fetch(`/api/programs/${id}`, {
+      const response = await fetch(`/api/admin/programs/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -432,7 +432,7 @@ const ProgramsPage = () => {
 
     // In a real app, you would update the order in the database
     try {
-      await fetch(`/api/programs/reorder`, {
+      await fetch(`/api/admin/programs/reorder`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
