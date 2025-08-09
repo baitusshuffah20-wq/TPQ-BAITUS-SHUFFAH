@@ -180,10 +180,29 @@ const ProgramsPage = () => {
         isActive: true,
       });
     } else if (showEditModal && currentProgram) {
+      // Handle features - could be string JSON or array
+      let featuresText = "";
+      try {
+        if (typeof currentProgram.features === "string") {
+          // If it's a JSON string, parse it first
+          const featuresArray = JSON.parse(currentProgram.features);
+          featuresText = Array.isArray(featuresArray) ? featuresArray.join("\n") : currentProgram.features;
+        } else if (Array.isArray(currentProgram.features)) {
+          // If it's already an array
+          featuresText = currentProgram.features.join("\n");
+        } else {
+          // Fallback to string representation
+          featuresText = String(currentProgram.features || "");
+        }
+      } catch (error) {
+        // If JSON parsing fails, treat as plain string
+        featuresText = String(currentProgram.features || "");
+      }
+
       setFormData({
         title: currentProgram.title,
         description: currentProgram.description,
-        features: currentProgram.features.join("\n"),
+        features: featuresText,
         duration: currentProgram.duration,
         ageGroup: currentProgram.ageGroup,
         price: currentProgram.price,

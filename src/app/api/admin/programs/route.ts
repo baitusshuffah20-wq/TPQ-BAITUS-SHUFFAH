@@ -53,8 +53,22 @@ export async function GET(request: NextRequest) {
       prisma.program.count({ where }),
     ]);
 
+    // Parse features JSON strings back to arrays for frontend
+    const programsWithParsedFeatures = programs.map(program => ({
+      ...program,
+      features: (() => {
+        try {
+          return typeof program.features === 'string'
+            ? JSON.parse(program.features)
+            : program.features;
+        } catch {
+          return [];
+        }
+      })()
+    }));
+
     return NextResponse.json({
-      programs,
+      programs: programsWithParsedFeatures,
       pagination: {
         page,
         limit,
@@ -107,7 +121,7 @@ export async function POST(request: NextRequest) {
       data: {
         title,
         description,
-        features,
+        features: JSON.stringify(features), // Convert array to JSON string
         duration,
         ageGroup,
         schedule,
@@ -118,9 +132,23 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Parse features JSON string back to array for frontend response
+    const programWithParsedFeatures = {
+      ...program,
+      features: (() => {
+        try {
+          return typeof program.features === 'string'
+            ? JSON.parse(program.features)
+            : program.features;
+        } catch {
+          return [];
+        }
+      })()
+    };
+
     return NextResponse.json({
       message: "Program created successfully",
-      program,
+      program: programWithParsedFeatures,
     });
 
   } catch (error) {

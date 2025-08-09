@@ -30,7 +30,21 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ program });
+    // Parse features JSON string back to array for frontend
+    const programWithParsedFeatures = {
+      ...program,
+      features: (() => {
+        try {
+          return typeof program.features === 'string'
+            ? JSON.parse(program.features)
+            : program.features;
+        } catch {
+          return [];
+        }
+      })()
+    };
+
+    return NextResponse.json({ program: programWithParsedFeatures });
 
   } catch (error) {
     console.error("Error fetching program:", error);
@@ -85,7 +99,7 @@ export async function PUT(
       data: {
         title,
         description,
-        features,
+        features: JSON.stringify(features), // Convert array to JSON string
         duration,
         ageGroup,
         schedule,
@@ -96,9 +110,23 @@ export async function PUT(
       },
     });
 
+    // Parse features JSON string back to array for frontend response
+    const programWithParsedFeatures = {
+      ...program,
+      features: (() => {
+        try {
+          return typeof program.features === 'string'
+            ? JSON.parse(program.features)
+            : program.features;
+        } catch {
+          return [];
+        }
+      })()
+    };
+
     return NextResponse.json({
       message: "Program updated successfully",
-      program,
+      program: programWithParsedFeatures,
     });
 
   } catch (error) {
