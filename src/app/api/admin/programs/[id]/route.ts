@@ -67,7 +67,17 @@ export async function PUT(
       );
     }
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (error) {
+      console.error("Error parsing request body:", error);
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
+
     const {
       title,
       description,
@@ -81,10 +91,35 @@ export async function PUT(
       order,
     } = body;
 
+    // Validate required fields
+    if (!title || !description || !features || !duration || !ageGroup) {
+      return NextResponse.json(
+        { error: "Missing required fields: title, description, features, duration, ageGroup" },
+        { status: 400 }
+      );
+    }
+
+    // Validate features is an array
+    if (!Array.isArray(features)) {
+      return NextResponse.json(
+        { error: "Features must be an array" },
+        { status: 400 }
+      );
+    }
+
     // Check if program exists
-    const existingProgram = await prisma.program.findUnique({
-      where: { id: params.id },
-    });
+    let existingProgram;
+    try {
+      existingProgram = await prisma.program.findUnique({
+        where: { id: params.id },
+      });
+    } catch (error) {
+      console.error("Error finding program:", error);
+      return NextResponse.json(
+        { error: "Database error while finding program" },
+        { status: 500 }
+      );
+    }
 
     if (!existingProgram) {
       return NextResponse.json(
@@ -94,21 +129,30 @@ export async function PUT(
     }
 
     // Update program
-    const program = await prisma.program.update({
-      where: { id: params.id },
-      data: {
-        title,
-        description,
-        features: JSON.stringify(features), // Convert array to JSON string
-        duration,
-        ageGroup,
-        schedule,
-        price,
-        image,
-        isActive,
-        order,
-      },
-    });
+    let program;
+    try {
+      program = await prisma.program.update({
+        where: { id: params.id },
+        data: {
+          title,
+          description,
+          features: JSON.stringify(features), // Convert array to JSON string
+          duration,
+          ageGroup,
+          schedule: schedule || existingProgram.schedule,
+          price: price || existingProgram.price,
+          image: image || existingProgram.image,
+          isActive: isActive !== undefined ? isActive : existingProgram.isActive,
+          order: order || existingProgram.order,
+        },
+      });
+    } catch (error) {
+      console.error("Error updating program:", error);
+      return NextResponse.json(
+        { error: "Database error while updating program" },
+        { status: 500 }
+      );
+    }
 
     // Parse features JSON string back to array for frontend response
     const programWithParsedFeatures = {

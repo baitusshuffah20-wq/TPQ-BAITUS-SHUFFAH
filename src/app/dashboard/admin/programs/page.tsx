@@ -264,18 +264,27 @@ const ProgramsPage = () => {
         .split("\n")
         .filter((f) => f.trim() !== "");
 
+      const requestBody = {
+        ...formData,
+        features: featuresArray,
+        order: isEditing ? currentProgram.order : programs.length + 1,
+        enrolledCount: isEditing ? currentProgram.enrolledCount : 0,
+      };
+
+      console.log("Sending request to:", url);
+      console.log("Request method:", method);
+      console.log("Request body:", requestBody);
+
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...formData,
-          features: featuresArray,
-          order: isEditing ? currentProgram.order : programs.length + 1,
-          enrolledCount: isEditing ? currentProgram.enrolledCount : 0,
-        }),
+        body: JSON.stringify(requestBody),
       });
+
+      console.log("Response status:", response.status);
+      console.log("Response headers:", Object.fromEntries(response.headers.entries()));
 
       // Dismiss loading toast
       toast.dismiss(loadingToast);
@@ -316,8 +325,23 @@ const ProgramsPage = () => {
           router.refresh();
         }, 1000);
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to save program");
+        let errorMessage = "Failed to save program";
+        try {
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } else {
+            // If response is not JSON (e.g., HTML error page), get text
+            const errorText = await response.text();
+            console.error("Non-JSON error response:", errorText);
+            errorMessage = `Server error (${response.status}): ${response.statusText}`;
+          }
+        } catch (parseError) {
+          console.error("Error parsing error response:", parseError);
+          errorMessage = `Server error (${response.status}): ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
     } catch (err) {
       console.error("Error saving program:", err);
