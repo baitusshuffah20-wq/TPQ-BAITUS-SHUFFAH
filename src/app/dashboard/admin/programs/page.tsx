@@ -59,17 +59,32 @@ const ProgramsPage = () => {
     const fetchPrograms = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/admin/programs");
-        const data = await response.json();
+        console.log("Fetching programs from /api/admin/programs");
 
-        if (data.success) {
+        const response = await fetch("/api/admin/programs");
+        console.log("Response status:", response.status);
+        console.log("Response headers:", Object.fromEntries(response.headers.entries()));
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Response not OK:", errorText);
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("Response data:", data);
+
+        // Handle the correct response structure from /api/admin/programs
+        if (data.programs && Array.isArray(data.programs)) {
           setPrograms(data.programs);
+          console.log("Programs loaded successfully:", data.programs.length, "programs");
         } else {
-          throw new Error("Failed to fetch programs");
+          console.error("Invalid response structure:", data);
+          throw new Error("Invalid response structure - programs array not found");
         }
       } catch (err) {
         console.error("Error fetching programs:", err);
-        setError("Failed to load programs");
+        setError(`Failed to load programs: ${err instanceof Error ? err.message : "Unknown error"}`);
 
         // Fallback data
         setPrograms([
