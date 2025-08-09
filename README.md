@@ -73,7 +73,7 @@ Sistem Informasi Manajemen Rumah Tahfidz yang modern dan terintegrasi untuk meng
 
 ```bash
 git clone https://github.com/baitusshuffah20-wq/TPQ-BAITUS-SHUFFAH.git
-cd sistem-informasi-TPQ-baitus-shuffah
+cd TPQ-BAITUS-SHUFFAH
 ```
 
 2. **Install dependencies**

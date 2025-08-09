@@ -12,7 +12,7 @@ async function main() {
     where: { email: "admin@rumahtahfidz.com" },
     update: {},
     create: {
-      email: "admin@rumahtahfidz.com",
+      email: "admin@tpqbaitusshuffah.com",
       name: "Administrator",
       phone: "081234567890",
       role: "ADMIN",
