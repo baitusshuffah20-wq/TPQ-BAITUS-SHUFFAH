@@ -67,51 +67,65 @@ const HomeScreen: React.FC = () => {
 
   const loadDashboardData = async () => {
     try {
-      // Simulate API call - replace with actual API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      setDashboardData({
-        santriProgress: {
-          hafalan: 75,
-          kehadiran: 92,
-          nilai: 85,
+      // Real API call to dashboard endpoint
+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/dashboard/wali`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add authentication header if needed
+          // 'Authorization': `Bearer ${userToken}`,
         },
-        payments: {
-          outstanding: 1,
-          nextDue: "2024-02-15",
-          amount: 150000,
-        },
-        announcements: [
-          {
-            id: "1",
-            title: "Libur Hari Raya Idul Fitri",
-            date: "2024-02-10",
-            type: "info",
-          },
-          {
-            id: "2",
-            title: "Pembayaran SPP Februari",
-            date: "2024-02-08",
-            type: "warning",
-          },
-        ],
-        schedule: [
-          {
-            id: "1",
-            activity: "Tahfidz Al-Quran",
-            time: "07:00 - 09:00",
-            location: "Ruang Utama",
-          },
-          {
-            id: "2",
-            activity: "Kajian Hadits",
-            time: "09:30 - 11:00",
-            location: "Ruang B",
-          },
-        ],
       });
+
+      if (response.ok) {
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          // Map real API data to dashboard format
+          setDashboardData({
+            santriProgress: {
+              hafalan: result.data.stats?.completedHafalan || 0,
+              kehadiran: result.data.stats?.attendanceRate || 0,
+              nilai: result.data.stats?.monthlyProgress || 0,
+            },
+            payments: {
+              outstanding: result.data.stats?.pendingPayments || 0,
+              nextDue: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              amount: 150000, // Default SPP amount
+            },
+            announcements: result.data.announcements || [
+              {
+                id: "1",
+                title: "Tidak ada pengumuman",
+                date: new Date().toISOString().split('T')[0],
+                type: "info",
+              },
+            ],
+            schedule: result.data.schedule || [
+              {
+                id: "1",
+                activity: "Tahfidz Al-Quran",
+                time: "07:00 - 09:00",
+                location: "Ruang Utama",
+              },
+            ],
+          });
+        } else {
+          throw new Error(result.message || 'Failed to load dashboard data');
+        }
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
     } catch (error) {
       console.error("Error loading dashboard data:", error);
+
+      // Set empty data instead of mock data
+      setDashboardData({
+        santriProgress: { hafalan: 0, kehadiran: 0, nilai: 0 },
+        payments: { outstanding: 0, nextDue: "", amount: 0 },
+        announcements: [],
+        schedule: [],
+      });
     }
   };
 

@@ -12,7 +12,6 @@ import {
   MapPin,
 } from "lucide-react";
 import { safeFetch, handleApiResponse, formatErrorForUser } from "@/lib/api-utils";
-import { mockStats, mockOperationalInfo } from "@/lib/mock-data";
 
 interface StatItem {
   id: string;
@@ -85,11 +84,10 @@ const StatsSection = () => {
         }
       } catch (err) {
         console.error("Error fetching stats:", err);
-        console.log("Using fallback mock data...");
 
-        // Use mock data as fallback
-        setStats(mockStats);
-        setOperationalInfo(mockOperationalInfo);
+        // Set empty data instead of mock data
+        setStats([]);
+        setOperationalInfo(null);
 
         const errorMessage = formatErrorForUser(err instanceof Error ? err.message : String(err));
         setError(errorMessage);

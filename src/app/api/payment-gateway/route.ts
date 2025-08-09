@@ -32,52 +32,15 @@ export async function GET(request: NextRequest) {
         gateways,
       });
     } catch (dbError: any) {
-      // Jika tabel belum ada, return data dummy
-      console.log("PaymentGateway table not found, returning dummy data:", dbError.message);
-
-      const dummyGateways = [
-        {
-          id: "dummy-1",
-          name: "Midtrans",
-          type: "CREDIT_CARD",
-          provider: "MIDTRANS",
-          isActive: true,
-          config: {
-            serverKey: "***",
-            clientKey: "***",
-            isProduction: false
-          },
-          fees: {
-            percentageFee: 2.9,
-            fixedFee: 2000
-          },
-          createdAt: new Date(),
-          updatedAt: new Date()
-        },
-        {
-          id: "dummy-2",
-          name: "QRIS",
-          type: "QRIS",
-          provider: "MIDTRANS",
-          isActive: true,
-          config: {
-            serverKey: "***",
-            clientKey: "***"
-          },
-          fees: {
-            percentageFee: 0.7,
-            fixedFee: 0
-          },
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-      ];
+      // If table doesn't exist, return empty array instead of dummy data
+      console.log("PaymentGateway table not found:", dbError.message);
 
       return NextResponse.json({
-        success: true,
-        gateways: dummyGateways,
-        message: "Using dummy data - database table not ready"
-      });
+        success: false,
+        gateways: [],
+        error: "Payment gateway table not found",
+        message: "Database table needs to be created"
+      }, { status: 404 });
     }
   } catch (error) {
     console.error("Error fetching payment gateways:", error);

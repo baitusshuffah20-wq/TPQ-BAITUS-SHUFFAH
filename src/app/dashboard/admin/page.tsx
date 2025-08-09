@@ -61,37 +61,9 @@ const AdminDashboard = () => {
         console.error("Error fetching dashboard data:", err);
         setError("Failed to load dashboard data");
 
-        // Fallback data
+        // Set empty data instead of fallback
         setDashboardData({
-          stats: [
-            {
-              title: "Total Santri",
-              value: "250",
-              change: "+12%",
-              changeType: "increase",
-              icon: "Users",
-              color: "text-blue-600",
-              bgColor: "bg-blue-50",
-            },
-            {
-              title: "Total Musyrif",
-              value: "15",
-              change: "+2%",
-              changeType: "increase",
-              icon: "GraduationCap",
-              color: "text-green-600",
-              bgColor: "bg-green-50",
-            },
-            {
-              title: "Total Donasi",
-              value: "Rp 25.5jt",
-              change: "+8%",
-              changeType: "increase",
-              icon: "Heart",
-              color: "text-red-600",
-              bgColor: "bg-red-50",
-            },
-          ],
+          stats: [],
           recentActivities: [],
           upcomingEvents: [],
         });
