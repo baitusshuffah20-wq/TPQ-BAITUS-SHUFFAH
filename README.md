@@ -88,11 +88,53 @@ npm install
 npm run dev
 ```
 
-4. **Open browser**
+4. **Setup Database**
+
+**Option A: Aiven (Recommended)**
+```bash
+npm run setup:aiven
+```
+
+**Option B: PlanetScale**
+```bash
+npm run setup:planetscale
+```
+
+5. **Open browser**
 
 ```
 http://localhost:3000
 ```
+
+**Login Credentials:**
+- Admin: admin@rumahtahfidz.com / admin123
+- Musyrif: ustadz.abdullah@rumahtahfidz.com / musyrif123
+- Wali: bapak.ahmad@gmail.com / wali123
+
+## 🌐 Deploy to Vercel
+
+### Quick Deploy
+
+1. **Update Environment Variables in Vercel Dashboard**
+   ```env
+   DATABASE_URL=mysql://avnadmin:PASSWORD@host.aivencloud.com:28375/defaultdb?ssl-mode=REQUIRED
+   NEXTAUTH_URL=https://your-app.vercel.app
+   NEXTAUTH_SECRET=your-production-secret
+   NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
+   NEXT_PUBLIC_APP_NAME=TPQ Baitus Shuffah
+   NODE_ENV=production
+   ```
+
+2. **Deploy**
+   ```bash
+   vercel --prod
+   ```
+
+### Detailed Deployment Guides
+
+- 📖 [Aiven Setup Guide](./AIVEN_SETUP.md)
+- 📖 [PlanetScale Setup Guide](./PLANETSCALE_SETUP.md)
+- 📖 [Vercel Deployment Guide](./VERCEL_DEPLOYMENT_GUIDE.md)
 
 ## 🎯 **Fitur yang Sudah Selesai**
 
